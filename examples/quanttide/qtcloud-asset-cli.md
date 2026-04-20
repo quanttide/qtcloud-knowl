@@ -256,3 +256,79 @@ $$ \eta: F_{\text{pattern}} \Rightarrow F_{\text{default}} $$
 - **整体架构**：是一个 **函子复合** $F_{\text{total}} = F_{\text{file}} \circ F_{\text{resolve}} \circ F_{\text{load}}$
 
 这种范畴论建模揭示了 CLI 应用的核心结构：**契约驱动** 的 **单向数据流**，通过 **自然变换** 实现配置到行为的映射。
+
+## 函数式编程实现
+
+### returns 库映射
+
+使用 [returns](https://returns.readthedocs.io/) 库实现函数式编程：
+
+| 范畴论概念 | returns 库 | qtcloud-asset-cli 实现 |
+|----------|----------|-------------------|
+| 对象 | `Result[T, E]` | `Workflow`, `ArchiveTask` |
+| 态射 | `bind`, `map` | `resolve_workflow` |
+| 函子 | `map_`, `bind` | `flow` 管道 |
+| 单子 | `Result`, `IO`, `Maybe` | `ArchiveResult`, IO 操作 |
+| 逆态射 | `.alt`, `.lash` | `_rollback` |
+| 自然变换 | `RequiresContext` | 依赖注入 |
+
+### 代码示例
+
+```python
+from returns.result import Result, safe, Success, Failure
+from returns.maybe import Maybe, Nothing, Some
+from returns.io import IO, IOResult
+from returns.pipeline import flow
+from returns.pointfree import bind
+
+# 1. 错误处理 (Result)
+result = (
+    resolve_workflow(skill, input, output, pattern, contract)
+    .bind(execute_tasks)
+    .alt(handle_error)  # 错误处理
+)
+
+# 2. 可选值 (Maybe)
+pattern = (
+    find_contract(root)
+    .bind(load_yaml)
+    .bind(parse_contract)
+    .map(lambda c: c.skills.get(skill))
+    .get_or_else("*.md")
+)
+
+# 3. 副作用 (IO)
+archive_result = (
+    _mkdir_io(dst_dir)
+    .flat_map(lambda _: _move_file_io(src, dst))
+    .flat_map(lambda _: _cleanup(src_dir))
+)
+
+# 4. 管道组合 (flow)
+workflow = flow(
+    find_contract,      # Maybe[Path]
+    load_yaml,        # Result[dict]
+    parse_contract,   # Result[ContractSchema]
+    resolve_workflow, # Result[Workflow]
+)
+```
+
+### 原始 vs 函数式对比
+
+| 场景 | 原始代码 | 函数式 |
+|------|---------|--------|
+| 错误处理 | `try/except` | `.bind().alt()` |
+| 可选值 | `if x is None` | `.get_or_else()` |
+| 副作用 | 直接调用 | `.flat_map()` |
+| 组合 | 嵌套函数调用 | `flow()` 管道 |
+
+### 关键函数映射
+
+| 原始函数 | 函数式版本 |
+|----------|-----------|
+| `resolve_workflow` | `Result[Workflow, Exception]` |
+| `archive_product` | `IOResult[ArchiveResult]` |
+| `_move_file` | `IO[None]` |
+| `_rollback` | `IO[list[str]]` |
+| `find_contract` | `Maybe[Path]` |
+| `get_skill` | `Result[SkillConfig, KeyError]` |
