@@ -8,6 +8,7 @@
 
 ## v0.0.4
 
+- [ ] **CLI 改用 `typer`** — 替换手动 `sys.argv`，获得 `--help` / `--version`
 - [ ] **Settings 新增 `sample_home`** — `QTCLOUD_KNOWL_SAMPLE_HOME`，无默认 fallback
 - [ ] **合并校验命令** — `find-undefined-terms`、`fusion-check`、`check-abstraction` 归入 `validate --{undefined,fusion,abstraction}`
 - [ ] **清理 CLI 参数** — 移除所有 `data_dir`、`sample_dir` 位置参数，统读 `settings`
