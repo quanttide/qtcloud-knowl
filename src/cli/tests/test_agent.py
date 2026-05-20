@@ -19,14 +19,14 @@ def _tool(name: str, desc: str = "", executor=None) -> Tool:
 
 class TestParseAction:
     def test_parse_valid(self):
-        result = Action.from_text("Thought: 需要检查\nAction: validate\nAction Input: {}")
+        result = Action.from_text("Thought: 需要检查\nAction name: validate\nAction args: {}")
         assert isinstance(result, Action)
         assert result.name == "validate"
         assert result.args == {}
 
     def test_parse_with_json_args(self):
         result = Action.from_text(
-            'Thought: 检查特定领域\nAction: validate\nAction Input: {"domain": "org-gov"}'
+            'Thought: 检查特定领域\nAction name: validate\nAction args: {"domain": "org-gov"}'
         )
         assert result.name == "validate"
         assert result.args == {"domain": "org-gov"}
@@ -35,7 +35,7 @@ class TestParseAction:
         assert Action.from_text("这是一段普通文本") is None
 
     def test_parse_missing_input(self):
-        assert Action.from_text("Action: validate\nSomething else") is None
+        assert Action.from_text("Action name: validate\nSomething else") is None
 
     def test_parse_final_answer(self):
         assert Action.from_text("Thought: 完成\nFinal Answer: 结果") is None
@@ -81,7 +81,7 @@ class TestRun:
 
     def test_one_tool_call_then_answer(self, mock_llm):
         mock_llm.chat.side_effect = [
-            ChatResponse(content="Thought: 需要检查\nAction: validate\nAction Input: {}", model="deepseek"),
+            ChatResponse(content="Thought: 需要检查\nAction name: validate\nAction args: {}", model="deepseek"),
             ChatResponse(content="Thought: 完成\nFinal Answer: 验证通过", model="deepseek"),
         ]
         exec_records = []
@@ -98,8 +98,8 @@ class TestRun:
 
     def test_multiple_tool_calls(self, mock_llm):
         mock_llm.chat.side_effect = [
-            ChatResponse(content="Thought: 先验证\nAction: validate\nAction Input: {}", model="deepseek"),
-            ChatResponse(content="Thought: 再融合检查\nAction: fusion-check\nAction Input: {}", model="deepseek"),
+            ChatResponse(content="Thought: 先验证\nAction name: validate\nAction args: {}", model="deepseek"),
+            ChatResponse(content="Thought: 再融合检查\nAction name: fusion-check\nAction args: {}", model="deepseek"),
             ChatResponse(content="Thought: 完成\nFinal Answer: 全部通过", model="deepseek"),
         ]
         calls = []
@@ -119,7 +119,7 @@ class TestRun:
 
     def test_max_steps_reached(self, mock_llm):
         mock_llm.chat.return_value = ChatResponse(
-            content="Thought: 继续\nAction: validate\nAction Input: {}", model="deepseek"
+            content="Thought: 继续\nAction name: validate\nAction args: {}", model="deepseek"
         )
 
         def validate(args):
@@ -133,7 +133,7 @@ class TestRun:
     def test_malformed_action_retry(self, mock_llm):
         mock_llm.chat.side_effect = [
             ChatResponse(content="这是一段乱写的文本", model="deepseek"),
-            ChatResponse(content="Thought: 修正\nAction: validate\nAction Input: {}", model="deepseek"),
+            ChatResponse(content="Thought: 修正\nAction name: validate\nAction args: {}", model="deepseek"),
             ChatResponse(content="Thought: 完成\nFinal Answer: 好了", model="deepseek"),
         ]
 
@@ -147,7 +147,7 @@ class TestRun:
 
     def test_tool_execution_failure(self, mock_llm):
         mock_llm.chat.side_effect = [
-            ChatResponse(content="Thought: 调用工具\nAction: failing\nAction Input: {}", model="deepseek"),
+            ChatResponse(content="Thought: 调用工具\nAction name: failing\nAction args: {}", model="deepseek"),
             ChatResponse(content="Thought: 完成\nFinal Answer: 已处理", model="deepseek"),
         ]
 

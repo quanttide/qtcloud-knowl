@@ -42,7 +42,7 @@ class Action(BaseModel):
 
     name: str
     args: dict = {}
-    pattern: ClassVar[str] = r"Action:\s*(.+)\nAction Input:\s*(.+)"
+    pattern: ClassVar[str] = r"Action name:\s*(.+)\nAction args:\s*(.+)"
 
     @classmethod
     def from_text(cls, text: str) -> Action | None:
@@ -82,8 +82,8 @@ REACT_PROMPT = """你是一个知识工程助手。你有以下工具可用：
 每次回复按以下格式（不要输出其他内容）：
 
 Thought: 你当前的思考
-Action: 工具名称
-Action Input: 给工具的参数（JSON 格式）
+Action name: 工具名称
+Action args: 给工具的参数（JSON 格式）
 
 当得到最终答案时：
 
