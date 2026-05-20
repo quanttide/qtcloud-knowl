@@ -6,7 +6,7 @@
 
 ```
 audit    全量质量审计 — 串行执行全部检测并聚合报告
-extract  知识抽取 — 从源文件自动抽取知识到知识库
+extract  从 Markdown 文档创建知识库骨架，推荐所属领域
 ```
 
 ## 快速开始
@@ -17,7 +17,7 @@ extract  知识抽取 — 从源文件自动抽取知识到知识库
    export QTCLOUD_KNOWL_SAMPLE_HOME=~/my-knowledge/raw
    ```
 2. 审计已有知识库：`qtcloud-knowl audit`
-3. 从源文档抽取知识：`qtcloud-knowl extract`
+3. 从源文档创建骨架：`qtcloud-knowl extract`
 
 详细说明见 `docs/index.md`（CLI 参考）和 `../../docs/`（通用设计文档）。
 
