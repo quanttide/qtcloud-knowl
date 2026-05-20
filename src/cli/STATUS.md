@@ -1,6 +1,6 @@
 # 知识工程智能体 — 状态报告
 
-最近一次检查：2026-05-20 | ROADMAP 执行：2026-05-20
+最近一次检查：2026-05-20
 
 ## 验收结果
 
@@ -26,79 +26,29 @@
 
 | 文档 | 状态 |
 |:----|:----|
-| `AGENTS.md` | ✅ 含元认知规则 4 条 |
-| `CHANGELOG.md` | ✅ 含 cli/v0.0.1 版本记录 |
-| `CONTRIBUTING.md` | ✅ 贡献指南，路径正确 |
-| `README.md` | ✅ 项目概览，路径正确 |
-| `ROADMAP.md` | ✅ 已执行完毕，含数据目录配置待办 |
+| `AGENTS.md` | ✅ |
+| `CHANGELOG.md` | ✅ |
+| `CONTRIBUTING.md` | ✅ |
+| `README.md` | ✅ |
+| `ROADMAP.md` | ✅ |
 | `STATUS.md` | ✅ 本文件 |
-| `docs/contract.md` | ✅ 人机权责清单 |
-| `docs/criteria.md` | ✅ 本体评审标准 |
-| `docs/index.md` | ✅ AI 能力边界分析 |
-| `docs/workflow.md` | ✅ 五步执行流程 |
+| `docs/contract.md` | ✅ |
+| `docs/criteria.md` | ✅ |
+| `docs/index.md` | ✅ |
+| `docs/workflow.md` | ✅ |
 
-## 评审结果（2026-05-20）
+## 已知问题
 
-### 已知问题
-
-| # | 问题 | 文件 | 影响 | 状态 |
-|---|------|------|------|------|
-| 1 | `reviewers/__init__.py` 中 `run_detection` 仍引用 `src.validators.*` | `app/reviewers/__init__.py:80-81` | 交互式评审菜单"融合检测""未定义术语"功能报错 | ✅ 已修复 |
-| 2 | `cli.py` 帮助信息仍写 `python -m src.cli`，未更新为 `qtcloud-knowl` | `app/cli.py:6` | 用户困惑 | ✅ 已修复 |
-| 3 | `detect_domain.py` 的 `main()` 未传递 `data_dir` 给 `run()` | `app/detectors/detect_domain.py:32` | 与核心函数接口不一致 | ✅ 已修复 |
-| 4 | `auto_fix.py` 的 `run()` 接受 `sample_dir` 参数但未使用 | `app/validators/auto_fix.py:17` | 死参数 | ✅ 已移除 |
-| 5 | 缺少环境变量测试覆盖 | `tests/test_config.py` | 配置可测试性弱 | ✅ 已有覆盖 |
-| 6 | 测试仅覆盖夹具数据，未覆盖生产 DATA_DIR 路径 | `tests/` | 安装后行为未验证 | ✅ 已补充 |
-| 7 | fusion-check "交接" 重叠 | `app/validators/fusion_check.py:182` | 需人判断 | ✅ 已确认（合法重叠） |
-| 8 | fusion-check qtdata-index.md 引用 `《量潮数据项目岗位权责章程》` 文件不存在 | `app/validators/fusion_check.py:183` | 需人确认 | 【需人确认】 |
-
-### 已修复（本轮）
-
-| 问题 | 状态 |
-|:----|:----|
-| `DATA_DIR` 硬编码 | ✅ 已修复（`KNOWL_DATA_DIR` 环境变量 + fallback `~/.local/share/qtcloud-knowl`） |
-| `app/` 目录重命名 | ✅ `src/` → `app/`，所有 import 已更新 |
-| 测试增强 | ✅ 含正例/反例断言 |
-| 未定义术语过滤 | ✅ 覆盖中文/阿拉伯/占位符 |
-| `config.py` 改用 `quanttide.LocalStorage` | ✅ 替换 `Path.home()` 硬编码，`docs/storage.md` 与代码一致 |
-| `HUMAN_CONFIRM_TERMS` 清理 | ✅ "交接" 经人确认为合法跨领域重叠，不再标记 |
-| 环境变量命名统一 | ✅ 标准化为 `QTCLOUD_KNOWL_DATA_HOME`，与 `quanttide` SDK `env_override` 一致 |
-| CLI 改用 typer | ✅ `sys.argv` → `typer`，自动 `--help`，无位置参数 |
-| `sample_home` 环境变量 | ✅ `QTCLOUD_KNOWL_SAMPLE_HOME`，`config.py` 移除所有模块级常量 |
-| 文档测试 | ✅ CLI help 输出验证、`storage.md` env var 验证、doctest 2 处 |
+| # | 问题 | 文件 | 状态 |
+|---|------|------|------|
+| 8 | fusion-check 引用文件 `《量潮数据项目岗位权责章程》` 不存在 | `app/validators/fusion_check.py` | ⏳ 需人确认 |
 
 ## 文件结构
 
 ```
-AGENTS.md              # 智能体自描述与元认知规则
-CHANGELOG.md           # 变更记录
-CONTRIBUTING.md        # 贡献指南
-README.md              # 项目概览
+CHANGELOG.md           # 变更记录（事实源）
+STATUS.md              # 本文件
+TODO.md                # 待办
 ROADMAP.md             # 路线图
-STATUS.md              # 状态报告
-pyproject.toml         # 项目配置（qtcloud-knowl-cli）
-docs/
-  contract.md          # 人机权责清单
-  criteria.md          # 本体验收标准
-  index.md             # AI 能力边界
-  workflow.md          # 执行流程
-app/                   # Python 工具链
-  cli.py               # 统一 CLI
-  models.py            # 数据模型
-  loader.py            # 数据加载
-  config.py            # 配置（pydantic BaseSettings，支持 QTCLOUD_KNOWL_DATA_HOME）
-  reporters/           # 报告生成 (3 模块)
-  validators/          # 验证检测 (4 模块)
-  detectors/           # 领域操作 (2 模块)
-  reviewers/           # 交互式评审 (6 模块)
-tests/
-  fixtures/input/      # 10 份源文档
-  fixtures/output/     # 4 领域建模结果
-  test_loader.py       # 加载测试
-  test_validate.py     # 验证测试
-  test_summary.py      # 概况测试
-  test_abstraction.py  # 抽象度测试
-  test_find_undefined.py  # 未定义术语测试
-  test_config.py          # 配置测试
-  test_fusion_check.py    # 融合检测测试
+...
 ```
