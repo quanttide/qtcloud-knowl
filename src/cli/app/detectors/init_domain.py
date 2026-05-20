@@ -14,8 +14,8 @@ SKELETONS = {
 }
 
 
-def run(domain_name: str, from_detect_file: str = None):
-    domain_dir = settings.data_home / domain_name
+def run(domain_name: str, from_detect_file: str = None, data_dir=None):
+    domain_dir = (Path(data_dir) if data_dir else settings.data_home) / domain_name
     domain_dir.mkdir(parents=True, exist_ok=True)
 
     domain_json_path = domain_dir / "domain.json"

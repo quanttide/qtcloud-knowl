@@ -1,62 +1,43 @@
 # ROADMAP
 
-## [0.0.5] — ReAct 知识抽取循环
+每个版本解决一个用户痛点。
 
-建立程序化 ReAct 智能体循环，将"智能体"角色从外部 AI 辅助编码助手内化为代码自身能力。
+## v0.0.5 — 规则引擎太多命令，用户不知道用什么
 
-### Agent 基础设施
+**痛点**：9 个底层命令（validate、fusion-check 等）暴露给用户，每个只做一件事，用户需要自己编排调用顺序。
 
-- ReAct 循环引擎：`Thought → Action → Observation → Thought` 主循环
-- Tool 注册系统：LLM 可调用的工具接口层
-- LLM 调用抽象层：支持多 Provider 的消息/补全接口
-- Conversation 上下文管理：消息历史窗口维护
+**解决**：收敛为 `audit` 和 `extract` 两个面向任务的入口，底层命令隐藏。用户只需说"帮我检查"和"帮我抽取"。
 
-### 知识抽取工具集
+## v0.0.6 — 报告写得像技术日志，业务专家看不懂
 
-将现有 CLI 命令和知识发现流程封装为 ReAct 可调用工具：
+**痛点**：audit 输出的是检测名和原始日志（validate 通过、find-undefined-terms 警告），业务专家不知道哪些需要自己看、哪些是工具内部问题。
 
-- `validate_domain(dir)` → 结构完整性检查
-- `detect_undefined_terms(sample_dir)` → 未定义术语扫描
-- `check_abstraction(dir)` → 本体抽象度检测
-- `fusion_check(dir)` → 跨领域融合检测
-- `suggest_ontology(domain_id, texts)` → 从源文推荐候选本体
-- `suggest_instances(ontology_id, texts)` → 从源文推荐候选实例
-- `suggest_relations(domains)` → 跨领域关系推荐
-- `write_domain_json(domain_id, data)` → 写入领域 JSON 文件
+**解决**：报告按「需要你确认的问题」「平台发现的问题」「建议关注」三组输出。extract 不再依赖 LLM，无 API key 也能创建知识库骨架。
 
-### 集成点
+## v0.0.7 — 报告只告诉有什么问题，不告诉怎么改
 
-- 新增 `app/agents/` 子包存放 agent 循环、工具注册、LLM 抽象
-- `app/agents/engine.py` — ReAct 主循环
-- `app/agents/tools.py` — 工具定义与注册
-- `app/agents/llm.py` — LLM 调用抽象
-- `app/cli.py` 新增 `extract` 命令触发抽取流程
+**痛点**：审计报告列出了问题和严重度，但不指向具体的 JSON 文件路径和字段，用户不知道从哪里下手修。
 
-### 依赖
+**解决**：每个问题项追加操作路径指引，告诉用户打开哪个文件、改什么字段。report 改为也可给机器读取的 JSON 格式，便于集成。
 
-- `openai` / `anthropic` SDK（择一，可配置）
-- `jinja2`（Prompt 模板）
+## v0.0.8 — 新手被空骨架的大量报错吓到
 
-## [0.0.6] — 面向任务的 CLI 重构
+**痛点**：刚 init-domain 出来空骨架就被 audit 报几十个问题（本体抽象度、覆盖率等），新手不知道这是正常的。
 
-当前 9 个命令（validate、fusion-check、find-undefined-terms 等）是工具级 API，需要人编排，不符合"规则引擎 vs 智能体 vs 人类"分工。v0.0.6 将其收敛为 2–3 个面向任务的高层入口。
+**解决**：`audit --mode new` 只检查结构完整性（文件存在、JSON 合法），跳过内容质量检测。`--mode formal` 维持严格模式。
 
-### CLI 收敛
+## v0.0.9 — 这次跑的和上次跑的看不出变化
 
-- `qtcloud-knowl audit` — 全量质量审计
-  - Agent 自动串行执行全部检测（validate + fusion-check + find-undefined-terms + check-abstraction + cross-domain-report）
-  - 聚合结果，解释根因，标记 **【需人确认】**
-  - 输出一份可读审计报告
-- `qtcloud-knowl extract` — 从源文件自动抽取知识到知识库
-  - 输入：源文档目录
-  - Agent 自动执行完整知识发现流程（领域→本体→实例→关系→跨域融合）
-  - 输出：填充完成的 domain/ontologies/instances/relations JSON
+**痛点**：每周跑一次 audit，但报告看不出哪些是新问题、哪些是已修复的。
 
-### 保留底层 API
+**解决**：写入 `.audit.json` 实现增量对比。输出格式："相比上次审计：✅ 已修复 3 项 / 🆕 新增 1 项 / ⏳ 待处理 2 项"。
 
-底层命令（validate、fusion-check 等）不删除，降级为不公开/仅 `--help` 隐藏的接口，供 agent 内部调用。用户面向的是 `audit` 和 `extract`。
+## v0.10.0 — 业务专家还不能自助完成全流程
+
+**痛点**：从文档到正式知识库的链路有断裂。extract 能创建骨架，但本体/实例/关系仍需人工编写。
+
+**解决**：接入 LLM 完成本体发现 → 实例映射 → 关系发现的完整语义抽取，输出标注"AI 生成"供人审核。配合 audit 做质量门禁，实现"文档入库 → 质检 → 发布"闭环。
 
 ---
 
-- 所有已发布版本记录见 [CHANGELOG.md](./CHANGELOG.md)
-- v0.0.5 的 agent 基础设施是 v0.0.6 的前置依赖
+所有已发布版本记录见 [CHANGELOG.md](./CHANGELOG.md)。

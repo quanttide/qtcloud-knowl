@@ -1,7 +1,9 @@
-"""知识抽取 — 从源文件自动抽取知识到知识库。"""
+"""知识抽取 — 从源文档自动创建知识库骨架。"""
 
 from pathlib import Path
+from collections import Counter
 from app.config import settings
+from app.loader import load_all_domains
 
 
 def run(sample_dir=None, data_dir=None):
@@ -13,50 +15,71 @@ def run(sample_dir=None, data_dir=None):
         print("错误: 源文档目录不存在或未设置")
         raise typer.Exit(code=1)
 
-    if not settings.llm_api_key:
-        print("错误: LLM API key 未配置（设置 QTCLOUD_KNOWL_LLM_API_KEY 环境变量）")
-        print("知识抽取需要 LLM 支持以分析文档内容并推荐本体/实例/关系。")
-        print("如果仅需骨架初始化，请使用 init-domain 命令。")
-        raise typer.Exit(code=1)
-
     md_files = list(sdir.glob("*.md"))
+    print(f"源文档目录: {sdir}")
+    print(f"目标目录: {ddir}")
+    print(f"找到 {len(md_files)} 个源文件")
+    print()
+
     if not md_files:
-        print("警告: 源文档目录中没有 .md 文件")
-        print("已创建空知识库骨架。")
         ddir.mkdir(parents=True, exist_ok=True)
+        print("没有 .md 文件需要处理。知识库骨架目录已就绪。")
         return 0
 
-    print(f"源文档目录: {sdir}")
-    print(f"目标数据目录: {ddir}")
-    print(f"源文件数: {len(md_files)}")
-    print()
+    ddir.mkdir(parents=True, exist_ok=True)
 
-    from app.detectors.detect_domain import run as detect_run
+    domain_hits = Counter()
+    file_domains = {}
 
-    for f in md_files:
-        print(f"[检测] {f.name}")
-        detect_run(str(f), str(ddir))
+    existing_domains = {}
+    try:
+        for d, domain, ontologies, instances, relations in load_all_domains(ddir):
+            existing_domains[domain.id] = domain
+    except Exception:
+        pass
+
+    for f in sorted(md_files):
+        content = f.read_text(encoding="utf-8")
+        best_domain = None
+        best_score = 0
+
+        for d, domain, ontologies, instances, relations in load_all_domains(ddir):
+            if not domain.vocabulary:
+                continue
+            score = sum(content.count(term) for term in domain.vocabulary)
+            if score > best_score:
+                best_score = score
+                best_domain = domain.id
+
+        if best_domain:
+            domain_hits[best_domain] += 1
+            file_domains[f.name] = best_domain
+
+    from app.detectors.init_domain import run as init_domain_run
+
+    for domain_id in sorted(set([d for d in domain_hits.keys()] + list(existing_domains.keys()))):
+        init_domain_run(domain_id, data_dir=str(ddir))
+
+    if domain_hits:
+        print("推荐领域:")
+        for domain_id, count in domain_hits.most_common():
+            tag = "（新建）" if domain_id not in existing_domains else "（已有）"
+            print(f"  {domain_id}{tag}: {count} 个文件匹配")
+
         print()
+        print("文件归属:")
+        for fname, domain_id in sorted(file_domains.items()):
+            print(f"  {fname} → {domain_id}")
+    else:
+        print("（未发现与已有领域匹配的文件，可先配置领域词汇表再运行）")
 
-    from quanttide_agent import LLM, ReActAgent, ActionParser, Tool
+    if settings.llm_api_key:
+        print()
+        print("LLM 已就绪，可执行语义抽取。运行方式：qtcloud-knowl audit 检查当前骨架完整性")
+    else:
+        print()
+        print("提示: 设置 QTCLOUD_KNOWL_LLM_API_KEY 可启用语义抽取（推荐本体/实例/关系）")
 
-    llm = LLM(api_key=settings.llm_api_key)
-    tools = [
-        Tool(name="detect-domain", description="为文件推荐所属领域", executor=lambda inp: detect_run(inp["filepath"], str(ddir))),
-    ]
-
-    agent = ReActAgent(llm, tools, parser=ActionParser(), max_steps=5)
-
-    print("=" * 60)
-    print("  知识抽取开始（需要 LLM 支持）")
-    print("=" * 60)
     print()
-    print("此功能需要 LLM API key 配置。当前连接已就绪。")
-    print(f"使用模型: {llm.model}")
-    print()
-
-    print("请通过 ReAct Agent 提示词触发抽取流程。")
-    print("例如: qtcloud-knowl agent \"对 sample_dir 中的文档执行知识发现\"")
-    print()
-
+    print(f"抽取完成。知识库位于: {ddir}")
     return 0
