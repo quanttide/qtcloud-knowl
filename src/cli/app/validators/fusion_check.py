@@ -30,7 +30,7 @@ IGNORE_LIST = [
     "最终验收报告", "交接确认书", "数据处理服务框架协议",
 ]
 
-HUMAN_CONFIRM_TERMS = {"交接"}
+HUMAN_CONFIRM_TERMS: set[str] = set()
 HUMAN_CONFIRM_REFS = {"量潮数据项目岗位权责章程"}
 
 

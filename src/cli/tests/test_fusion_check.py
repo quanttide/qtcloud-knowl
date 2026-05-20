@@ -17,18 +17,19 @@ class TestFusionCheck:
         captured = capsys.readouterr()
         assert "（无冲突）" in captured.out
 
-    def test_term_overlap_has_human_confirm(self, capsys):
+    def test_term_overlap_detected_without_human_confirm(self, capsys):
         check_term_overlap(FIXTURE_DIR)
         captured = capsys.readouterr()
-        assert "【需人确认】" in captured.out
+        assert "交接" in captured.out
+        assert "【需人确认】" not in captured.out
 
     def test_broken_references_has_human_confirm(self, capsys):
         check_broken_references(SAMPLE_DIR)
         captured = capsys.readouterr()
         assert "【需人确认】" in captured.out
 
-    def test_human_confirm_terms_defined(self):
-        assert "交接" in HUMAN_CONFIRM_TERMS
+    def test_human_confirm_terms_empty(self):
+        assert not HUMAN_CONFIRM_TERMS
 
     def test_human_confirm_refs_defined(self):
         assert "量潮数据项目岗位权责章程" in HUMAN_CONFIRM_REFS

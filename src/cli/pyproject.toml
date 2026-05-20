@@ -3,7 +3,9 @@ name = "qtcloud-knowl-cli"
 version = "0.0.2"
 description = "Knowledge Agent CLI — charting, validation, and ontology management"
 requires-python = ">=3.12"
-dependencies = []
+dependencies = [
+    "quanttide",
+]
 
 [project.scripts]
 qtcloud-knowl = "app.cli:main"

@@ -5,6 +5,11 @@ import pytest
 from app import config
 
 
+class _FakeLocalStorage:
+    def __init__(self, app_name, vendor=None):
+        self.data_dir = Path.home() / ".local" / "share" / vendor / app_name
+
+
 @pytest.fixture(autouse=True)
 def reset_config():
     yield
@@ -14,9 +19,10 @@ def reset_config():
 class TestConfig:
     def test_data_dir_fallback(self, monkeypatch):
         monkeypatch.delenv("KNOWL_DATA_DIR", raising=False)
+        import quanttide
+        monkeypatch.setattr(quanttide, "LocalStorage", _FakeLocalStorage)
         importlib.reload(config)
-        expected = Path.home() / ".local" / "share" / "qtcloud-knowl"
-        assert config.DATA_DIR == expected
+        assert config.DATA_DIR == Path.home() / ".local" / "share" / "quanttide" / "qtcloud-knowl"
 
     def test_data_dir_from_env(self, monkeypatch):
         monkeypatch.setenv("KNOWL_DATA_DIR", "/tmp/custom-data")

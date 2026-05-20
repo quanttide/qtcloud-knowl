@@ -49,7 +49,7 @@ pip install quanttide
 
 ## 覆盖默认路径
 
-`LocalStorage` 自动读取环境变量 `{APP_NAME}_DATA_DIR`。设置后所有路径查询均返回覆盖值：
+`LocalStorage` 自动读取环境变量 `KNOWL_DATA_DIR`。设置后所有路径查询均返回覆盖值：
 
 ```bash
 export KNOWL_DATA_DIR=~/my-knowledge-base

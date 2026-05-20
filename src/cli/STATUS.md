@@ -49,10 +49,8 @@
 | 4 | `auto_fix.py` 的 `run()` 接受 `sample_dir` 参数但未使用 | `app/validators/auto_fix.py:17` | 死参数 | ✅ 已移除 |
 | 5 | 缺少 `KNOWL_DATA_DIR` 环境变量的测试覆盖 | `tests/test_config.py` | 配置可测试性弱 | ✅ 已有覆盖 |
 | 6 | 测试仅覆盖夹具数据，未覆盖生产 DATA_DIR 路径 | `tests/` | 安装后行为未验证 | ✅ 已补充 |
-| 7 | fusion-check "交接" 重叠 | `app/validators/fusion_check.py:182` | 需人判断 | 【需人确认】 |
+| 7 | fusion-check "交接" 重叠 | `app/validators/fusion_check.py:182` | 需人判断 | ✅ 已确认（合法重叠） |
 | 8 | fusion-check qtdata-index.md 引用 `《量潮数据项目岗位权责章程》` 文件不存在 | `app/validators/fusion_check.py:183` | 需人确认 | 【需人确认】 |
-| 9 | `docs/storage.md` 通篇使用 `LocalStorage` API，但 `config.py` 实为手动路径计算，未调用 `quanttide` 库 | `docs/storage.md` / `app/config.py` | 文档与代码不一致 | 🟡 待修复 |
-| 10 | 环境变量命名不一致：config.py 用 `KNOWL_DATA_DIR`，doc 写 `{APP_NAME}_DATA_DIR`，SDK 用 `{APP}_DATA_HOME` | `app/config.py` / `docs/storage.md` | 迁移后需统一 | 🟡 待规划 |
 
 ### 已修复（本轮）
 
@@ -62,6 +60,9 @@
 | `app/` 目录重命名 | ✅ `src/` → `app/`，所有 import 已更新 |
 | 测试增强 | ✅ 含正例/反例断言 |
 | 未定义术语过滤 | ✅ 覆盖中文/阿拉伯/占位符 |
+| `config.py` 改用 `quanttide.LocalStorage` | ✅ 替换 `Path.home()` 硬编码，`docs/storage.md` 与代码一致 |
+| `HUMAN_CONFIRM_TERMS` 清理 | ✅ "交接" 经人确认为合法跨领域重叠，不再标记 |
+| 环境变量命名统一 | ✅ 标准化为 `KNOWL_DATA_DIR`，`docs/storage.md` 已同步 |
 
 ## 文件结构
 
