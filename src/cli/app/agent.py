@@ -44,15 +44,15 @@ class Action(BaseModel):
     args: dict = {}
 
 
-class ReActParser:
-    """ReAct 协议解析器"""
+class ActionParser:
+    """从 LLM 回复中解析 Action 指令"""
 
     KEY_ACTION_NAME = "Action name"
     KEY_ACTION_ARGS = "Action args"
     _pattern = rf"{KEY_ACTION_NAME}:\s*(.+)\n{KEY_ACTION_ARGS}:\s*(.+)"
 
     @classmethod
-    def parse_action(cls, text: str) -> Action | None:
+    def parse(cls, text: str) -> Action | None:
         m = re.search(cls._pattern, text)
         if not m:
             return None
@@ -89,8 +89,8 @@ REACT_PROMPT = f"""你是一个知识工程助手。你有以下工具可用：
 每次回复按以下格式（不要输出其他内容）：
 
 Thought: 你当前的思考
-{ReActParser.KEY_ACTION_NAME}: 工具名称
-{ReActParser.KEY_ACTION_ARGS}: 给工具的参数（JSON 格式）
+{ActionParser.KEY_ACTION_NAME}: 工具名称
+{ActionParser.KEY_ACTION_ARGS}: 给工具的参数（JSON 格式）
 
 当得到最终答案时：
 
@@ -120,7 +120,7 @@ class Agent:
             if "Final Answer:" in output:
                 return output.split("Final Answer:", 1)[1].strip()
 
-            action = ReActParser.parse_action(output)
+            action = ActionParser.parse(output)
             messages.append(Message(role="assistant", content=output))
             if not action:
                 messages.append(Message(role="user", content="无法解析指令，请使用正确的 ReAct 格式。"))
