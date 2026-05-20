@@ -2,14 +2,17 @@
 ReAct 智能体实验 — 基于 quanttide-agent 的工具调用循环。
 
 用法:
-    from app.agent import Agent, Tool
+    from app.agent import ActionParser, Agent, Message, Tool
     from quanttide_agent import LLM
 
     llm = LLM(model="deepseek-v4-flash")
     agent = Agent(llm, [
         Tool(name="validate", description="检查目录结构", executor=validate_fn),
     ])
-    result = agent.run("检查 org-gov 领域有没有问题")
+    result = agent.run([
+        Message(role="system", content=f"你是一个助手。用{ActionParser.KEY_ACTION_NAME}指定工具"),
+        Message(role="user", content="检查一下"),
+    ])
 """
 
 from __future__ import annotations
@@ -89,13 +92,8 @@ class Agent:
         self._parser = parser or ActionParser()
         self.max_steps = max_steps
 
-    def run(self, task: str) -> str:
-        tool_desc = "\n".join(f"- {t.name}: {t.description}" for t in self._tools.values())
-        messages: list[Message] = [
-            Message(role="system", content=self._build_prompt(tool_desc)),
-            Message(role="user", content=task),
-        ]
-
+    def run(self, messages: list[Message]) -> str:
+        messages = list(messages)
         for _ in range(self.max_steps):
             resp = self.llm.chat([m.to_dict() for m in messages])
             output = resp.content.strip()
@@ -114,23 +112,6 @@ class Agent:
             messages.append(Message(role="tool", tool_call_id=action.name, content=result))
 
         return "达到最大步数，未得到最终答案。"
-
-    def _build_prompt(self, tool_descriptions: str) -> str:
-        return f"""你是一个知识工程助手。你有以下工具可用：
-
-{tool_descriptions}
-
-每次回复按以下格式（不要输出其他内容）：
-
-Thought: 你当前的思考
-{self._parser.key_action_name}: 工具名称
-{self._parser.key_action_args}: 给工具的参数（JSON 格式）
-
-当得到最终答案时：
-
-Thought: 我得到答案了
-    Final Answer: 你的最终回复
-"""
 
 
 def default_agent(llm: LLM | None = None) -> Agent:

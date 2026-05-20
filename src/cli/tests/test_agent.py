@@ -73,12 +73,15 @@ class TestExecute:
 
 
 class TestRun:
+    def _msgs(self, task: str) -> list[Message]:
+        return [Message(role="user", content=task)]
+
     def test_direct_final_answer(self, mock_llm):
         mock_llm.chat.return_value = ChatResponse(
             content="Thought: 无需工具\nFinal Answer: 一切正常", model="deepseek"
         )
         agent = Agent(mock_llm, [], max_steps=5)
-        result = agent.run("检查状态")
+        result = agent.run(self._msgs("检查状态"))
         assert result == "一切正常"
         assert mock_llm.chat.call_count == 1
 
@@ -94,7 +97,7 @@ class TestRun:
             return "结构完整"
 
         agent = Agent(mock_llm, [_tool("validate", executor=validate)])
-        result = agent.run("验证一下")
+        result = agent.run(self._msgs("验证一下"))
         assert result == "验证通过"
         assert mock_llm.chat.call_count == 2
         assert len(exec_records) == 1
@@ -116,7 +119,7 @@ class TestRun:
             return "OK"
 
         agent = Agent(mock_llm, [_tool("validate", executor=validate), _tool("fusion-check", executor=fusion)])
-        result = agent.run("全面检查")
+        result = agent.run(self._msgs("全面检查"))
         assert result == "全部通过"
         assert calls == ["validate", "fusion"]
 
@@ -129,7 +132,7 @@ class TestRun:
             return "结果"
 
         agent = Agent(mock_llm, [_tool("validate", executor=validate)], max_steps=3)
-        result = agent.run("检查")
+        result = agent.run(self._msgs("检查"))
         assert "达到最大步数" in result
         assert mock_llm.chat.call_count == 3
 
@@ -144,7 +147,7 @@ class TestRun:
             return "ok"
 
         agent = Agent(mock_llm, [_tool("validate", executor=validate)], max_steps=5)
-        result = agent.run("测试")
+        result = agent.run(self._msgs("测试"))
         assert result == "好了"
         assert mock_llm.chat.call_count == 3
 
@@ -158,7 +161,7 @@ class TestRun:
             raise ValueError("崩溃")
 
         agent = Agent(mock_llm, [_tool("failing", executor=failing)])
-        result = agent.run("测试")
+        result = agent.run(self._msgs("测试"))
         assert result == "已处理"
 
 
