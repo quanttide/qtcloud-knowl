@@ -1,34 +1,37 @@
 # ROADMAP
 
-## v0.0.4: 抽离文档源管理层，净化 `config.py`
+## v0.0.4: CLI 重设计 — 统一配置入口与验证命令
 
 ### 背景
 
-`config.py` 仍残留一条模块级 `SAMPLE_DIR`，指向原始源文档目录（`fixtures/input/`），仅被两个 validator 用作 CLI 默认值。这违反了"`config.py` 只含运行时配置"的原则——源文档路径是开发期结构，不应由配置层硬编码。
+CLI 当前的问题不在代码实现，而在接口设计暴露了内部实现细节：
 
-| 现状 | 问题 |
+1. **`sample_dir` 泄漏到 CLI 参数** — `find-undefined-terms` 和 `fusion-check` 各自接受源文档路径作为位置参数，本质是配置项被伪装成命令参数
+2. **校验命令碎片化** — `validate`（JSON 结构）、`find-undefined-terms`（术语覆盖）、`fusion-check`（跨域一致性）、`check-abstraction`（抽象度）四个命令全是校验，被人为拆散
+3. **数据源没有统一配置层** — `data_home` 已纳入 `Settings`（env var），`sample_home` 仍是模块级常量，两个配置层概念不一致
+
+### 设计方案
+
+| 现在 | 改进 |
 |------|------|
-| `config.py` 导出 `SAMPLE_DIR` | 与 `settings.data_home` 混在同一模块，职责不清 |
-| `fusion_check.py`、`find_undefined.py` 默认值依赖 `SAMPLE_DIR` | CLI 隐含了对夹具目录的耦合 |
-| 源文档加载逻辑分散在两个 validator 内 | 无统一缓存、无统一接口 |
+| `find-undefined-terms <sample_dir> [data_dir]` | `validate --undefined`，从 `Settings` 读路径 |
+| `fusion-check [data_dir] [sample_dir]` | `validate --fusion`，从 `Settings` 读路径 |
+| `check-abstraction` | `validate --abstraction` |
+| `SAMPLE_DIR` 模块级常量 | `Settings.sample_home`（`QTCLOUD_KNOWL_SAMPLE_HOME`） |
 
 ### 执行步骤
 
-1. **创建 `app/sources/` 模块** — 统一负责源文档的定位、加载、缓存
-   - `loader.py` — 按文件名或 glob 模式读取文档内容
-   - `resolver.py` — 处理《引用》解析，维护文件→标题映射
-   - 提供 `resolve_ref(title) → Path`、`load_source(name) → str` 等接口
-2. **修改 `fusion_check.py`** — `check_broken_references` 改用 `sources.resolve_ref`，不再直接操作 `SAMPLE_DIR`
-3. **修改 `find_undefined.py`** — 文档扫描改用 `sources.load_source`，不再直接操作 `SAMPLE_DIR`
-4. **`--sample-dir` 改为必填参数** — 或由 `sources` 模块通过其他方式确定默认路径
-5. **`config.py` 移除 `SAMPLE_DIR`** — 净化后只保留 `Settings.data_home`
+1. **`Settings` 新增 `sample_home`** — 环境变量 `QTCLOUD_KNOWL_SAMPLE_HOME`，fallback 无默认值（用户必须设置才能使用依赖源文档的功能）
+2. **合并校验命令** — 将 `find-undefined-terms`、`fusion-check`、`check-abstraction` 作为 `validate` 的子开关
+3. **清理 CLI 参数** — 去掉所有透传的 `data_dir`、`sample_dir` 位置参数，统一从 `settings` 读取
+4. **移除 `SAMPLE_DIR`** — `config.py` 只保留 `Settings`
 
 ### 验收标准
 
-- `config.py` 不引用 `fixtures/` 路径
-- `fusion_check.py` 和 `find_undefined.py` 不直接引用 `SAMPLE_DIR`
-- `app/sources/` 可独立测试，不依赖 fixtures 目录存在
-- 所有测试仍然通过
+- `validate` 是唯一的校验入口，子功能通过 `--undefined`、`--fusion`、`--abstraction` 访问
+- CLI 命令不接受 `data_dir` 或 `sample_dir` 位置参数
+- `config.py` 不含模块级路径常量
+- 所有测试通过
 
 ---
 
