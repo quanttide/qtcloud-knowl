@@ -17,7 +17,7 @@ from __future__ import annotations
 import json
 import re
 from collections.abc import Callable
-from typing import Any, ClassVar, Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel
 from quanttide_agent import LLM, ToolDef
@@ -42,13 +42,18 @@ class Action(BaseModel):
 
     name: str
     args: dict = {}
-    KEY_ACTION_NAME: ClassVar[str] = "Action name"
-    KEY_ACTION_ARGS: ClassVar[str] = "Action args"
-    PATTERN: ClassVar[str] = rf"{KEY_ACTION_NAME}:\s*(.+)\n{KEY_ACTION_ARGS}:\s*(.+)"
+
+
+class ReActParser:
+    """ReAct 协议解析器"""
+
+    KEY_ACTION_NAME = "Action name"
+    KEY_ACTION_ARGS = "Action args"
+    _pattern = rf"{KEY_ACTION_NAME}:\s*(.+)\n{KEY_ACTION_ARGS}:\s*(.+)"
 
     @classmethod
-    def from_text(cls, text: str) -> Action | None:
-        m = re.search(cls.PATTERN, text)
+    def parse_action(cls, text: str) -> Action | None:
+        m = re.search(cls._pattern, text)
         if not m:
             return None
         name = m.group(1).strip()
@@ -57,7 +62,7 @@ class Action(BaseModel):
             inp = json.loads(raw)
         except json.JSONDecodeError:
             inp = raw
-        return cls(name=name, args=inp)
+        return Action(name=name, args=inp)
 
 
 class Tool(BaseModel):
@@ -84,8 +89,8 @@ REACT_PROMPT = f"""你是一个知识工程助手。你有以下工具可用：
 每次回复按以下格式（不要输出其他内容）：
 
 Thought: 你当前的思考
-{Action.KEY_ACTION_NAME}: 工具名称
-{Action.KEY_ACTION_ARGS}: 给工具的参数（JSON 格式）
+{ReActParser.KEY_ACTION_NAME}: 工具名称
+{ReActParser.KEY_ACTION_ARGS}: 给工具的参数（JSON 格式）
 
 当得到最终答案时：
 
@@ -115,7 +120,7 @@ class Agent:
             if "Final Answer:" in output:
                 return output.split("Final Answer:", 1)[1].strip()
 
-            action = Action.from_text(output)
+            action = ReActParser.parse_action(output)
             messages.append(Message(role="assistant", content=output))
             if not action:
                 messages.append(Message(role="user", content="无法解析指令，请使用正确的 ReAct 格式。"))

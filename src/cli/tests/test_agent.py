@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 from quanttide_agent import ChatResponse, LLM
 
-from app.agent import Action, Agent, Message, Tool
+from app.agent import Action, Agent, Message, ReActParser, Tool
 
 
 @pytest.fixture
@@ -19,26 +19,26 @@ def _tool(name: str, desc: str = "", executor=None) -> Tool:
 
 class TestParseAction:
     def test_parse_valid(self):
-        result = Action.from_text("Thought: 需要检查\nAction name: validate\nAction args: {}")
+        result = ReActParser.parse_action("Thought: 需要检查\nAction name: validate\nAction args: {}")
         assert isinstance(result, Action)
         assert result.name == "validate"
         assert result.args == {}
 
     def test_parse_with_json_args(self):
-        result = Action.from_text(
+        result = ReActParser.parse_action(
             'Thought: 检查特定领域\nAction name: validate\nAction args: {"domain": "org-gov"}'
         )
         assert result.name == "validate"
         assert result.args == {"domain": "org-gov"}
 
     def test_parse_no_action(self):
-        assert Action.from_text("这是一段普通文本") is None
+        assert ReActParser.parse_action("这是一段普通文本") is None
 
     def test_parse_missing_input(self):
-        assert Action.from_text("Action name: validate\nSomething else") is None
+        assert ReActParser.parse_action("Action name: validate\nSomething else") is None
 
     def test_parse_final_answer(self):
-        assert Action.from_text("Thought: 完成\nFinal Answer: 结果") is None
+        assert ReActParser.parse_action("Thought: 完成\nFinal Answer: 结果") is None
 
 
 class TestExecute:
