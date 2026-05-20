@@ -1,13 +1,5 @@
 # ROADMAP
 
-## 现状
-
-五个阶段全部完成。工具链已从 shell 脚本统一为 Python CLI，原始知识库和领域数据整理为 tests/fixtures/input 和 output，loader 层剥离了硬编码路径假设。
-
-待解决的问题集中在检测精度和测试质量上。
-
-## 待办
-
 ### 修复检测精度
 
 - find-undefined-terms 对模板术语（`第X条 定义`）的误报过滤
@@ -19,6 +11,8 @@
 - 现有测试仅验证返回值，未验证输出内容
 - 为每个检测模块补充正例和反例断言
 
-### 代码质量
+### 数据目录可配置化
 
-- 无阻塞问题
+- `config.py` 中 DATA_DIR 硬编码为 tests/fixtures/output，安装后无法使用
+- 方案：读取 `KNOWL_DATA_DIR` 环境变量，fallback 到 `~/.local/share/qtcloud-knowl`
+- 各命令已接受可选 `data_dir` 参数，只需改 `config.py` 一个文件
