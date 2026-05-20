@@ -6,18 +6,34 @@
 """
 
 import os
+import subprocess
 import sys
 
 sys.path.insert(0, os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 
-def main():
-    # 从 Vault 获取 API key（通过库的 config 机制，支持 env/vault/.env）
-    from quanttide_agent.config import settings
+def _load_vault_key() -> str:
+    """从本地 Vault 读取 DeepSeek API key。"""
+    try:
+        result = subprocess.run(
+            ["vault", "kv", "get", "-field=api_key", "quanttide/deepseek"],
+            capture_output=True, text=True, timeout=10,
+        )
+        if result.returncode == 0:
+            return result.stdout.strip()
+        print(f"Vault 错误: {result.stderr}")
+    except Exception as e:
+        print(f"Vault 调用失败: {e}")
+    return ""
 
-    if not settings.llm_api_key:
-        print("错误: LLM_API_KEY 未配置。检查 vault 或 LLM_API_KEY 环境变量。")
+
+def main():
+    api_key = _load_vault_key()
+    if not api_key:
+        print("错误: 无法从 Vault 读取 API key")
         sys.exit(1)
+
+    os.environ["LLM_API_KEY"] = api_key
 
     from quanttide_agent import Message, ReActAgent
     from app.agent import default_agent
