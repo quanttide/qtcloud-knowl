@@ -92,11 +92,11 @@
 
 ## 评审流程
 
-1. 跑 `python -m src.cli check-abstraction` 检测未抽象信号
-2. 跑 `python -m src.cli cross-domain-report` 检查跨域关系覆盖率
-3. 跑 `python -m src.cli summary` 概览各领域数据量
-4. 跑 `python -m src.cli fusion-check` 检测名称冲突、引用断裂、效力一致性
-5. 跑 `python -m src.cli find-undefined-terms` 检测未定义术语
+1. 跑 `qtcloud-knowl check-abstraction` 检测未抽象信号
+2. 跑 `qtcloud-knowl cross-domain-report` 检查跨域关系覆盖率
+3. 跑 `qtcloud-knowl summary` 概览各领域数据量
+4. 跑 `qtcloud-knowl fusion-check` 检测名称冲突、引用断裂、效力一致性
+5. 跑 `qtcloud-knowl find-undefined-terms` 检测未定义术语
 6. 逐项检查实例-源文件一致性（人工）
 7. 逐项评审跨域关系合理性（人工）
 8. 更新 `.review.json` 记录评审结果

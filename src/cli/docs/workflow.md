@@ -6,15 +6,15 @@
 
 扫描知识库，识别所涵盖的知识领域。每个领域代表一个观察视角。
 
-工具 → `python -m src.cli detect-domain`
+工具 → `qtcloud-knowl detect-domain`
 
 ```bash
-python -m src.cli detect-domain tests/fixtures/input/<file>
+qtcloud-knowl detect-domain tests/fixtures/input/<file>
 ```
 
 基于词汇命中排序，推荐最匹配的领域。命中显著领先时规则引擎直接输出推荐；命中接近时智能体分析视角差异给人选。
 
-产出：`tests/fixtures/output/<domain>/domain.json`（规则引擎通过 `python -m src.cli init-domain` 创建）
+产出：`tests/fixtures/output/<domain>/domain.json`（规则引擎通过 `qtcloud-knowl init-domain` 创建）
 
 ### 第一步：本体发现
 
@@ -62,10 +62,10 @@ python -m src.cli detect-domain tests/fixtures/input/<file>
 
 对比不同领域对同一术语的定义和处理，暴露冲突和不一致。
 
-工具 → `python -m src.cli fusion-check`
+工具 → `qtcloud-knowl fusion-check`
 
 ```bash
-python -m src.cli fusion-check
+qtcloud-knowl fusion-check
 ```
 
 自动检测：同名本体冲突、词汇交叉、引用断裂、效力主体一致性。
@@ -84,10 +84,10 @@ python -m src.cli fusion-check
 辅助工具：
 
 ```bash
-python -m src.cli validate              # 检查结构完整性
-python -m src.cli summary               # 概况总览
-python -m src.cli find-undefined-terms  # 找出未定义术语
-python -m src.cli auto-fix              # 补缺失骨架文件
+qtcloud-knowl validate              # 检查结构完整性
+qtcloud-knowl summary               # 概况总览
+qtcloud-knowl find-undefined-terms  # 找出未定义术语
+qtcloud-knowl auto-fix              # 补缺失骨架文件
 ```
 
 迭代模式：智能体修 → 跑规则引擎验证 → 再修 → 直到 validate 全部通过。

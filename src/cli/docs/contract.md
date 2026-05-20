@@ -16,13 +16,13 @@
 
 | 命令 | 职责 |
 |:----|:----|
-| `python -m src.cli validate` | 检查四个 JSON 文件存在性和 JSON 格式合法性 |
-| `python -m src.cli summary` | 统计各领域的本体、实例、关系、文件数 |
-| `python -m src.cli fusion-check` | 跨领域检测：同名本体冲突、词汇交叉、引用断裂、效力主体一致性 |
-| `python -m src.cli detect-domain` | 新文件词汇命中排序，推荐领域 |
-| `python -m src.cli init-domain` | 创建领域目录和骨架 JSON |
-| `python -m src.cli find-undefined-terms` | 扫描加粗术语对比已知定义，列出未定义项 |
-| `python -m src.cli auto-fix` | 循环 validate + 补缺失骨架文件 |
+| `qtcloud-knowl validate` | 检查四个 JSON 文件存在性和 JSON 格式合法性 |
+| `qtcloud-knowl summary` | 统计各领域的本体、实例、关系、文件数 |
+| `qtcloud-knowl fusion-check` | 跨领域检测：同名本体冲突、词汇交叉、引用断裂、效力主体一致性 |
+| `qtcloud-knowl detect-domain` | 新文件词汇命中排序，推荐领域 |
+| `qtcloud-knowl init-domain` | 创建领域目录和骨架 JSON |
+| `qtcloud-knowl find-undefined-terms` | 扫描加粗术语对比已知定义，列出未定义项 |
+| `qtcloud-knowl auto-fix` | 循环 validate + 补缺失骨架文件 |
 
 边界：
 - 有确定规则即可读写文件

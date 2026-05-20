@@ -25,12 +25,12 @@
 }
 ```
 
-1. 运行 `python -m src.cli init-domain <domain-id>` 创建骨架
+1. 运行 `qtcloud-knowl init-domain <domain-id>` 创建骨架
 2. 编辑 `domain.json`：填写名称、视角声明、文件列表、词汇表
 3. 编辑 `ontologies.json`：发现该视角下的本体模式
 4. 编辑 `instances.json`：将文件内容映射到本体
 5. 编辑 `relations.json`：描述跨本体或跨实例的连接
-6. 运行 `python -m src.cli validate` 验证 JSON 合法性
+6. 运行 `qtcloud-knowl validate` 验证 JSON 合法性
 
 ### 修改检测逻辑
 
@@ -43,7 +43,7 @@
 - 使用 Python 模块，放在 `src/` 目录下对应的子包中
 - 遵循 `docs/contract.md` 的分工：有确定规则的操作归脚本，需要判断的归智能体
 - 每个模块应提供 `run()` 函数作为入口，接受参数并返回退出码
-- 模块可直接通过 `python -m src.cli <command>` 调用
+- 模块可直接通过 `qtcloud-knowl <command>` 调用
 
 ### `src/` 目录结构
 

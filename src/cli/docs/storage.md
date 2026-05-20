@@ -41,7 +41,7 @@
 
 ```bash
 export KNOWL_DATA_DIR=~/my-knowledge-base
-kcli summary
+qtcloud-knowl summary
 ```
 
 环境变量的优先级高于操作系统默认路径，不会修改 `~/.local/share/quanttide/qtcloud-knowl/`。

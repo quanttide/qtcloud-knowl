@@ -14,13 +14,14 @@ knowl-agent/
 │   ├── contract.md
 │   ├── workflow.md
 │   └── report.md              # 最近一次执行报告
-├── src/                # Python 工具链
+├── app/                # Python 工具链
 │   ├── cli.py          # 统一 CLI 入口
 │   ├── models.py       # 数据模型
 │   ├── loader.py       # 数据加载
 │   ├── reporters/      # 报告生成
 │   ├── validators/     # 验证检测
-│   └── detectors/      # 领域操作
+│   ├── detectors/      # 领域操作
+│   └── reviewers/      # 交互式评审
 ├── tests/
 │   ├── fixtures/       # 测试数据
 │   │   ├── output/     # 领域建模产出（按领域划分）
