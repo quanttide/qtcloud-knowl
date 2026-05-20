@@ -64,23 +64,6 @@ class ActionParser:
             inp = raw
         return Action(name=name, args=inp)
 
-    def build_prompt(self, tool_descriptions: str) -> str:
-        return f"""你是一个知识工程助手。你有以下工具可用：
-
-{tool_descriptions}
-
-每次回复按以下格式（不要输出其他内容）：
-
-Thought: 你当前的思考
-{self.key_action_name}: 工具名称
-{self.key_action_args}: 给工具的参数（JSON 格式）
-
-当得到最终答案时：
-
-Thought: 我得到答案了
-Final Answer: 你的最终回复
-"""
-
 
 class Tool(BaseModel):
     """工具定义（schema + execute）"""
@@ -109,7 +92,7 @@ class Agent:
     def run(self, task: str) -> str:
         tool_desc = "\n".join(f"- {t.name}: {t.description}" for t in self._tools.values())
         messages: list[Message] = [
-            Message(role="system", content=self._parser.build_prompt(tool_desc)),
+            Message(role="system", content=self._build_prompt(tool_desc)),
             Message(role="user", content=task),
         ]
 
@@ -131,6 +114,25 @@ class Agent:
             messages.append(Message(role="tool", tool_call_id=action.name, content=result))
 
         return "达到最大步数，未得到最终答案。"
+
+    def _build_prompt(self, tool_descriptions: str) -> str:
+        return f"""你是一个知识工程助手。你有以下工具可用：
+
+{tool_descriptions}
+
+每次回复按以下格式（不要输出其他内容）：
+
+Thought: 你当前的思考
+{self._parser.key_action_name}: 工具名称
+{self._parser.key_action_args}: 给工具的参数（JSON 格式）
+
+当得到最终答案时：
+
+Thought: 我得到答案了
+    Final Answer: 你的最终回复
+"""
+
+
 def default_agent(llm: LLM | None = None) -> Agent:
     from app.validators.validate import run as validate_run
     from app.validators.fusion_check import run as fusion_run
