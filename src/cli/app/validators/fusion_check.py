@@ -30,6 +30,9 @@ IGNORE_LIST = [
     "最终验收报告", "交接确认书", "数据处理服务框架协议",
 ]
 
+HUMAN_CONFIRM_TERMS = {"交接"}
+HUMAN_CONFIRM_REFS = {"量潮数据项目岗位权责章程"}
+
 
 def check_name_conflict(data_dir):
     print("========================================")
@@ -64,7 +67,8 @@ def check_term_overlap(data_dir):
     for d, domain, ontologies, instances, relations in load_all_domains(data_dir):
         for term in domain.vocabulary:
             if term in term_map and term_map[term] != domain.id:
-                print(f'  "{term}" 同时属于: {term_map[term]}, {domain.id}')
+                tag = " 【需人确认】" if term in HUMAN_CONFIRM_TERMS else ""
+                print(f'  "{term}" 同时属于: {term_map[term]}, {domain.id}{tag}')
                 found = 1
             else:
                 term_map[term] = domain.id
@@ -112,7 +116,8 @@ def check_broken_references(sample_dir=None):
                         break
 
             if not matched:
-                print(f'  {f.name}: 引用 "《{ref}》" 但无法匹配到已知文件')
+                tag = " 【需人确认】" if any(hc in ref for hc in HUMAN_CONFIRM_REFS) else ""
+                print(f'  {f.name}: 引用 "《{ref}》" 但无法匹配到已知文件{tag}')
                 found = 1
 
     if not found:

@@ -1,6 +1,6 @@
 # 知识工程智能体 — 状态报告
 
-最近一次检查：2026-07-10
+最近一次检查：2026-07-10 | ROADMAP 执行：2026-05-20
 
 ## 验收结果
 
@@ -20,17 +20,17 @@
 |:------|:----|
 | CLI 9 命令 | ✅ 全部可用 |
 | 交互式评审 | ✅ 可用（src/reviewers/） |
-| 测试 | ✅ 5/5 通过 |
+| 测试 | ✅ 30/30 通过 |
 
 ### 文档一致性
 
 | 文档 | 状态 |
 |:----|:----|
-| `AGENTS.md` | ✅ 含元认知规则 4 条 |
+| `AGENTS.md` | ✅ 含元认知规则 4 条（未变动） |
 | `CHANGELOG.md` | ✅ 5 阶段变更记录 |
 | `CONTRIBUTING.md` | ✅ 贡献指南，路径正确 |
 | `README.md` | ✅ 项目概览，路径正确 |
-| `ROADMAP.md` | ✅ 当前阶段：工具链已完成 |
+| `ROADMAP.md` | ✅ 已执行完毕（3 项 7 子项全部完成） |
 | `STATUS.md` | ✅ 本文件 |
 | `docs/contract.md` | ✅ 人机权责清单 |
 | `docs/criteria.md` | ✅ 本体评审标准 |
@@ -41,8 +41,11 @@
 
 | 问题 | 影响 | 状态 |
 |:----|:----|:----|
-| 测试断言弱 | 仅验证返回值 | 待增强 |
-| 未定义术语过滤规则 | 模板术语误报 | 待优化 |
+| 测试断言弱 | 仅验证返回值 | ✅ 已增强（含正例/反例） |
+| 未定义术语过滤规则 | 模板术语误报 | ✅ 已修复（覆盖中文/阿拉伯/占位符） |
+| `DATA_DIR` 硬编码 | 安装后不可用 | ✅ 已修复（`KNOWL_DATA_DIR` 环境变量 + fallback） |
+| fusion-check "交接" 重叠 | 需人判断 | 【需人确认】已标记 |
+| fusion-check qtdata-index.md 引用 | `《量潮数据项目岗位权责章程》` 文件不存在 | 【需人确认】已标记 |
 
 ## 文件结构
 
@@ -68,10 +71,13 @@ src/                   # Python 工具链
   detectors/           # 领域操作 (2 模块)
   reviewers/           # 交互式评审 (5 模块)
 tests/
-  fixtures/input/      # 10 份源文档
-  fixtures/output/     # 4 领域建模结果
-  test_loader.py       # 加载测试
-  test_validate.py     # 验证测试
-  test_summary.py      # 概况测试
-  test_abstraction.py  # 抽象度测试
+  fixtures/input/       # 10 份源文档
+  fixtures/output/      # 4 领域建模结果
+  test_config.py        # 配置测试
+  test_loader.py        # 加载测试
+  test_validate.py      # 验证测试
+  test_summary.py       # 概况测试
+  test_abstraction.py   # 抽象度测试
+  test_find_undefined.py  # 未定义术语测试
+  test_fusion_check.py    # 融合检测测试
 ```
