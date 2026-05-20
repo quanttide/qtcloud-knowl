@@ -42,11 +42,13 @@ class Action(BaseModel):
 
     name: str
     args: dict = {}
-    pattern: ClassVar[str] = r"Action name:\s*(.+)\nAction args:\s*(.+)"
+    KEY_ACTION_NAME: ClassVar[str] = "Action name"
+    KEY_ACTION_ARGS: ClassVar[str] = "Action args"
 
     @classmethod
     def from_text(cls, text: str) -> Action | None:
-        m = re.search(cls.pattern, text)
+        pattern = rf"{cls.KEY_ACTION_NAME}:\s*(.+)\n{cls.KEY_ACTION_ARGS}:\s*(.+)"
+        m = re.search(pattern, text)
         if not m:
             return None
         name = m.group(1).strip()
@@ -75,15 +77,15 @@ class Tool(BaseModel):
             return f"执行错误: {e}"
 
 
-REACT_PROMPT = """你是一个知识工程助手。你有以下工具可用：
+REACT_PROMPT = f"""你是一个知识工程助手。你有以下工具可用：
 
-{tool_descriptions}
+{{tool_descriptions}}
 
 每次回复按以下格式（不要输出其他内容）：
 
 Thought: 你当前的思考
-Action name: 工具名称
-Action args: 给工具的参数（JSON 格式）
+{Action.KEY_ACTION_NAME}: 工具名称
+{Action.KEY_ACTION_ARGS}: 给工具的参数（JSON 格式）
 
 当得到最终答案时：
 
