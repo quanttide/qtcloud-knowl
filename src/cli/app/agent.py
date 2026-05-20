@@ -44,11 +44,11 @@ class Action(BaseModel):
     args: dict = {}
     KEY_ACTION_NAME: ClassVar[str] = "Action name"
     KEY_ACTION_ARGS: ClassVar[str] = "Action args"
+    PATTERN: ClassVar[str] = rf"{KEY_ACTION_NAME}:\s*(.+)\n{KEY_ACTION_ARGS}:\s*(.+)"
 
     @classmethod
     def from_text(cls, text: str) -> Action | None:
-        pattern = rf"{cls.KEY_ACTION_NAME}:\s*(.+)\n{cls.KEY_ACTION_ARGS}:\s*(.+)"
-        m = re.search(pattern, text)
+        m = re.search(cls.PATTERN, text)
         if not m:
             return None
         name = m.group(1).strip()
