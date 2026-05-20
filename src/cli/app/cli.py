@@ -1,8 +1,8 @@
 #!/usr/bin/env python3
 """知识工程智能体 — 统一 CLI 入口"""
 
-import sys
 import argparse
+import sys
 
 
 def main():
@@ -18,7 +18,9 @@ def main():
         print("  find-undefined-terms    未定义术语扫描 <sample_dir> [data_dir]")
         print("  fusion-check            跨领域融合检测 [data_dir] [sample_dir]")
         print("  detect-domain           推荐所属领域 <file>")
-        print("  init-domain             初始化新领域 <domain_name> [--from-detect <file>]")
+        print(
+            "  init-domain             初始化新领域 <domain_name> [--from-detect <file>]"
+        )
         return 1
 
     command = sys.argv[1]
@@ -26,34 +28,42 @@ def main():
 
     if command == "summary":
         from app.reporters.summary import run
+
         return run(*args)
 
     elif command == "validate":
         from app.validators.validate import run
+
         return run(*args)
 
     elif command == "auto-fix":
         from app.validators.auto_fix import run
+
         return run(*args)
 
     elif command == "check-abstraction":
         from app.reporters.abstraction import run
+
         return run(*args)
 
     elif command == "cross-domain-report":
         from app.reporters.cross_domain import run
+
         return run(*args)
 
     elif command == "find-undefined-terms":
         from app.validators.find_undefined import run
+
         return run(*args)
 
     elif command == "fusion-check":
         from app.validators.fusion_check import run
+
         return run(*args)
 
     elif command == "detect-domain":
         from app.detectors.detect_domain import run
+
         if not args:
             print("用法: qtcloud-knowl detect-domain <file>")
             return 1
@@ -61,8 +71,11 @@ def main():
 
     elif command == "init-domain":
         from app.detectors.init_domain import run
+
         if not args:
-            print("用法: qtcloud-knowl init-domain <domain_name> [--from-detect <file>]")
+            print(
+                "用法: qtcloud-knowl init-domain <domain_name> [--from-detect <file>]"
+            )
             return 1
         kwargs = {"domain_name": args[0]}
         if "--from-detect" in args:

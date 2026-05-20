@@ -1,5 +1,14 @@
 # 变更记录
 
+## [0.0.3] - 2026-05-20
+
+### 重构
+
+- `config.py` 集成 `quanttide.LocalStorage` + `pydantic_settings.BaseSettings`
+- 环境变量统一为 `QTCLOUD_KNOWL_DATA_HOME`（XDG 风格）
+- 新增 `conftest.py` 统一测试 mock
+- 移除 `DATA_DIR` 模块级别名，全部通过 `Settings` 获取
+
 ## [0.0.2] - 2026-05-20
 
 ### 修复检测精度
