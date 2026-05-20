@@ -18,10 +18,24 @@ import json
 import re
 from collections.abc import Callable
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from pydantic import BaseModel
 from quanttide_agent import LLM, ToolDef
+
+
+class Message(BaseModel):
+    """消息"""
+
+    role: Literal["system", "user", "assistant", "tool"]
+    content: str
+    tool_call_id: str | None = None
+
+    def to_dict(self) -> dict:
+        d: dict[str, Any] = {"role": self.role, "content": self.content}
+        if self.tool_call_id:
+            d["tool_call_id"] = self.tool_call_id
+        return d
 
 
 class Tool(BaseModel):
@@ -31,6 +45,7 @@ class Tool(BaseModel):
     description: str = ""
     parameters: dict | None = None
     execute: Callable | None = None
+
 
 REACT_PROMPT = """你是一个知识工程助手。你有以下工具可用：
 
@@ -58,24 +73,26 @@ class Agent:
     def run(self, task: str) -> str:
         tool_desc = "\n".join(f"- {t.name}: {t.description}" for t in self._tools.values())
         system = REACT_PROMPT.format(tool_descriptions=tool_desc)
-        messages = [{"role": "system", "content": system}, {"role": "user", "content": task}]
+        messages: list[Message] = [
+            Message(role="system", content=system),
+            Message(role="user", content=task),
+        ]
 
         for _ in range(self.max_steps):
-            resp = self.llm.chat(messages)
+            resp = self.llm.chat([m.to_dict() for m in messages])
             output = resp.content.strip()
 
             if "Final Answer:" in output:
                 return output.split("Final Answer:", 1)[1].strip()
 
             action = self._parse_action(output)
+            messages.append(Message(role="assistant", content=output))
             if not action:
-                messages.append({"role": "assistant", "content": output})
-                messages.append({"role": "user", "content": "无法解析指令，请使用正确的 ReAct 格式。"})
+                messages.append(Message(role="user", content="无法解析指令，请使用正确的 ReAct 格式。"))
                 continue
 
-            messages.append({"role": "assistant", "content": output})
             result = self._execute(action["name"], action["input"])
-            messages.append({"role": "tool", "tool_call_id": action["name"], "content": str(result)})
+            messages.append(Message(role="tool", tool_call_id=action["name"], content=str(result)))
 
         return "达到最大步数，未得到最终答案。"
 

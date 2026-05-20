@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 from quanttide_agent import ChatResponse, LLM
 
-from app.agent import Agent, Tool
+from app.agent import Agent, Message, Tool
 
 
 @pytest.fixture
@@ -190,4 +190,22 @@ class TestInit:
         tool = Tool(name="t1", description="d1")
         assert tool.name == "t1"
         assert tool.execute is None
+
+
+class TestMessage:
+    def test_system_message(self):
+        m = Message(role="system", content="你好")
+        assert m.to_dict() == {"role": "system", "content": "你好"}
+
+    def test_user_message(self):
+        m = Message(role="user", content="hello")
+        assert m.to_dict() == {"role": "user", "content": "hello"}
+
+    def test_tool_message(self):
+        m = Message(role="tool", content="result", tool_call_id="call_1")
+        assert m.to_dict() == {"role": "tool", "content": "result", "tool_call_id": "call_1"}
+
+    def test_assistant_message(self):
+        m = Message(role="assistant", content="回复")
+        assert m.to_dict() == {"role": "assistant", "content": "回复"}
 
