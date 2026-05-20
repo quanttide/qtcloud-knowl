@@ -5,7 +5,7 @@ description: 8-step product iteration cycle — execute ROADMAP versions with bu
 
 # Product Iteration Cycle
 
-每次迭代 = 一个 ROADMAP 版本的交付。严格按 8 步循环执行。
+每次迭代 = 一个 ROADMAP 版本的交付。严格按 9 步循环执行。
 
 ## Step 1: 确认版本目标
 
@@ -40,7 +40,7 @@ description: 8-step product iteration cycle — execute ROADMAP versions with bu
 - 每完成一条运行 `uv run pytest tests/` 确认无回归
 - 新增代码必须有测试覆盖。每完成一条 task 跑 `uv run pytest --cov=app --cov-report=term-missing --doctest-modules` 确认：
   - **新增模块的语句覆盖率达到 100%**
-  - **总体覆盖率不降低**（当前基线 74%）
+  - **总体覆盖率不降低**（当前基线 77%）
   - **doctest 全部通过**，新增函数/类必须有 docstring + 可执行的 doctest 示例
   - 未覆盖的行必须有明确理由（如 `if __name__ == "__main__"` 守卫）
 - 超出能力范围的 task：标记 `[x]` + 追加 **【需人确认】** + 说明原因

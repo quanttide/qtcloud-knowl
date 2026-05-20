@@ -39,31 +39,60 @@
 | `audit` | 全量质量审计 — 串行执行全部 5 项检测，聚合输出可读报告 |
 | `extract` | 知识抽取 — 从 Markdown 文档创建知识库骨架，按内容推荐所属领域 |
 
-### 审计流程（audit）
+### audit
 
-串行执行并按顺序聚合结果：
+```
+audit [DATA_DIR] [--mode simple|full] [--sample-dir PATH]
+```
 
-1. **validate** — 目录结构完整性 + JSON 合法性
-2. **find-undefined-terms** — 源文档加粗术语是否已定义
-3. **fusion-check** — 跨领域名称冲突、引用断裂、效力声明
-4. **check-abstraction** — 本体 pattern 抽象度检测
-5. **cross-domain-report** — 跨领域关系覆盖率
+全面检查知识库，按「需要你确认」「平台发现」「建议关注」三组输出报告。支持增量对比——二次运行会显示相比上次的变化。
 
-输出标记 **【需人确认】** 表示智能体无法决断，需人介入。
+关键行为：
+- `--mode simple`：只检查结构完整性，跳过质量检测，问题降一级严重度
+- `--mode full`（默认）：执行全部 5 项检测
+- 首次运行无历史对比；二次起输出 `相比上次审计：✅ 已修复 N 项 / 🆕 新增 N 项 / ⏳ 待处理 N 项`
 
-### 抽取流程（extract）
+实际输出：
 
-1. 读取源文档目录下所有 `.md` 文件
-2. 对每份文件推荐所属领域（词汇匹配）
-3. 创建领域目录和 JSON 骨架文件
-4. 输出一句话摘要（详细匹配信息加 `--verbose` 查看）
-5. 配置 `QTCLOUD_KNOWL_LLM_API_KEY` 后可启用语义抽取
+```text
+============================================================
+  知识库质量审计报告（全面审计模式）
+============================================================
+审计目标: ~/.local/share/quanttide/qtcloud-knowl/
+领域数量: 4
+相比上次审计（2026-05-21）：⏳ 待处理 1 项
+
+━━━ 需要你确认的问题 ━━━
+  名称冲突或引用断裂
+    • qtdata-index.md: 引用 "《量潮数据项目岗位权责章程》" 但无法匹配到已知文件
+    → 确认该引用是否必要，如必要则补充源文件或删除引用
+```
+
+### extract
+
+```
+extract [SAMPLE_DIR] [--data-dir PATH] [--verbose]
+```
+
+从 Markdown 文档创建知识库骨架，按内容推荐所属领域。
+
+关键行为：
+- 无 LLM 也能用：只做骨架创建 + 词汇匹配
+- 默认输出一句话摘要；加 `--verbose` 显示领域匹配详情
+- 配置 `QTCLOUD_KNOWL_LLM_API_KEY` 后可启用语义抽取
+
+实际输出：
+
+```text
+抽取完成。共收录 10 份文档。骨架文件已保存到 ~/.local/share/quanttide/qtcloud-knowl/。
+```
 
 ### 配置
 
 | 环境变量 | 说明 | 默认值 |
 |----------|------|--------|
 | `QTCLOUD_KNOWL_DATA_HOME` | 知识库数据目录 | `~/.local/share/quanttide/qtcloud-knowl/` |
+| `QTCLOUD_KNOWL_STATE_HOME` | 审计状态文件目录（增量对比用） | `~/.local/state/quanttide/qtcloud-knowl/` |
 | `QTCLOUD_KNOWL_SAMPLE_HOME` | 源文档目录 | 无 |
 | `QTCLOUD_KNOWL_LLM_API_KEY` | LLM API key（extract 需要） | 空 |
 

@@ -20,7 +20,7 @@
 | CLI 入口 | ✅ `audit`（增量对比 + 业务语言报告）、`extract`（一句话摘要 + --verbose） |
 | 审计模式 | ✅ `--mode simple`（快速）/ `--mode full`（全面） |
 | 底层 API | ✅ 9 命令隐藏，内部可调用 |
-| 测试 | ✅ 151 通过 |
+| 测试 | ✅ 151 通过，覆盖率 77% |
 
 ### 文档一致性
 
@@ -49,9 +49,8 @@ CHANGELOG.md           # 变更记录（事实源）
 STATUS.md              # 本文件
 TODO.md                # 待办
 ROADMAP.md             # 路线图（PM 视角）
-docs/
-  index.md             # CLI 参考（业务 + 技术）
-  overview.md          # （已合并到 index.md）
+  docs/
+    index.md             # CLI 参考（业务 + 技术）
 app/
   agents/              # 新增：审计 + 抽取编排
   cli.py               # Typer 入口（2 公开 + 9 隐藏）
