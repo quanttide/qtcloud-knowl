@@ -11,7 +11,7 @@ REQUIRED_FILES = ["domain.json", "ontologies.json", "instances.json", "relations
 
 
 def run(data_dir=None):
-    base = data_dir or DATA_DIR
+    base = Path(data_dir) if data_dir else DATA_DIR
     errors = 0
 
     for domain_dir in sorted(base.iterdir()):

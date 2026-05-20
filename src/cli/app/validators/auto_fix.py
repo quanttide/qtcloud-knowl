@@ -18,7 +18,7 @@ MAX_ITER = 10
 
 
 def run(data_dir=None, sample_dir=None):
-    base = data_dir or DATA_DIR
+    base = Path(data_dir) if data_dir else DATA_DIR
     print("骨架文件自动补全开始（不修复 JSON 格式错误）\n")
 
     for i in range(1, MAX_ITER + 1):

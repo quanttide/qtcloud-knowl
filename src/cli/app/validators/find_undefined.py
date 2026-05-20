@@ -10,10 +10,13 @@ from app.loader import load_all_domains
 
 IGNORED_TERMS = {
     "制定依据", "目的", "适用范围", "定义", "章程效力", "解释权",
-    "第X条", "第X章",
+    "第X条", "第X章", "术语名称",
 }
-IGNORED_PREFIXES = ("第", "第")
-IGNORED_CHAPTER_RE = re.compile(r"^第[一二三四五六七八九十]+条|^第[一二三四五六七八九十]+章")
+IGNORED_CHAPTER_RE = re.compile(
+    r"^第[一二三四五六七八九十]+[条章]"
+    r"|^第\d+[条章]"
+    r"|^第X[条章]"
+)
 
 
 def collect_defined_terms(sample_dir, data_dir):
@@ -36,7 +39,8 @@ def collect_defined_terms(sample_dir, data_dir):
 
 def run(sample_dir=None, data_dir=None):
     sdir = Path(sample_dir) if sample_dir else SAMPLE_DIR
-    defined = collect_defined_terms(sdir, data_dir)
+    ddir = Path(data_dir) if data_dir else DATA_DIR
+    defined = collect_defined_terms(sdir, ddir)
     defined_clean = {t.replace(" ", "") for t in defined}
 
     print("=== 全库使用但未定义的术语 ===\n")

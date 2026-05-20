@@ -3,6 +3,7 @@
 
 import re
 import argparse
+from pathlib import Path
 from app.config import DATA_DIR
 from app.loader import load_all_domains
 
@@ -17,7 +18,7 @@ SIGNAL_PATTERNS = [
 
 
 def run(data_dir=None):
-    base = data_dir or DATA_DIR
+    base = Path(data_dir) if data_dir else DATA_DIR
     errors = 0
 
     print("====== 本体抽象度检测 ======\n")

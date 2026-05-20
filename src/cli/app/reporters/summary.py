@@ -8,7 +8,7 @@ from app.loader import load_all_domains
 
 
 def run(data_dir=None):
-    base = data_dir or DATA_DIR
+    base = Path(data_dir) if data_dir else DATA_DIR
     domains = load_all_domains(base)
     if not domains:
         print("未找到领域数据")
