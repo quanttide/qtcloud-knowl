@@ -50,11 +50,19 @@ def run_init_domain(domain_name, from_detect_file=None):
     return run(domain_name, from_detect_file)
 
 
-def all_detection_tools():
-    return [
-        ("validate", "领域目录结构完整性验证", run_validate),
-        ("find-undefined-terms", "扫描源文档中未定义术语", run_find_undefined),
-        ("fusion-check", "跨领域融合检测（名称冲突、引用断裂）", run_fusion_check),
-        ("check-abstraction", "本体抽象度检测", run_check_abstraction),
-        ("cross-domain-report", "跨领域关系覆盖率报告", run_cross_domain_report),
-    ]
+STRUCTURAL_TOOLS = [
+    ("validate", "领域目录结构完整性验证", run_validate),
+    ("find-undefined-terms", "扫描源文档中未定义术语", run_find_undefined),
+    ("fusion-check", "跨领域融合检测（名称冲突、引用断裂）", run_fusion_check),
+]
+QUALITY_TOOLS = [
+    ("check-abstraction", "本体抽象度检测", run_check_abstraction),
+    ("cross-domain-report", "跨领域关系覆盖率报告", run_cross_domain_report),
+]
+
+
+def all_detection_tools(mode="full"):
+    tools = list(STRUCTURAL_TOOLS)
+    if mode == "full":
+        tools += QUALITY_TOOLS
+    return tools

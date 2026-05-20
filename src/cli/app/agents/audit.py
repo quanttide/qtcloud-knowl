@@ -62,7 +62,7 @@ def _parse_issues(output, data_dir=None):
     return issues
 
 
-def run(data_dir=None, sample_dir=None):
+def run(data_dir=None, sample_dir=None, mode="full"):
     ddir = Path(data_dir) if data_dir else settings.data_home
     sdir = Path(sample_dir) if sample_dir else settings.sample_home
 
@@ -71,6 +71,10 @@ def run(data_dir=None, sample_dir=None):
         print("审计中止：数据目录不存在")
         print(f"  路径: {ddir}")
         print("请确认 QTCLOUD_KNOWL_DATA_HOME 已正确设置。")
+        raise typer.Exit(code=1)
+
+    if mode not in ("simple", "full"):
+        print(f"错误: 不支持的审计模式 '{mode}'，仅支持 simple（快速）/ full（全面）")
         raise typer.Exit(code=1)
 
     domain_count = 0
@@ -84,7 +88,8 @@ def run(data_dir=None, sample_dir=None):
     auto_fixable = []
     suggestions = []
 
-    for name, desc, fn in all_detection_tools():
+    tools = all_detection_tools(mode)
+    for name, desc, fn in tools:
         kwargs = {}
         if name in ("find-undefined-terms",):
             if sdir:
@@ -114,8 +119,14 @@ def run(data_dir=None, sample_dir=None):
         elif name == "cross-domain-report" and issues:
             suggestions.append(("跨领域关系覆盖率", issues))
 
+    if mode == "simple":
+        suggestions = need_confirm + suggestions
+        need_confirm = auto_fixable
+        auto_fixable = []
+
+    mode_label = "快速检查模式" if mode == "simple" else "全面审计模式"
     print("=" * 60)
-    print("  知识库质量审计报告")
+    print(f"  知识库质量审计报告（{mode_label}）")
     print("=" * 60)
 
     print(f"\n审计目标: {ddir}")
@@ -137,20 +148,26 @@ def run(data_dir=None, sample_dir=None):
         print()
 
     if need_confirm:
-        print("━━━ 需要你确认的问题 ━━━")
-        print("以下问题平台无法自动判断，需要你决定如何处理。\n")
+        title_label = "建议关注" if mode == "simple" else "需要你确认的问题"
+        desc = "以下问题可通过 auto-fix 自动修复，无需手动处理。" if mode == "simple" else "以下问题平台无法自动判断，需要你决定如何处理。"
+        print(f"━━━ {title_label} ━━━")
+        print(f"{desc}\n")
         for title, issues in need_confirm:
             _print_group(title, issues)
 
     if auto_fixable:
-        print("━━━ 平台发现的问题 ━━━")
-        print("以下问题平台已识别，可通过自动修复处理。\n")
+        title_label = "平台发现的问题"
+        desc = "以下问题平台已识别，可通过自动修复处理。"
+        print(f"━━━ {title_label} ━━━")
+        print(f"{desc}\n")
         for title, issues in auto_fixable:
             _print_group(title, issues)
 
     if suggestions:
-        print("━━━ 建议关注 ━━━")
-        print("以下不是错误，但优化后可以提升知识库质量。\n")
+        title_label = "建议关注"
+        desc = "以下优化建议在全面审计模式下提供。" if mode == "full" else "以下问题在快速模式下仅供参考，切换到 --mode full 进行全面审计。"
+        print(f"━━━ {title_label} ━━━")
+        print(f"{desc}\n")
         for title, issues in suggestions:
             _print_group(title, issues)
 
@@ -162,7 +179,9 @@ def run(data_dir=None, sample_dir=None):
     print(f"  · 平台可修复: {len(auto_fixable)} 项")
     print(f"  · 建议关注:   {len(suggestions)} 项")
     print()
-    if need_confirm:
+    if mode == "simple":
+        print("当前为快速检查模式，运行 qtcloud-knowl audit --mode full 进行全面审计。")
+    elif need_confirm:
         print("请先处理「需要你确认的问题」，其他问题可并行处理。")
     elif auto_fixable:
         print("运行 qtcloud-knowl audit --auto-fix 自动修复平台发现的问题。")
