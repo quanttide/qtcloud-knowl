@@ -44,22 +44,4 @@
 - `review --reject <id> --reason x` 拒绝并注明原因
 - 同一 CLI 同时支持人工知识库评审和 AI 草稿审核
 
----
-
-## 已发布
-
-## v0.0.12 — 模型与加载逻辑在 CLI/SDK 间重复维护
-
-**痛点**：`app/models.py`、`app/loader.py`、`app/reviewers/data.py` 三套重复的模型/加载逻辑需要分别维护，导致类型不一致（`Instance.data` 可变默认值 bug）和代码膨胀。
-
-**解决**：CLI 改为使用 `qtcloud-knowl` SDK 包（`packages/python/`）的模型和加载器，删除 `app/models.py` 和 `app/loader.py`，`reviewers/data.py` 改为底层调用 SDK。统一数据模型类型约束。
-
-## v0.0.11 — 审计结果不可靠，环境变量配置不灵活
-
-**痛点**：data_home 设成无效路径直接崩溃；diff 在 simple/full 模式间切换产生假阳性；env var 置空后行为异常。
-
-**解决**：不在 import 阶段崩溃，改为命令入口处校验路径。diff 按审计模式隔离存储。env var 空串回退到默认值。
-
----
-
-其他已发布版本见 [CHANGELOG.md](./CHANGELOG.md)。
+已发布版本见 [CHANGELOG.md](./CHANGELOG.md)。
