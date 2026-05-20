@@ -38,25 +38,31 @@ def _count(output, marker):
     return len(re.findall(marker, output))
 
 
-def _format_issues(output, indent="    "):
+def _parse_issues(output):
     issues = []
+    current_domain = None
     for line in output.split("\n"):
         stripped = line.strip()
         if not stripped:
             continue
+        m = re.match(r"^=== (.+) ===", stripped)
+        if m:
+            current_domain = m.group(1)
+            continue
         if "[MISS] " in stripped:
-            label = stripped.split("[MISS] ", 1)[-1].strip()
+            fname = stripped.split("[MISS] ", 1)[-1].strip()
+            issues.append((f"• 缺少文件 {fname}", f"创建文件 data/{current_domain}/{fname}" if current_domain else None))
         elif "[FAIL] " in stripped:
-            label = stripped.split("[FAIL] ", 1)[-1].strip()
+            detail = stripped.split("[FAIL] ", 1)[-1].strip()
+            issues.append((f"• JSON 格式错误: {detail}", f"修复 data/{current_domain} 下的对应 JSON 文件" if current_domain else None))
         elif "使用了术语" in stripped:
-            label = stripped
+            issues.append((f"• {stripped}", "在对应领域 domain.json 的 vocabulary 字段中补充该术语"))
         elif "需人确认" in stripped:
             label = stripped.replace("【需人确认】", "").strip()
+            issues.append((f"• {label}", "确认该引用是否必要，如必要则补充源文件或删除引用"))
         elif "[检测到] " in stripped:
             label = stripped.split("[检测到] ", 1)[-1].strip()
-        else:
-            continue
-        issues.append(f"{indent}• {label}")
+            issues.append((f"• {label}", "重构 ontologies.json 中的 pattern，将具体值改为变量"))
     return issues
 
 
@@ -97,18 +103,18 @@ def run(data_dir=None, sample_dir=None):
 
         output, ret = capture_run(fn, **kwargs)
 
-        issues = _format_issues(output)
+        issues = _parse_issues(output)
 
         if name == "validate" and issues:
-            auto_fixable.append(("文件结构问题", issues, "运行 qtcloud-knowl auto-fix 可自动补全缺失的骨架文件"))
+            auto_fixable.append(("文件结构问题", issues))
         elif name == "find-undefined-terms" and issues:
-            need_confirm.append(("未定义术语", issues, "这些术语在源文档中使用了，但没有在任何领域中被定义"))
+            need_confirm.append(("未定义术语", issues))
         elif name == "fusion-check" and issues:
-            need_confirm.append(("名称冲突或引用断裂", issues, "请确认这些引用是否正确，或是否需要统一术语"))
+            need_confirm.append(("名称冲突或引用断裂", issues))
         elif name == "check-abstraction" and issues:
-            suggestions.append(("本体抽象度不足", issues, "建议按 docs/criteria.md 中的方法重新抽象"))
+            suggestions.append(("本体抽象度不足", issues))
         elif name == "cross-domain-report" and issues:
-            suggestions.append(("跨领域关系覆盖率", issues, "每个领域至少应有 2 条跨领域关系"))
+            suggestions.append(("跨领域关系覆盖率", issues))
 
     print("=" * 60)
     print("  知识库质量审计报告")
@@ -124,35 +130,31 @@ def run(data_dir=None, sample_dir=None):
         print("✓ 未发现问题，知识库结构良好。")
         return 0
 
+    def _print_group(title, issues):
+        print(f"  {title}")
+        for label, action in issues:
+            print(f"    {label}")
+            if action:
+                print(f"    → {action}")
+        print()
+
     if need_confirm:
         print("━━━ 需要你确认的问题 ━━━")
         print("以下问题平台无法自动判断，需要你决定如何处理。\n")
-        for title, issues, hint in need_confirm:
-            print(f"  {title}")
-            for i in issues:
-                print(i)
-            print(f"  建议：{hint}")
-            print()
+        for title, issues in need_confirm:
+            _print_group(title, issues)
 
     if auto_fixable:
         print("━━━ 平台发现的问题 ━━━")
         print("以下问题平台已识别，可通过自动修复处理。\n")
-        for title, issues, hint in auto_fixable:
-            print(f"  {title}")
-            for i in issues:
-                print(i)
-            print(f"  建议：{hint}")
-            print()
+        for title, issues in auto_fixable:
+            _print_group(title, issues)
 
     if suggestions:
         print("━━━ 建议关注 ━━━")
         print("以下不是错误，但优化后可以提升知识库质量。\n")
-        for title, issues, hint in suggestions:
-            print(f"  {title}")
-            for i in issues:
-                print(i)
-            print(f"  建议：{hint}")
-            print()
+        for title, issues in suggestions:
+            _print_group(title, issues)
 
     print("=" * 60)
     print("  汇总")
