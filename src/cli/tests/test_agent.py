@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 from quanttide_agent import ChatResponse, LLM
 
-from app.agent import Action, Agent, Message, Tool, parse_action
+from app.agent import Action, Agent, Message, Tool
 
 
 @pytest.fixture
@@ -19,26 +19,26 @@ def _tool(name: str, desc: str = "", executor=None) -> Tool:
 
 class TestParseAction:
     def test_parse_valid(self):
-        result = parse_action("Thought: 需要检查\nAction: validate\nAction Input: {}")
+        result = Action.from_text("Thought: 需要检查\nAction: validate\nAction Input: {}")
         assert isinstance(result, Action)
         assert result.name == "validate"
         assert result.input == {}
 
     def test_parse_with_json_args(self):
-        result = parse_action(
+        result = Action.from_text(
             'Thought: 检查特定领域\nAction: validate\nAction Input: {"domain": "org-gov"}'
         )
         assert result.name == "validate"
         assert result.input == {"domain": "org-gov"}
 
     def test_parse_no_action(self):
-        assert parse_action("这是一段普通文本") is None
+        assert Action.from_text("这是一段普通文本") is None
 
     def test_parse_missing_input(self):
-        assert parse_action("Action: validate\nSomething else") is None
+        assert Action.from_text("Action: validate\nSomething else") is None
 
     def test_parse_final_answer(self):
-        assert parse_action("Thought: 完成\nFinal Answer: 结果") is None
+        assert Action.from_text("Thought: 完成\nFinal Answer: 结果") is None
 
 
 class TestExecute:

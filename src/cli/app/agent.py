@@ -44,6 +44,19 @@ class Action(BaseModel):
     name: str
     input: dict = {}
 
+    @classmethod
+    def from_text(cls, text: str) -> Action | None:
+        m = re.search(r"Action:\s*(.+)\nAction Input:\s*(.+)", text)
+        if not m:
+            return None
+        name = m.group(1).strip()
+        raw = m.group(2).strip()
+        try:
+            inp = json.loads(raw)
+        except json.JSONDecodeError:
+            inp = raw
+        return cls(name=name, input=inp)
+
 
 class Tool(BaseModel):
     """工具定义（schema + execute）"""
@@ -100,7 +113,7 @@ class Agent:
             if "Final Answer:" in output:
                 return output.split("Final Answer:", 1)[1].strip()
 
-            action = parse_action(output)
+            action = Action.from_text(output)
             messages.append(Message(role="assistant", content=output))
             if not action:
                 messages.append(Message(role="user", content="无法解析指令，请使用正确的 ReAct 格式。"))
@@ -111,21 +124,6 @@ class Agent:
             messages.append(Message(role="tool", tool_call_id=action.name, content=result))
 
         return "达到最大步数，未得到最终答案。"
-
-
-def parse_action(text: str) -> Action | None:
-        m = re.search(r"Action:\s*(.+)\nAction Input:\s*(.+)", text)
-        if not m:
-            return None
-        name = m.group(1).strip()
-        raw = m.group(2).strip()
-        try:
-            inp = json.loads(raw)
-        except json.JSONDecodeError:
-            inp = raw
-        return Action(name=name, input=inp)
-
-
 def _import_run(module_path: str) -> Callable:
     def fn(_args: dict | None = None) -> str:
         import importlib
