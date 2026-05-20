@@ -218,7 +218,7 @@ def run(data_dir=None, sample_dir=None, mode="full"):
 
     if need_confirm:
         title_label = "建议关注" if mode == "simple" else "需要你确认的问题"
-        desc = "以下问题可通过 auto-fix 自动修复，无需手动处理。" if mode == "simple" else "以下问题平台无法自动判断，需要你决定如何处理。"
+        desc = "以下问题可由平台自动修复，无需手动处理。" if mode == "simple" else "以下问题平台无法自动判断，需要你决定如何处理。"
         print(f"━━━ {title_label} ━━━")
         print(f"{desc}\n")
         for title, issues in need_confirm:
@@ -253,6 +253,6 @@ def run(data_dir=None, sample_dir=None, mode="full"):
     elif need_confirm:
         print("请先处理「需要你确认的问题」，其他问题可并行处理。")
     elif auto_fixable:
-        print("运行 qtcloud-knowl audit --auto-fix 自动修复平台发现的问题。")
+        print("运行 qtcloud-knowl auto-fix 自动修复平台发现的问题。")
 
     return 0 if not need_confirm and not auto_fixable else 1

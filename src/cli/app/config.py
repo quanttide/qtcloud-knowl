@@ -6,7 +6,6 @@
 from pathlib import Path
 from typing import Optional
 
-from functools import partial
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource
 from quanttide import LocalStorage
