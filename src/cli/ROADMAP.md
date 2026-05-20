@@ -24,3 +24,25 @@
 - [x] `config.py` 中 DATA_DIR 硬编码为 tests/fixtures/output，安装后无法使用
 - [x] 方案：读取 `KNOWL_DATA_DIR` 环境变量，fallback 到 `~/.local/share/qtcloud-knowl`
 - [x] 附带修复 4 个模块中 `data_dir` 字符串→`Path` 转换缺失的 bug
+
+## 待办 (2026-05-20 评审)
+
+### 🔴 严重
+
+- `reviewers/__init__.py` `run_detection` 仍引用 `src.validators.*`，交互式评审菜单"融合检测""未定义术语"功能报错
+
+### 🟡 中
+
+- `cli.py` 帮助信息仍写 `python -m src.cli`，未更新为 `kcli`
+- `detect_domain.py` `main()` 未传递 `data_dir` 给 `run()`，与核心函数接口不一致
+- 缺少 `KNOWL_DATA_DIR` 环境变量的测试覆盖
+- 测试仅覆盖夹具数据，未覆盖生产 DATA_DIR 路径
+
+### 🟢 低
+
+- `auto_fix.py` `run()` 接受 `sample_dir` 参数但未使用
+
+## 🧑 需人确认
+
+- fusion-check "交接" 跨领域重叠
+- fusion-check qtdata-index.md 引用 `《量潮数据项目岗位权责章程》` 文件不存在
