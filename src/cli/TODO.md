@@ -6,17 +6,21 @@ v0.0.5 → v0.0.12 全部完成，见 [CHANGELOG.md](CHANGELOG.md)。
 
 ---
 
-## v0.0.13 — AI 抽取结果缺少审核入口
+## v0.0.13 — reviewers TUI 无法批量操作，也不支持 AI 草稿
 
-- [ ] reviewers 新增"AI 草稿审核"模式
-  - [ ] 读取候选本体/实例/关系列表
-  - [ ] 逐条展示：ID、名称、描述、来源
-  - [ ] 支持接受 / 拒绝 / 修改后接受
-  - [ ] 确认项写入 `data_home`（domain.json / ontologies.json / instances.json / relations.json）
-- [ ] 审核进度：显示已审核/待审核/N 条被拒
-- [ ] tests
+- [ ] 新增 `review` CLI 命令
+  - [ ] `review --list` 列出所有待审项（支持 --domain 过滤）
+  - [ ] `review --list --pending` 只显示待审项
+  - [ ] `review --approve` 全部通过
+  - [ ] `review --approve <id>` 单条通过
+  - [ ] `review --reject <id> --reason x` 拒绝并注明原因
+  - [ ] `review --reset` 重置评审记录
+- [ ] review CLI 同时支持已有知识库评审和 AI 草稿审核
+- [ ] 保留 reviewers TUI 代码（不做破坏性删除），入口重定向到 `review` CLI
+- [ ] 测试
+- [ ] 更新 docs/commands.md
 
-停止条件：用伪造的候选数据跑通审核流程，能看到逐条确认后知识库文件被更新。
+停止条件：`review --list` 列出待审项，`review --approve <id>` 通过后再次 --list 不再显示该项。
 
 ## v0.0.14 — 不知道 LLM 抽出来效果怎么样
 
@@ -26,7 +30,8 @@ v0.0.5 → v0.0.12 全部完成，见 [CHANGELOG.md](CHANGELOG.md)。
   - [ ] relation-discovery prompt（关系发现）
 - [ ] `extract --llm <document>` 读取文档，调用 LLM，输出原始结果到 stdout
 - [ ] LLM 连接复用 `quanttide-agent.LLM`
-- [ ] tests（mock LLM 返回）
+- [ ] 测试
+- [ ] 更新 docs/commands.md
 
 停止条件：指定一个源文档，`extract --llm` 能返回原始 LLM 输出。
 
@@ -37,16 +42,18 @@ v0.0.5 → v0.0.12 全部完成，见 [CHANGELOG.md](CHANGELOG.md)。
 - [ ] 重复运行不覆盖，按时间戳生成版本
 - [ ] `extract --list-drafts` 列出所有草稿
 - [ ] `extract --show-draft <id>` 查看指定草稿
-- [ ] tests
+- [ ] 测试
+- [ ] 更新 docs/commands.md
 
 停止条件：多次运行 `extract --llm` 后，`--list-drafts` 能列出多个版本，`--show-draft` 能展示结构化内容。
 
 ## v0.0.16 — 草稿审核后不能落库
 
-- [ ] v0.0.13 的审核工作流读取 `drafts/` 而非伪造数据
+- [ ] review CLI 读取 `drafts/` 而非仅读取正式知识库
 - [ ] 审核确认后写入正式知识库（domain.json / ontologies.json / instances.json / relations.json）
 - [ ] 已落库的草稿标记为"已发布"
-- [ ] tests
+- [ ] 测试
+- [ ] 更新 docs/commands.md
 
 停止条件：从文档抽取 → 草稿保存 → 审核确认 → 落库的完整链路可走通。
 

@@ -8,11 +8,15 @@
 
 **解决**：CLI 改为使用 `qtcloud-knowl` SDK 包（`packages/python/`）的模型和加载器，删除 `app/models.py` 和 `app/loader.py`，`reviewers/data.py` 改为底层调用 SDK。统一数据模型类型约束。
 
-## v0.0.13 — AI 抽取结果缺少审核入口
+## v0.0.13 — reviewers TUI 无法批量操作，也不支持 AI 草稿
 
-**痛点**：v0.1.0 承诺 AI 生成的抽取结果"供人审核"，但 reviewers 当前只支持人工评审已有知识库，没有审核 AI 草稿的工作流。
+**痛点**：reviewers TUI 只能逐条交互评审，无法脚本化，也无法处理 AI 生成的候选知识。
 
-**解决**：reviewers 新增"AI 草稿审核"模式，展示 AI 提取的候选本体/实例/关系，逐条接受/拒绝/修改后写入知识库。
+**解决**：TUI 改为 CLI 命令体系：
+- `review --list` 列出待审项（支持 --domain 过滤）
+- `review --approve` 全部通过或 `--approve <id>` 单条通过
+- `review --reject <id> --reason x` 拒绝并注明原因
+- 同一 CLI 同时支持人工知识库评审和 AI 草稿审核
 
 ## v0.0.14 — 不知道 LLM 抽出来效果怎么样
 
@@ -34,7 +38,7 @@
 
 **痛点**：草稿在 `drafts/` 里，审核入口（v0.0.13）能看到但不能写入正式知识库。
 
-**解决**：审核工作流接入 drafts/，确认后写入 `data_home` 的 domain.json、ontologies.json、instances.json、relations.json。
+**解决**：review CLI 接入 drafts/，确认后写入 `data_home` 的 domain.json、ontologies.json、instances.json、relations.json。
 
 **用户能力**：LLM 结果经审核转为正式知识库。
 
@@ -48,7 +52,7 @@
 
 **痛点**：从文档到正式知识库的链路有断裂。extract 能创建骨架，但本体/实例/关系仍需人工编写。
 
-**解决**：设计 prompt 管线 + 结构化输出解析器 + 编排调用，完成本体发现 → 实例映射 → 关系发现的全自动语义抽取。经 v0.0.13 审核工作流确认后落库。配合 audit 做质量门禁，实现"文档入库 → 质检 → 发布"闭环。LLM 连接层由 `quanttide-agent` 提供；不强制复用现有 ReActAgent，可按需覆盖或重写。
+**解决**：设计 prompt 管线 + 结构化输出解析器 + 编排调用，完成本体发现 → 实例映射 → 关系发现的全自动语义抽取。经 v0.0.13 review CLI 审核确认后落库。配合 audit 做质量门禁，实现"文档入库 → 质检 → 发布"闭环。LLM 连接层由 `quanttide-agent` 提供；不强制复用现有 ReActAgent，可按需覆盖或重写。
 
 ---
 
