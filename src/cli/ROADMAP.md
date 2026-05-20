@@ -33,7 +33,7 @@
 
 ### 🟡 中
 
-- [x] `cli.py` 帮助信息 `python -m src.cli` → `kcli`
+- [x] `cli.py` 帮助信息 `python -m src.cli` → `qtcloud-knowl`
 - [x] `detect_domain.py` `main()` 新增 `--data-dir` 参数并传给 `run()`
 - [x] 缺少 `KNOWL_DATA_DIR` 环境变量的测试覆盖 → 已有 `test_config.py`
 

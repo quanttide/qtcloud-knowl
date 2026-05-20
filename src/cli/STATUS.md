@@ -44,7 +44,7 @@
 | # | 问题 | 文件 | 影响 | 状态 |
 |---|------|------|------|------|
 | 1 | `reviewers/__init__.py` 中 `run_detection` 仍引用 `src.validators.*` | `app/reviewers/__init__.py:80-81` | 交互式评审菜单"融合检测""未定义术语"功能报错 | ✅ 已修复 |
-| 2 | `cli.py` 帮助信息仍写 `python -m src.cli`，未更新为 `kcli` | `app/cli.py:6` | 用户困惑 | ✅ 已修复 |
+| 2 | `cli.py` 帮助信息仍写 `python -m src.cli`，未更新为 `qtcloud-knowl` | `app/cli.py:6` | 用户困惑 | ✅ 已修复 |
 | 3 | `detect_domain.py` 的 `main()` 未传递 `data_dir` 给 `run()` | `app/detectors/detect_domain.py:32` | 与核心函数接口不一致 | ✅ 已修复 |
 | 4 | `auto_fix.py` 的 `run()` 接受 `sample_dir` 参数但未使用 | `app/validators/auto_fix.py:17` | 死参数 | ✅ 已移除 |
 | 5 | 缺少 `KNOWL_DATA_DIR` 环境变量的测试覆盖 | `tests/test_config.py` | 配置可测试性弱 | ✅ 已有覆盖 |
