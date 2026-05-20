@@ -1,6 +1,6 @@
 """测试 ReAct 智能体"""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from quanttide_agent import ChatResponse, LLM, ToolDef
@@ -13,14 +13,20 @@ def mock_llm() -> MagicMock:
     return MagicMock(spec=LLM)
 
 
+def _tool(name: str, desc: str = "") -> ToolDef:
+    return ToolDef(name=name, description=desc)
+
+
 class TestParseAction:
     def test_parse_valid(self):
         agent = Agent.__new__(Agent)
+        agent._tools = {}
         result = agent._parse_action("Thought: 需要检查\nAction: validate\nAction Input: {}")
         assert result == {"name": "validate", "input": {}}
 
     def test_parse_with_json_args(self):
         agent = Agent.__new__(Agent)
+        agent._tools = {}
         result = agent._parse_action(
             'Thought: 检查特定领域\nAction: validate\nAction Input: {"domain": "org-gov"}'
         )
@@ -28,16 +34,18 @@ class TestParseAction:
 
     def test_parse_no_action(self):
         agent = Agent.__new__(Agent)
+        agent._tools = {}
         assert agent._parse_action("这是一段普通文本") is None
 
     def test_parse_missing_input(self):
         agent = Agent.__new__(Agent)
+        agent._tools = {}
         result = agent._parse_action("Action: validate\nSomething else")
         assert result is None
 
     def test_parse_final_answer(self):
         agent = Agent.__new__(Agent)
-        # Final Answer should not be parsed as action
+        agent._tools = {}
         result = agent._parse_action("Thought: 完成\nFinal Answer: 结果")
         assert result is None
 
@@ -51,14 +59,14 @@ class TestExecute:
             return "执行成功"
 
         agent = Agent.__new__(Agent)
-        agent._executors = {"my-tool": tool_fn}
+        agent._tools = {"my-tool": (_tool("my-tool"), tool_fn)}
         result = agent._execute("my-tool", {"key": "val"})
         assert result == "执行成功"
         assert exec_records == [{"key": "val"}]
 
     def test_execute_unknown_tool(self):
         agent = Agent.__new__(Agent)
-        agent._executors = {}
+        agent._tools = {}
         result = agent._execute("unknown", {})
         assert "未知工具" in result
 
@@ -67,7 +75,7 @@ class TestExecute:
             raise ValueError("工具崩溃")
 
         agent = Agent.__new__(Agent)
-        agent._executors = {"failing": failing_fn}
+        agent._tools = {"failing": (_tool("failing"), failing_fn)}
         result = agent._execute("failing", {})
         assert "执行错误" in result
         assert "工具崩溃" in result
@@ -78,7 +86,7 @@ class TestRun:
         mock_llm.chat.return_value = ChatResponse(
             content="Thought: 无需工具\nFinal Answer: 一切正常", model="deepseek"
         )
-        agent = Agent(mock_llm, tools=[], executors={}, max_steps=5)
+        agent = Agent(mock_llm, [], max_steps=5)
         result = agent.run("检查状态")
         assert result == "一切正常"
         assert mock_llm.chat.call_count == 1
@@ -94,7 +102,7 @@ class TestRun:
             exec_records.append(args)
             return "结构完整"
 
-        agent = Agent(mock_llm, tools=[ToolDef(name="validate", description="验证")], executors={"validate": validate})
+        agent = Agent(mock_llm, [(_tool("validate"), validate)])
         result = agent.run("验证一下")
         assert result == "验证通过"
         assert mock_llm.chat.call_count == 2
@@ -116,7 +124,7 @@ class TestRun:
             calls.append("fusion")
             return "OK"
 
-        agent = Agent(mock_llm, tools=[ToolDef(name="validate", description="v"), ToolDef(name="fusion-check", description="f")], executors={"validate": validate, "fusion-check": fusion})
+        agent = Agent(mock_llm, [(_tool("validate"), validate), (_tool("fusion-check"), fusion)])
         result = agent.run("全面检查")
         assert result == "全部通过"
         assert calls == ["validate", "fusion"]
@@ -125,7 +133,11 @@ class TestRun:
         mock_llm.chat.return_value = ChatResponse(
             content="Thought: 继续\nAction: validate\nAction Input: {}", model="deepseek"
         )
-        agent = Agent(mock_llm, tools=[ToolDef(name="validate", description="v")], executors={"validate": lambda args: "结果"}, max_steps=3)
+
+        def validate(args):
+            return "结果"
+
+        agent = Agent(mock_llm, [(_tool("validate"), validate)], max_steps=3)
         result = agent.run("检查")
         assert "达到最大步数" in result
         assert mock_llm.chat.call_count == 3
@@ -136,7 +148,11 @@ class TestRun:
             ChatResponse(content="Thought: 修正\nAction: validate\nAction Input: {}", model="deepseek"),
             ChatResponse(content="Thought: 完成\nFinal Answer: 好了", model="deepseek"),
         ]
-        agent = Agent(mock_llm, tools=[ToolDef(name="validate", description="v")], executors={"validate": lambda args: "ok"}, max_steps=5)
+
+        def validate(args):
+            return "ok"
+
+        agent = Agent(mock_llm, [(_tool("validate"), validate)], max_steps=5)
         result = agent.run("测试")
         assert result == "好了"
         assert mock_llm.chat.call_count == 3
@@ -146,15 +162,21 @@ class TestRun:
             ChatResponse(content="Thought: 调用工具\nAction: failing\nAction Input: {}", model="deepseek"),
             ChatResponse(content="Thought: 完成\nFinal Answer: 已处理", model="deepseek"),
         ]
-        agent = Agent(mock_llm, tools=[ToolDef(name="failing", description="f")], executors={"failing": lambda args: (_ for _ in ()).throw(ValueError("崩溃"))})
+
+        def failing(args):
+            raise ValueError("崩溃")
+
+        agent = Agent(mock_llm, [(_tool("failing"), failing)])
         result = agent.run("测试")
         assert result == "已处理"
 
 
 class TestInit:
-    def test_accepts_custom_tools(self):
-        tools = [ToolDef(name="t1", description="d1")]
-        executors = {"t1": lambda args: ""}
-        agent = Agent(MagicMock(spec=LLM), tools=tools, executors=executors)
-        assert len(agent.tools) == 1
-        assert agent.tools[0].name == "t1"
+    def test_accepts_tool_pairs(self):
+        def fn(args):
+            return ""
+
+        agent = Agent(MagicMock(spec=LLM), [(_tool("t1"), fn)])
+        assert len(agent._tools) == 1
+        assert "t1" in agent._tools
+

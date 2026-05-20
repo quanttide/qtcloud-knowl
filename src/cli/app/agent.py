@@ -3,10 +3,12 @@ ReAct 智能体实验 — 基于 quanttide-agent 的工具调用循环。
 
 用法:
     from app.agent import Agent
-    from quanttide_agent import LLM
+    from quanttide_agent import LLM, ToolDef
 
     llm = LLM(model="deepseek-v4-flash")
-    agent = Agent(llm)
+    agent = Agent(llm, [
+        (ToolDef(name="validate", description="检查目录结构"), validate_fn),
+    ])
     result = agent.run("检查 org-gov 领域有没有问题")
 """
 
@@ -37,14 +39,13 @@ Final Answer: 你的最终回复
 
 
 class Agent:
-    def __init__(self, llm: LLM, tools: list[ToolDef], executors: dict[str, Callable], max_steps: int = 10):
+    def __init__(self, llm: LLM, tool_pairs: list[tuple[ToolDef, Callable]], max_steps: int = 10):
         self.llm = llm
-        self.tools = tools
-        self._executors = executors
+        self._tools = {t.name: (t, fn) for t, fn in tool_pairs}
         self.max_steps = max_steps
 
     def run(self, task: str) -> str:
-        tool_desc = "\n".join(f"- {t.name}: {t.description}" for t in self.tools)
+        tool_desc = "\n".join(f"- {t.name}: {t.description}" for t, _ in self._tools.values())
         system = REACT_PROMPT.format(tool_descriptions=tool_desc)
         messages = [{"role": "system", "content": system}, {"role": "user", "content": task}]
 
@@ -80,13 +81,14 @@ class Agent:
         return {"name": name, "input": inp}
 
     def _execute(self, name: str, inp: dict) -> str:
-        fn = self._executors.get(name)
-        if fn:
-            try:
-                return str(fn(inp))
-            except Exception as e:
-                return f"执行错误: {e}"
-        return f"未知工具: {name}"
+        pair = self._tools.get(name)
+        if not pair:
+            return f"未知工具: {name}"
+        _, fn = pair
+        try:
+            return str(fn(inp))
+        except Exception as e:
+            return f"执行错误: {e}"
 
 
 def _import_run(module_path: str) -> Callable:
@@ -106,16 +108,9 @@ def default_agent(llm: LLM | None = None) -> Agent:
     from quanttide_agent import LLM as _LLM
 
     llm = llm or _LLM(model="deepseek-v4-flash")
-    tools = [
-        ToolDef(name="validate", description="检查领域目录结构完整性"),
-        ToolDef(name="fusion-check", description="跨领域融合检测（名称冲突、引用断裂）"),
-        ToolDef(name="check-abstraction", description="本体抽象度检测"),
-        ToolDef(name="cross-domain-report", description="跨领域关系覆盖率报告"),
-    ]
-    executors = {
-        "validate": _import_run("app.validators.validate"),
-        "fusion-check": _import_run("app.validators.fusion_check"),
-        "check-abstraction": _import_run("app.reporters.abstraction"),
-        "cross-domain-report": _import_run("app.reporters.cross_domain"),
-    }
-    return Agent(llm, tools, executors)
+    return Agent(llm, [
+        (ToolDef(name="validate", description="检查领域目录结构完整性"), _import_run("app.validators.validate")),
+        (ToolDef(name="fusion-check", description="跨领域融合检测（名称冲突、引用断裂）"), _import_run("app.validators.fusion_check")),
+        (ToolDef(name="check-abstraction", description="本体抽象度检测"), _import_run("app.reporters.abstraction")),
+        (ToolDef(name="cross-domain-report", description="跨领域关系覆盖率报告"), _import_run("app.reporters.cross_domain")),
+    ])
