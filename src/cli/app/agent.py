@@ -6,11 +6,12 @@ ReAct 智能体实验 — 基于 quanttide-agent 的工具调用循环。
     from quanttide_agent import LLM
 
     llm = LLM(model="deepseek-v4-flash")
-    agent = Agent(llm, [
-        Tool(name="validate", description="检查目录结构", executor=validate_fn),
-    ])
+    tools = [Tool(name="validate", description="检查目录结构", executor=validate_fn)]
+    agent = Agent(llm, tools)
+
+    tool_desc = "\\n".join(f"- {t.name}: {t.description}" for t in tools)
     result = agent.run([
-        Message(role="system", content=f"你是一个助手。用{ActionParser.KEY_ACTION_NAME}指定工具"),
+        Message(role="system", content=Agent.system_prompt(tool_desc)),
         Message(role="user", content="检查一下"),
     ])
 """
@@ -23,7 +24,7 @@ from collections.abc import Callable
 from typing import Any, Literal
 
 from pydantic import BaseModel
-from quanttide_agent import LLM, ToolDef
+from quanttide_agent import LLM
 
 
 class Message(BaseModel):
@@ -113,6 +114,25 @@ class Agent:
 
         return "达到最大步数，未得到最终答案。"
 
+    @staticmethod
+    def system_prompt(tool_descriptions: str, parser: ActionParser | None = None) -> str:
+        p = parser or ActionParser()
+        return f"""你可以使用以下工具：
+
+{tool_descriptions}
+
+每次回复按以下格式：
+
+Thought: 你当前的思考
+{p.key_action_name}: 工具名称
+{p.key_action_args}: 给工具的参数（JSON 格式）
+
+当得到最终答案时：
+
+Thought: 我得到答案了
+Final Answer: 你的最终回复
+"""
+
 
 def default_agent(llm: LLM | None = None) -> Agent:
     from app.validators.validate import run as validate_run
@@ -122,9 +142,10 @@ def default_agent(llm: LLM | None = None) -> Agent:
     from quanttide_agent import LLM as _LLM
 
     llm = llm or _LLM(model="deepseek-v4-flash")
-    return Agent(llm, [
+    tools = [
         Tool(name="validate", description="检查领域目录结构完整性", executor=validate_run),
         Tool(name="fusion-check", description="跨领域融合检测（名称冲突、引用断裂）", executor=fusion_run),
         Tool(name="check-abstraction", description="本体抽象度检测", executor=abstraction_run),
         Tool(name="cross-domain-report", description="跨领域关系覆盖率报告", executor=cross_domain_run),
-    ])
+    ]
+    return Agent(llm, tools, parser=ActionParser())
