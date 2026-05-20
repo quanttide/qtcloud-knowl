@@ -41,7 +41,7 @@ class Action(BaseModel):
     """LLM 输出的动作指令"""
 
     name: str
-    input: dict = {}
+    args: dict = {}
 
     @classmethod
     def from_text(cls, text: str) -> Action | None:
@@ -54,7 +54,7 @@ class Action(BaseModel):
             inp = json.loads(raw)
         except json.JSONDecodeError:
             inp = raw
-        return cls(name=name, input=inp)
+        return cls(name=name, args=inp)
 
 
 class Tool(BaseModel):
@@ -119,7 +119,7 @@ class Agent:
                 continue
 
             tool = self._tools.get(action.name)
-            result = tool.execute(action.input) if tool else f"未知工具: {action.name}"
+            result = tool.execute(action.args) if tool else f"未知工具: {action.name}"
             messages.append(Message(role="tool", tool_call_id=action.name, content=result))
 
         return "达到最大步数，未得到最终答案。"

@@ -22,14 +22,14 @@ class TestParseAction:
         result = Action.from_text("Thought: 需要检查\nAction: validate\nAction Input: {}")
         assert isinstance(result, Action)
         assert result.name == "validate"
-        assert result.input == {}
+        assert result.args == {}
 
     def test_parse_with_json_args(self):
         result = Action.from_text(
             'Thought: 检查特定领域\nAction: validate\nAction Input: {"domain": "org-gov"}'
         )
         assert result.name == "validate"
-        assert result.input == {"domain": "org-gov"}
+        assert result.args == {"domain": "org-gov"}
 
     def test_parse_no_action(self):
         assert Action.from_text("这是一段普通文本") is None
@@ -194,11 +194,11 @@ class TestMessage:
 
 class TestAction:
     def test_action(self):
-        a = Action(name="validate", input={"domain": "test"})
+        a = Action(name="validate", args={"domain": "test"})
         assert a.name == "validate"
-        assert a.input == {"domain": "test"}
+        assert a.args == {"domain": "test"}
 
-    def test_action_default_input(self):
+    def test_action_default_args(self):
         a = Action(name="validate")
-        assert a.input == {}
+        assert a.args == {}
 
