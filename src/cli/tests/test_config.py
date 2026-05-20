@@ -18,14 +18,14 @@ def reset_config():
 
 class TestConfig:
     def test_data_dir_fallback(self, monkeypatch):
-        monkeypatch.delenv("QTCLOUD_KNOWL_DATA_DIR", raising=False)
+        monkeypatch.delenv("QTCLOUD_KNOWL_DATA_HOME", raising=False)
         import quanttide
         monkeypatch.setattr(quanttide, "LocalStorage", _FakeLocalStorage)
         importlib.reload(config)
         assert config.DATA_DIR == Path.home() / ".local" / "share" / "quanttide" / "qtcloud-knowl"
 
     def test_data_dir_from_env(self, monkeypatch):
-        monkeypatch.setenv("QTCLOUD_KNOWL_DATA_DIR", "/tmp/custom-data")
+        monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", "/tmp/custom-data")
         importlib.reload(config)
         assert config.DATA_DIR == Path("/tmp/custom-data")
 
@@ -38,7 +38,7 @@ class TestConfig:
         assert config.SAMPLE_DIR.exists()
 
     def test_production_data_dir_works_end_to_end(self, monkeypatch, tmp_path):
-        monkeypatch.setenv("QTCLOUD_KNOWL_DATA_DIR", str(tmp_path))
+        monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", str(tmp_path))
         importlib.reload(config)
         domain_dir = tmp_path / "test-domain"
         domain_dir.mkdir()

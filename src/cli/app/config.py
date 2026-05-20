@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from pydantic import Field
 from pydantic_settings import BaseSettings
 from quanttide import LocalStorage
 
@@ -7,9 +8,10 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 
 class Settings(BaseSettings):
-    model_config = {"env_prefix": "QTCLOUD_KNOWL_"}
-
-    data_dir: Path = LocalStorage("qtcloud-knowl", vendor="quanttide").data_dir
+    data_dir: Path = Field(
+        default=LocalStorage("qtcloud-knowl", vendor="quanttide").data_dir,
+        alias="QTCLOUD_KNOWL_DATA_HOME",
+    )
 
 
 settings = Settings()

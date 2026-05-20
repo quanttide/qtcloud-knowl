@@ -62,7 +62,7 @@
 | 未定义术语过滤 | ✅ 覆盖中文/阿拉伯/占位符 |
 | `config.py` 改用 `quanttide.LocalStorage` | ✅ 替换 `Path.home()` 硬编码，`docs/storage.md` 与代码一致 |
 | `HUMAN_CONFIRM_TERMS` 清理 | ✅ "交接" 经人确认为合法跨领域重叠，不再标记 |
-| 环境变量命名统一 | ✅ 标准化为 `QTCLOUD_KNOWL_DATA_DIR`，`config.py` 改用 pydantic `BaseSettings` |
+| 环境变量命名统一 | ✅ 标准化为 `QTCLOUD_KNOWL_DATA_HOME`，与 `quanttide` SDK `env_override` 一致 |
 
 ## 文件结构
 
@@ -83,7 +83,7 @@ app/                   # Python 工具链
   cli.py               # 统一 CLI
   models.py            # 数据模型
   loader.py            # 数据加载
-  config.py            # 配置（pydantic BaseSettings，支持 QTCLOUD_KNOWL_DATA_DIR）
+  config.py            # 配置（pydantic BaseSettings，支持 QTCLOUD_KNOWL_DATA_HOME）
   reporters/           # 报告生成 (3 模块)
   validators/          # 验证检测 (4 模块)
   detectors/           # 领域操作 (2 模块)

@@ -49,10 +49,10 @@ pip install quanttide
 
 ## 覆盖默认路径
 
-`LocalStorage` 自动读取环境变量 `QTCLOUD_KNOWL_DATA_DIR`。设置后所有路径查询均返回覆盖值：
+`LocalStorage` 自动读取环境变量 `QTCLOUD_KNOWL_DATA_HOME`。设置后所有路径查询均返回覆盖值：
 
 ```bash
-export QTCLOUD_KNOWL_DATA_DIR=~/my-knowledge-base
+export QTCLOUD_KNOWL_DATA_HOME=~/my-knowledge-base
 qtcloud-knowl summary
 ```
 
