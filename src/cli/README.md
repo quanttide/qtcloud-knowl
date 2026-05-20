@@ -19,7 +19,7 @@ extract  知识抽取 — 从源文件自动抽取知识到知识库
 2. 审计已有知识库：`qtcloud-knowl audit`
 3. 从源文档抽取知识：`qtcloud-knowl extract`
 
-详细说明见 `docs/storage.md`。
+详细说明见 `docs/index.md`（CLI 参考）和 `../../docs/`（通用设计文档）。
 
 ## 目录结构
 
@@ -31,11 +31,8 @@ README.md              # 本文件
 ROADMAP.md             # 路线图
 STATUS.md              # 状态报告
 TODO.md                # 待办
-docs/                  # 设计文档
-  storage.md           # 数据存储方案
-  contract.md          # 人机权责分工
-  criteria.md          # 本体评审标准
-  workflow.md          # 执行流程
+docs/                  # CLI 文档
+  index.md             # CLI 参考（命令、配置、内部 API）
 app/                   # CLI 工具链
   cli.py               # typer 入口
   config.py            # 配置（pydantic Settings）

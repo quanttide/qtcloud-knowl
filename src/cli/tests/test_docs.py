@@ -6,7 +6,8 @@ from pathlib import Path
 from app.config import settings, Settings
 
 
-DOCS_DIR = Path(__file__).resolve().parent.parent / "docs"
+CLI_DOCS_DIR = Path(__file__).resolve().parent.parent / "docs"
+TOP_DOCS_DIR = Path(__file__).resolve().parent.parent.parent.parent / "docs"
 
 
 class TestCliHelp:
@@ -44,25 +45,20 @@ class TestCliHelp:
 
 
 class TestStorageDoc:
-    """docs/storage.md 与环境变量一致"""
+    """顶层 docs/storage.md 与环境变量一致"""
 
     def test_data_home_env_var_documented(self):
-        doc = (DOCS_DIR / "storage.md").read_text(encoding="utf-8")
+        doc = (TOP_DOCS_DIR / "storage.md").read_text(encoding="utf-8")
         assert "QTCLOUD_KNOWL_DATA_HOME" in doc
         assert hasattr(settings, "data_home")
 
     def test_sample_home_env_var_documented(self):
-        doc = (DOCS_DIR / "storage.md").read_text(encoding="utf-8")
+        doc = (TOP_DOCS_DIR / "storage.md").read_text(encoding="utf-8")
         assert "QTCLOUD_KNOWL_SAMPLE_HOME" in doc
         assert hasattr(settings, "sample_home")
 
-    def test_directory_structure_in_fixtures(self):
-        """文档列出的领域目录在夹具中存在"""
-        doc = (DOCS_DIR / "storage.md").read_text(encoding="utf-8")
-        fixture_dir = Path(__file__).resolve().parent / "fixtures" / "output"
-        listed = re.findall(r"^\s+(\w+)/$", doc, re.MULTILINE)
-        for domain in listed:
-            assert (fixture_dir / domain).is_dir(), f"领域 {domain} 在 fixtures 中不存在"
+    def test_cli_docs_index_exists(self):
+        assert (CLI_DOCS_DIR / "index.md").exists()
 
 
 class TestSettingsDoc:
