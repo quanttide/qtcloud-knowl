@@ -1,46 +1,42 @@
 # TODO
 
-## v0.0.5 — 规则引擎太多命令，用户不知道用什么
+## 已发布
 
-✅ 已完成：收敛为 audit / extract 两个入口，9 个底层命令隐藏。
+v0.0.5 → v0.0.10 全部完成，见 [CHANGELOG.md](CHANGELOG.md)。
 
-## v0.0.6 — 报告写得像技术日志，业务专家看不懂
+## v0.0.11 — 审计结果不可靠，环境变量配置不灵活
 
-✅ 已完成：audit 报告按三组输出（需确认 / 平台发现 / 建议关注），extract 无 LLM 也能用。
+### P0 — 无效路径崩溃
 
-## v0.0.7 — 报告只告诉有什么问题，不告诉怎么改
+- [ ] **#26** 不在 import 阶段崩溃，改为命令入口处校验路径
+  - 停止条件：`QTCLOUD_KNOWL_DATA_HOME=/nonexistent` 不再报 `PermissionError`，而是输出"请确认数据目录路径"
+  - 方案：将 `data_home` 的 `LocalStorage` 调用改为惰性求值，或在命令入口处拦截
 
-✅ 已完成：每个问题项追加 `→ 操作路径`。
+### P1 — diff 跨模式污染
 
-### 剩余工作（同版本内迭代）
+- [ ] **#27** diff 按审计模式（simple/full）隔离存储
+  - 停止条件：先跑 `--mode full` 再跑 `--mode simple`，diff 不显示假阳性"已修复"
+  - 方案：`audit.json` 中记录 mode，加载时只匹配同 mode 的状态
 
-✅ **#22a** 操作路径改为绝对路径
-✅ **#22b** MISS 类问题优先推荐 `auto-fix`
-✅ **#22c** `_parse_issues` 加空结果兜底
-✅ **#22d** 防 domain=None 路径
+### P2 — env var 空串不 fallback
 
-## v0.0.8 — 新手被空骨架的大量报错吓到
+- [ ] **#28** env var 置空串时回退到默认值
+  - 停止条件：`QTCLOUD_KNOWL_DATA_HOME=""` 等价于未设置，使用 `LocalStorage` 默认路径
+  - 方案：Path 字段加 validator，空串视为 None
 
-✅ **#23** 区分简单模式与完整模式
-- `audit --mode simple` 只检查结构（3 项），问题降一级严重度，末尾引导使用 `--mode full`
-- `audit --mode full`（默认）保持全部 5 项检测
-- 3 个测试覆盖 simple/full/invalid
+### P3 — init_domain 噪音
 
-## v0.0.9 — 失败路径不一致 + extract 输出不像人话
+- [ ] **#29** verbose 模式也过滤 init_domain 内部日志
+  - 停止条件：`extract --verbose` 不显示"领域 xxx 初始化完成"
+  - 方案：init_domain 的打印改为通过回调/参数控制
 
-✅ **#21** extract 输出改为一句话摘要，`--verbose` 控制详情
-✅ **#24** 统一失败路径：data_home 不存在、sample_home 未设置、目录不存在都给出业务语言提示
+### P4 — 细节打磨
 
-## v0.0.10 — 这次跑的和上次跑的看不出变化
+- [ ] **#30** `audit --help` 中 `--mode` 括号风格统一
+- [ ] **#31** detect-domain 隐藏命令的输出去掉技术分数，只留推荐结论
 
-✅ **#25** 审计报告加版本对比
+---
 
-### 剩余工作（同版本内迭代）
+## v0.1.0 — 业务专家还不能自助完成全流程
 
-✅ **#25a** 状态文件存入 XDG state 目录（`state_home`），与用户数据隔离
-✅ **#25b** 无变化时输出 `✓ 与上次审计一致，无新增问题`
-✅ **#25c** diff 精度改进：基于 `category|group|label` 三元组 hash 匹配
-
-## v0.0.11 — 业务专家还不能自助完成全流程
-
-（待规划：LLM 语义抽取 + audit 质量门禁 → 文档入库到发布的完整闭环）
+（待启动：LLM 语义抽取 + audit 质量门禁 → 文档入库到发布的完整闭环）
