@@ -14,7 +14,7 @@ def run(data_dir=None, **kwargs) -> str:
     base = Path(data_dir) if data_dir else settings.data_home
     if not base.exists():
         print(f"数据目录不存在: {base}")
-        return 1
+        return f"数据目录不存在: {base}"
     errors = 0
 
     for domain_dir in sorted(base.iterdir()):

@@ -77,16 +77,16 @@ class TestRun:
         return [Message(role="user", content=task)]
 
     def test_direct_final_answer(self, mock_llm):
-        mock_llm.chat.return_value = ChatResponse(
+        mock_llm.complete.return_value = ChatResponse(
             content="Thought: 无需工具\nFinal Answer: 一切正常", model="deepseek"
         )
         agent = ReActAgent(mock_llm, [], max_steps=5)
         result = agent.run(self._msgs("检查状态"))
         assert result == "一切正常"
-        assert mock_llm.chat.call_count == 1
+        assert mock_llm.complete.call_count == 1
 
     def test_one_tool_call_then_answer(self, mock_llm):
-        mock_llm.chat.side_effect = [
+        mock_llm.complete.side_effect = [
             ChatResponse(content="Thought: 需要检查\nAction name: validate\nAction args: {}", model="deepseek"),
             ChatResponse(content="Thought: 完成\nFinal Answer: 验证通过", model="deepseek"),
         ]
@@ -99,11 +99,11 @@ class TestRun:
         agent = ReActAgent(mock_llm, [_tool("validate", executor=validate)])
         result = agent.run(self._msgs("验证一下"))
         assert result == "验证通过"
-        assert mock_llm.chat.call_count == 2
+        assert mock_llm.complete.call_count == 2
         assert len(exec_records) == 1
 
     def test_multiple_tool_calls(self, mock_llm):
-        mock_llm.chat.side_effect = [
+        mock_llm.complete.side_effect = [
             ChatResponse(content="Thought: 先验证\nAction name: validate\nAction args: {}", model="deepseek"),
             ChatResponse(content="Thought: 再融合检查\nAction name: fusion-check\nAction args: {}", model="deepseek"),
             ChatResponse(content="Thought: 完成\nFinal Answer: 全部通过", model="deepseek"),
@@ -124,7 +124,7 @@ class TestRun:
         assert calls == ["validate", "fusion"]
 
     def test_max_steps_reached(self, mock_llm):
-        mock_llm.chat.return_value = ChatResponse(
+        mock_llm.complete.return_value = ChatResponse(
             content="Thought: 继续\nAction name: validate\nAction args: {}", model="deepseek"
         )
 
@@ -134,10 +134,10 @@ class TestRun:
         agent = ReActAgent(mock_llm, [_tool("validate", executor=validate)], max_steps=3)
         result = agent.run(self._msgs("检查"))
         assert "达到最大步数" in result
-        assert mock_llm.chat.call_count == 3
+        assert mock_llm.complete.call_count == 3
 
     def test_malformed_action_retry(self, mock_llm):
-        mock_llm.chat.side_effect = [
+        mock_llm.complete.side_effect = [
             ChatResponse(content="这是一段乱写的文本", model="deepseek"),
             ChatResponse(content="Thought: 修正\nAction name: validate\nAction args: {}", model="deepseek"),
             ChatResponse(content="Thought: 完成\nFinal Answer: 好了", model="deepseek"),
@@ -149,10 +149,10 @@ class TestRun:
         agent = ReActAgent(mock_llm, [_tool("validate", executor=validate)], max_steps=5)
         result = agent.run(self._msgs("测试"))
         assert result == "好了"
-        assert mock_llm.chat.call_count == 3
+        assert mock_llm.complete.call_count == 3
 
     def test_tool_execution_failure(self, mock_llm):
-        mock_llm.chat.side_effect = [
+        mock_llm.complete.side_effect = [
             ChatResponse(content="Thought: 调用工具\nAction name: failing\nAction args: {}", model="deepseek"),
             ChatResponse(content="Thought: 完成\nFinal Answer: 已处理", model="deepseek"),
         ]

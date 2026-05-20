@@ -32,3 +32,45 @@ class TestFindUndefined:
         assert not IGNORED_CHAPTER_RE.match("公司治理机构")
         assert not IGNORED_CHAPTER_RE.match("项目经理")
         assert not IGNORED_CHAPTER_RE.match("知识产权")
+
+    def test_detects_undefined_term(self, tmp_path, capsys):
+        sample = tmp_path / "samples"
+        sample.mkdir()
+        (sample / "test.md").write_text(
+            "本文包含一个 **未知术语XYZ** 应该被检测到", encoding="utf-8"
+        )
+        data = tmp_path / "data"
+        data.mkdir()
+        domain_dir = data / "test-domain"
+        domain_dir.mkdir()
+        for name, content in [
+            ("domain.json", '{"id": "test", "name": "test", "vocabulary": [], "files": []}'),
+            ("ontologies.json", '{"ontologies": []}'),
+            ("instances.json", '{"instances": []}'),
+            ("relations.json", '{"relations": []}'),
+        ]:
+            (domain_dir / name).write_text(content, encoding="utf-8")
+        result = run(sample, data)
+        captured = capsys.readouterr()
+        assert "未知术语XYZ" in captured.out
+
+    def test_ignores_single_char_terms(self, tmp_path, capsys):
+        sample = tmp_path / "samples"
+        sample.mkdir()
+        (sample / "test.md").write_text(
+            "短术语 **a** 和 **x** 应被忽略", encoding="utf-8"
+        )
+        data = tmp_path / "data"
+        data.mkdir()
+        domain_dir = data / "test-domain"
+        domain_dir.mkdir()
+        for name, content in [
+            ("domain.json", '{"id": "test", "name": "test", "vocabulary": [], "files": []}'),
+            ("ontologies.json", '{"ontologies": []}'),
+            ("instances.json", '{"instances": []}'),
+            ("relations.json", '{"relations": []}'),
+        ]:
+            (domain_dir / name).write_text(content, encoding="utf-8")
+        result = run(sample, data)
+        captured = capsys.readouterr()
+        assert "全部术语已有定义" in captured.out

@@ -9,7 +9,7 @@ from app.loader import load_all_domains
 
 def run(filepath: str, data_dir=None):
     path = Path(filepath)
-    base = data_dir or settings.data_home
+    base = Path(data_dir) if data_dir else settings.data_home
     if not path.exists():
         print(f"文件不存在: {filepath}")
         return 1

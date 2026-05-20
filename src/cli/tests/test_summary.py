@@ -1,3 +1,4 @@
+from pathlib import Path
 from tests.conftest import FIXTURE_DIR
 from app.reporters.summary import run
 
@@ -33,3 +34,12 @@ class TestSummary:
         assert counts.get("doc-std") == 3
         assert counts.get("hr") == 3
         assert counts.get("org-gov") == 4
+
+    def test_empty_dir_returns_one(self, tmp_path):
+        result = run(tmp_path)
+        assert result == 1
+
+    def test_empty_dir_prints_message(self, tmp_path, capsys):
+        run(tmp_path)
+        captured = capsys.readouterr()
+        assert "未找到领域数据" in captured.out
