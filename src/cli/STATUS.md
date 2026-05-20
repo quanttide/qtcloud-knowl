@@ -51,6 +51,8 @@
 | 6 | 测试仅覆盖夹具数据，未覆盖生产 DATA_DIR 路径 | `tests/` | 安装后行为未验证 | ✅ 已补充 |
 | 7 | fusion-check "交接" 重叠 | `app/validators/fusion_check.py:182` | 需人判断 | 【需人确认】 |
 | 8 | fusion-check qtdata-index.md 引用 `《量潮数据项目岗位权责章程》` 文件不存在 | `app/validators/fusion_check.py:183` | 需人确认 | 【需人确认】 |
+| 9 | `docs/storage.md` 通篇使用 `LocalStorage` API，但 `config.py` 实为手动路径计算，未调用 `quanttide` 库 | `docs/storage.md` / `app/config.py` | 文档与代码不一致 | 🟡 待修复 |
+| 10 | 环境变量命名不一致：config.py 用 `KNOWL_DATA_DIR`，doc 写 `{APP_NAME}_DATA_DIR`，SDK 用 `{APP}_DATA_HOME` | `app/config.py` / `docs/storage.md` | 迁移后需统一 | 🟡 待规划 |
 
 ### 已修复（本轮）
 
@@ -84,7 +86,7 @@ app/                   # Python 工具链
   reporters/           # 报告生成 (3 模块)
   validators/          # 验证检测 (4 模块)
   detectors/           # 领域操作 (2 模块)
-  reviewers/           # 交互式评审 (5 模块)
+  reviewers/           # 交互式评审 (6 模块)
 tests/
   fixtures/input/      # 10 份源文档
   fixtures/output/     # 4 领域建模结果
@@ -93,5 +95,6 @@ tests/
   test_summary.py      # 概况测试
   test_abstraction.py  # 抽象度测试
   test_find_undefined.py  # 未定义术语测试
+  test_config.py          # 配置测试
   test_fusion_check.py    # 融合检测测试
 ```
