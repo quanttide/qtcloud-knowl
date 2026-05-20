@@ -2,19 +2,59 @@
 
 ## 已发布
 
-v0.0.5 → v0.0.10 全部完成，见 [CHANGELOG.md](CHANGELOG.md)。
-
-## v0.0.11 — 审计结果不可靠，环境变量配置不灵活
-
-✅ **#26** 无效路径不再崩溃 — `default_factory` 替代类级 LocalStorage 调用
-✅ **#27** diff 按 mode 隔离 — `_load_audit_state(mode=mode)` 仅匹配同 mode 状态
-✅ **#28** env var 空串回退 — `model_validator` 空串→None→默认值
-✅ **#29** init_domain 噪音 — verbose 模式也抑制 init_domain 日志
-✅ **#30** help 括号统一 — `simple（快速检查）/ full（全面审计）`
-✅ **#31** detect-domain 去技术分数 — 只输出推荐领域名
+v0.0.5 → v0.0.12 全部完成，见 [CHANGELOG.md](CHANGELOG.md)。
 
 ---
 
+## v0.0.13 — AI 抽取结果缺少审核入口
+
+- [ ] reviewers 新增"AI 草稿审核"模式
+  - [ ] 读取候选本体/实例/关系列表
+  - [ ] 逐条展示：ID、名称、描述、来源
+  - [ ] 支持接受 / 拒绝 / 修改后接受
+  - [ ] 确认项写入 `data_home`（domain.json / ontologies.json / instances.json / relations.json）
+- [ ] 审核进度：显示已审核/待审核/N 条被拒
+- [ ] tests
+
+停止条件：用伪造的候选数据跑通审核流程，能看到逐条确认后知识库文件被更新。
+
+## v0.0.14 — 不知道 LLM 抽出来效果怎么样
+
+- [ ] `app/prompts/` 目录，存放抽取 prompt 模板
+  - [ ] ontology-discovery prompt（本体发现）
+  - [ ] instance-mapping prompt（实例映射）
+  - [ ] relation-discovery prompt（关系发现）
+- [ ] `extract --llm <document>` 读取文档，调用 LLM，输出原始结果到 stdout
+- [ ] LLM 连接复用 `quanttide-agent.LLM`
+- [ ] tests（mock LLM 返回）
+
+停止条件：指定一个源文档，`extract --llm` 能返回原始 LLM 输出。
+
+## v0.0.15 — LLM 输出没法保存为结构化草稿
+
+- [ ] 解析 LLM 输出为 Domain / Ontology / Instance / Relation 结构
+- [ ] 保存到 `settings.data_home / drafts/ <domain>/` 目录
+- [ ] 重复运行不覆盖，按时间戳生成版本
+- [ ] `extract --list-drafts` 列出所有草稿
+- [ ] `extract --show-draft <id>` 查看指定草稿
+- [ ] tests
+
+停止条件：多次运行 `extract --llm` 后，`--list-drafts` 能列出多个版本，`--show-draft` 能展示结构化内容。
+
+## v0.0.16 — 草稿审核后不能落库
+
+- [ ] v0.0.13 的审核工作流读取 `drafts/` 而非伪造数据
+- [ ] 审核确认后写入正式知识库（domain.json / ontologies.json / instances.json / relations.json）
+- [ ] 已落库的草稿标记为"已发布"
+- [ ] tests
+
+停止条件：从文档抽取 → 草稿保存 → 审核确认 → 落库的完整链路可走通。
+
 ## v0.1.0 — 业务专家还不能自助完成全流程
 
-（待启动：LLM 语义抽取 + audit 质量门禁 → 文档入库到发布的完整闭环）
+- [ ] prompt 管线编排：三个 prompt 串联执行
+- [ ] 结构化输出解析器（LLM 原始输出 → 模型实例）
+- [ ] 全链路单命令完成：文档抽取 → 草稿 → 审核 → 发布
+- [ ] audit 做质量门禁
+- [ ] 标记"AI 生成"供人溯源
+- [ ] 文档
