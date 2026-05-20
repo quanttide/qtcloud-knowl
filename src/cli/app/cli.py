@@ -7,7 +7,7 @@ import argparse
 
 def main():
     if len(sys.argv) < 2:
-        print("用法: python -m src.cli <command> [args...]")
+        print("用法: kcli <command> [args...]")
         print("")
         print("命令:")
         print("  summary                 领域概况统计")
@@ -55,14 +55,14 @@ def main():
     elif command == "detect-domain":
         from app.detectors.detect_domain import run
         if not args:
-            print("用法: python -m src.cli detect-domain <file>")
+            print("用法: kcli detect-domain <file>")
             return 1
         return run(args[0])
 
     elif command == "init-domain":
         from app.detectors.init_domain import run
         if not args:
-            print("用法: python -m src.cli init-domain <domain_name> [--from-detect <file>]")
+            print("用法: kcli init-domain <domain_name> [--from-detect <file>]")
             return 1
         kwargs = {"domain_name": args[0]}
         if "--from-detect" in args:

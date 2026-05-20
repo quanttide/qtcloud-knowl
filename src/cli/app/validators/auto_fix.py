@@ -17,7 +17,7 @@ SKELETONS = {
 MAX_ITER = 10
 
 
-def run(data_dir=None, sample_dir=None):
+def run(data_dir=None):
     base = Path(data_dir) if data_dir else DATA_DIR
     if not base.exists():
         print(f"数据目录不存在: {base}")
@@ -68,9 +68,8 @@ def run(data_dir=None, sample_dir=None):
 def main():
     parser = argparse.ArgumentParser(description="循环检测+自动修复已知问题")
     parser.add_argument("data_dir", nargs="?", default=DATA_DIR, help="data 目录路径")
-    parser.add_argument("sample_dir", nargs="?", default=None, help="sample 目录路径")
     args = parser.parse_args()
-    exit(run(args.data_dir, args.sample_dir))
+    exit(run(args.data_dir))
 
 
 if __name__ == "__main__":

@@ -115,9 +115,9 @@ def main():
                 print("  已重置")
                 wait()
         elif choice == "6":
-            run_detection("src.validators.fusion_check", "跨领域融合检测")
+            run_detection("app.validators.fusion_check", "跨领域融合检测")
         elif choice == "7":
-            run_detection("src.validators.find_undefined", "未定义术语检查")
+            run_detection("app.validators.find_undefined", "未定义术语检查")
         elif choice == "0":
             clear()
             print("再见。")

@@ -37,8 +37,9 @@ def run(filepath: str, data_dir=None):
 def main():
     parser = argparse.ArgumentParser(description="基于词汇匹配为新文件推荐所属领域")
     parser.add_argument("file", help="要检测的文件路径")
+    parser.add_argument("--data-dir", default=None, help="数据目录路径")
     args = parser.parse_args()
-    exit(run(args.file))
+    exit(run(args.file, args.data_dir))
 
 
 if __name__ == "__main__":
