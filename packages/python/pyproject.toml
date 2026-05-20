@@ -1,7 +1,7 @@
 [project]
 name = "qtcloud-knowl"
 version = "0.0.1"
-description = "Knowledge Agent core — data models and loaders"
+description = "量潮知识云Python SDK"
 requires-python = ">=3.12"
 dependencies = [
     "pydantic>=2.0",
