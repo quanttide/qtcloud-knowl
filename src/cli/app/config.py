@@ -1,3 +1,12 @@
+"""配置管理。
+
+通过 `Settings` 读取环境变量，提供运行时路径。
+
+    >>> from app.config import settings
+    >>> isinstance(settings.data_home, Path)
+    True
+"""
+
 from pathlib import Path
 from typing import Optional
 

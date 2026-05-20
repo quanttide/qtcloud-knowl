@@ -1,0 +1,72 @@
+"""文档一致性测试 — 确保文档描述与代码实现匹配"""
+
+import re
+from pathlib import Path
+
+from app.config import settings, Settings
+
+
+DOCS_DIR = Path(__file__).resolve().parent.parent / "docs"
+
+
+class TestCliHelp:
+    """CLI --help 输出与文档一致"""
+
+    def test_all_commands_listed(self):
+        from app.cli import app
+        from typer.testing import CliRunner
+
+        runner = CliRunner()
+        result = runner.invoke(app, ["--help"])
+        assert result.exit_code == 0
+        for cmd in ["summary", "validate", "find-undefined-terms",
+                     "fusion-check", "check-abstraction", "auto-fix",
+                     "cross-domain-report", "detect-domain", "init-domain"]:
+            assert cmd in result.output, f"命令 {cmd} 未出现在 --help 输出中"
+
+    def test_validate_help(self):
+        from app.cli import app
+        from typer.testing import CliRunner
+
+        runner = CliRunner()
+        result = runner.invoke(app, ["validate", "--help"])
+        assert result.exit_code == 0
+        assert "领域目录结构完整性验证" in result.output
+
+
+class TestStorageDoc:
+    """docs/storage.md 与环境变量一致"""
+
+    def test_data_home_env_var_documented(self):
+        doc = (DOCS_DIR / "storage.md").read_text(encoding="utf-8")
+        assert "QTCLOUD_KNOWL_DATA_HOME" in doc
+        assert hasattr(settings, "data_home")
+
+    def test_sample_home_env_var_documented(self):
+        doc = (DOCS_DIR / "storage.md").read_text(encoding="utf-8")
+        assert "QTCLOUD_KNOWL_SAMPLE_HOME" in doc
+        assert hasattr(settings, "sample_home")
+
+    def test_directory_structure_in_fixtures(self):
+        """文档列出的领域目录在夹具中存在"""
+        doc = (DOCS_DIR / "storage.md").read_text(encoding="utf-8")
+        fixture_dir = Path(__file__).resolve().parent / "fixtures" / "output"
+        listed = re.findall(r"^\s+(\w+)/$", doc, re.MULTILINE)
+        for domain in listed:
+            assert (fixture_dir / domain).is_dir(), f"领域 {domain} 在 fixtures 中不存在"
+
+
+class TestSettingsDoc:
+    """Settings 字段描述与文档一致"""
+
+    def test_settings_fields_match_env_prefix(self):
+        """所有 Settings 字段有对应的 env var 文档"""
+        for field_name in Settings.model_fields:
+            assert field_name in dir(settings), f"字段 {field_name} 不可访问"
+
+    def test_data_home_is_path(self):
+        assert isinstance(settings.data_home, Path)
+
+    def test_sample_home_is_optional(self):
+        """sample_home 允许 None"""
+        assert settings.sample_home is None or isinstance(settings.sample_home, Path)

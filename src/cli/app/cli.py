@@ -1,5 +1,15 @@
 #!/usr/bin/env python3
-"""知识工程智能体 — 统一 CLI 入口"""
+"""知识工程智能体 — 统一 CLI 入口。
+
+所有命令从 `settings` 读取路径，不接受位置参数。
+
+    >>> from app.cli import app
+    >>> from typer.testing import CliRunner
+    >>> runner = CliRunner()
+    >>> result = runner.invoke(app, ["--help"])
+    >>> result.exit_code
+    0
+"""
 
 import typer
 from app.config import settings
