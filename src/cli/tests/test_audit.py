@@ -1,8 +1,46 @@
 """测试全量审计命令"""
 
 import json
+from datetime import datetime
 from typer.testing import CliRunner
 from tests.conftest import FIXTURE_DIR, SAMPLE_DIR
+from app.agents.audit import _collect_issues, _compute_diff, _load_audit_state, _save_audit_state
+
+
+class TestAuditState:
+    def test_collect_issues_flattens_all_categories(self):
+        issues = _collect_issues(
+            [("g1", [("l1", "a1")])],
+            [("g2", [("l2", "a2")])],
+            [("g3", [("l3", "a3")])],
+        )
+        assert len(issues) == 3
+        assert issues[0]["category"] == "need_confirm"
+        assert issues[1]["category"] == "auto_fixable"
+        assert issues[2]["category"] == "suggestions"
+
+    def test_compute_diff_all_cases(self):
+        prev = [{"label": "a"}, {"label": "b"}, {"label": "c"}]
+        curr = [{"label": "b"}, {"label": "c"}, {"label": "d"}]
+        fixed, new, pending, _, _ = _compute_diff(prev, curr)
+        assert fixed == {"a"}
+        assert new == {"d"}
+        assert pending == {"b", "c"}
+
+    def test_save_and_load_audit_state(self, tmp_path):
+        issues = [{"category": "need_confirm", "group": "t", "label": "l"}]
+        _save_audit_state(tmp_path, issues, "full")
+        state = _load_audit_state(tmp_path)
+        assert state is not None
+        assert state["mode"] == "full"
+        assert len(state["issues"]) == 1
+
+    def test_load_nonexistent_returns_none(self, tmp_path):
+        assert _load_audit_state(tmp_path) is None
+
+    def test_load_corrupted_returns_none(self, tmp_path):
+        (tmp_path / ".audit.json").write_text("{invalid}", encoding="utf-8")
+        assert _load_audit_state(tmp_path) is None
 
 
 class TestAudit:

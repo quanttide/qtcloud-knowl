@@ -3,10 +3,52 @@
 import io
 import sys
 import re
+import json
+from datetime import datetime
 from pathlib import Path
 from app.config import settings
 from app.agents.tools import all_detection_tools
 from app.loader import load_all_domains
+
+AUDIT_STATE_FILE = ".audit.json"
+
+
+def _collect_issues(need_confirm, auto_fixable, suggestions):
+    flat = []
+    for category, items in [("need_confirm", need_confirm), ("auto_fixable", auto_fixable), ("suggestions", suggestions)]:
+        for group_title, issue_list in items:
+            for label, action in issue_list:
+                flat.append({"category": category, "group": group_title, "label": label})
+    return flat
+
+
+def _load_audit_state(ddir):
+    fpath = ddir / AUDIT_STATE_FILE
+    if fpath.exists():
+        try:
+            return json.loads(fpath.read_text(encoding="utf-8"))
+        except Exception:
+            return None
+    return None
+
+
+def _save_audit_state(ddir, issues, mode):
+    fpath = ddir / AUDIT_STATE_FILE
+    state = {
+        "timestamp": datetime.now().isoformat(),
+        "mode": mode,
+        "issues": issues,
+    }
+    fpath.write_text(json.dumps(state, ensure_ascii=False, indent=2), encoding="utf-8")
+
+
+def _compute_diff(previous_issues, current_issues):
+    prev_set = {i["label"] for i in previous_issues}
+    curr_set = {i["label"] for i in current_issues}
+    fixed = prev_set - curr_set
+    new = curr_set - prev_set
+    pending = prev_set & curr_set
+    return fixed, new, pending, prev_set, curr_set
 
 
 def capture_run(fn, *args, **kwargs):
@@ -124,6 +166,10 @@ def run(data_dir=None, sample_dir=None, mode="full"):
         need_confirm = auto_fixable
         auto_fixable = []
 
+    current_issues = _collect_issues(need_confirm, auto_fixable, suggestions)
+    previous = _load_audit_state(ddir)
+    _save_audit_state(ddir, current_issues, mode)
+
     mode_label = "快速检查模式" if mode == "simple" else "全面审计模式"
     print("=" * 60)
     print(f"  知识库质量审计报告（{mode_label}）")
@@ -133,6 +179,20 @@ def run(data_dir=None, sample_dir=None, mode="full"):
     print(f"领域数量: {domain_count}")
     if sdir:
         print(f"源文件目录: {sdir}")
+
+    if previous:
+        fixed, new, pending, _, _ = _compute_diff(previous.get("issues", []), current_issues)
+        prev_time = previous.get("timestamp", "未知")[:10]
+        parts = []
+        if fixed:
+            parts.append(f"✅ 已修复 {len(fixed)} 项")
+        if new:
+            parts.append(f"🆕 新增 {len(new)} 项")
+        if pending:
+            parts.append(f"⏳ 待处理 {len(pending)} 项")
+        if parts:
+            print(f"相比上次审计（{prev_time}）：{' / '.join(parts)}")
+
     print()
 
     if not need_confirm and not auto_fixable and not suggestions:
