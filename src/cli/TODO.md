@@ -13,4 +13,4 @@
   - `pyproject.toml` 添加 `quanttide` 依赖
   - `config.py` fallback 改为 `LocalStorage("qtcloud-knowl", vendor="quanttide").data_dir`
   - 测试适配 mock 策略
-- [x] **#10** 统一环境变量命名 — 标准化为 `KNOWL_DATA_DIR`
+- [x] **#10** 统一环境变量命名 — 标准化为 `QTCLOUD_KNOWL_DATA_DIR`（pydantic `BaseSettings`, `env_prefix="QTCLOUD_KNOWL_"`）

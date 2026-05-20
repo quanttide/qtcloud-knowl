@@ -47,7 +47,7 @@
 | 2 | `cli.py` 帮助信息仍写 `python -m src.cli`，未更新为 `qtcloud-knowl` | `app/cli.py:6` | 用户困惑 | ✅ 已修复 |
 | 3 | `detect_domain.py` 的 `main()` 未传递 `data_dir` 给 `run()` | `app/detectors/detect_domain.py:32` | 与核心函数接口不一致 | ✅ 已修复 |
 | 4 | `auto_fix.py` 的 `run()` 接受 `sample_dir` 参数但未使用 | `app/validators/auto_fix.py:17` | 死参数 | ✅ 已移除 |
-| 5 | 缺少 `KNOWL_DATA_DIR` 环境变量的测试覆盖 | `tests/test_config.py` | 配置可测试性弱 | ✅ 已有覆盖 |
+| 5 | 缺少环境变量测试覆盖 | `tests/test_config.py` | 配置可测试性弱 | ✅ 已有覆盖 |
 | 6 | 测试仅覆盖夹具数据，未覆盖生产 DATA_DIR 路径 | `tests/` | 安装后行为未验证 | ✅ 已补充 |
 | 7 | fusion-check "交接" 重叠 | `app/validators/fusion_check.py:182` | 需人判断 | ✅ 已确认（合法重叠） |
 | 8 | fusion-check qtdata-index.md 引用 `《量潮数据项目岗位权责章程》` 文件不存在 | `app/validators/fusion_check.py:183` | 需人确认 | 【需人确认】 |
@@ -62,7 +62,7 @@
 | 未定义术语过滤 | ✅ 覆盖中文/阿拉伯/占位符 |
 | `config.py` 改用 `quanttide.LocalStorage` | ✅ 替换 `Path.home()` 硬编码，`docs/storage.md` 与代码一致 |
 | `HUMAN_CONFIRM_TERMS` 清理 | ✅ "交接" 经人确认为合法跨领域重叠，不再标记 |
-| 环境变量命名统一 | ✅ 标准化为 `KNOWL_DATA_DIR`，`docs/storage.md` 已同步 |
+| 环境变量命名统一 | ✅ 标准化为 `QTCLOUD_KNOWL_DATA_DIR`，`config.py` 改用 pydantic `BaseSettings` |
 
 ## 文件结构
 
@@ -83,7 +83,7 @@ app/                   # Python 工具链
   cli.py               # 统一 CLI
   models.py            # 数据模型
   loader.py            # 数据加载
-  config.py            # 配置（支持 KNOWL_DATA_DIR 环境变量）
+  config.py            # 配置（pydantic BaseSettings，支持 QTCLOUD_KNOWL_DATA_DIR）
   reporters/           # 报告生成 (3 模块)
   validators/          # 验证检测 (4 模块)
   detectors/           # 领域操作 (2 模块)
