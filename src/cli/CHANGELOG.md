@@ -1,5 +1,15 @@
 # 变更记录
 
+## [0.0.5] - 2026-05-20
+
+### 重构
+
+- 集成 `quanttide-agent` 替换本地 Agent 实现（ReActAgent、Action、Tool）
+- 消息模型从自定义格式迁移至 `quanttide-agent` 标准消息类型
+- 配置层接入 Vault 密钥管理
+- 测试从 40 个扩至 135 个，覆盖率从 37% 提升至 74%
+- 修复 `detect_domain` 中 `Path` 类型转换 bug
+
 ## [0.0.4] - 2026-05-20
 
 ### CLI 重设计
