@@ -5,7 +5,6 @@ description = "Knowledge Agent CLI — charting, validation, and ontology manage
 requires-python = ">=3.12"
 dependencies = [
     "quanttide",
-    "pydantic-settings",
 ]
 
 [project.scripts]
