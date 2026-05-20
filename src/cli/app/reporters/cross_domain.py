@@ -3,12 +3,12 @@
 
 import argparse
 from pathlib import Path
-from app.config import DATA_DIR
+from app.config import settings
 from app.loader import load_all_domains
 
 
 def run(data_dir=None):
-    base = Path(data_dir) if data_dir else DATA_DIR
+    base = Path(data_dir) if data_dir else settings.data_home
     domains_data = load_all_domains(base)
 
     print("====== 跨领域关系覆盖率报告 ======\n")
@@ -48,7 +48,7 @@ def run(data_dir=None):
 
 def main():
     parser = argparse.ArgumentParser(description="统计每个领域的跨领域关系覆盖率")
-    parser.add_argument("data_dir", nargs="?", default=DATA_DIR, help="data 目录路径")
+    parser.add_argument("data_dir", nargs="?", default=settings.data_home, help="data 目录路径")
     args = parser.parse_args()
     exit(run(args.data_dir))
 

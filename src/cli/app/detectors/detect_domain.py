@@ -3,13 +3,13 @@
 
 import argparse
 from pathlib import Path
-from app.config import DATA_DIR
+from app.config import settings
 from app.loader import load_all_domains
 
 
 def run(filepath: str, data_dir=None):
     path = Path(filepath)
-    base = data_dir or DATA_DIR
+    base = data_dir or settings.data_home
     if not path.exists():
         print(f"文件不存在: {filepath}")
         return 1

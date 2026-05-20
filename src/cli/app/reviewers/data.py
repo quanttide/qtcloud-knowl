@@ -1,16 +1,16 @@
 import json
 from pathlib import Path
 from datetime import datetime
-from app.config import DATA_DIR
+from app.config import settings
 
-REVIEW_FILE = DATA_DIR / ".review.json"
+REVIEW_FILE = settings.data_home / ".review.json"
 
 
 def load_domains():
     domains = []
-    if not DATA_DIR.exists():
+    if not settings.data_home.exists():
         return domains
-    for d in sorted(DATA_DIR.iterdir()):
+    for d in sorted(settings.data_home.iterdir()):
         if d.is_dir() and (d / "domain.json").exists():
             with open(d / "domain.json") as f:
                 info = json.load(f)

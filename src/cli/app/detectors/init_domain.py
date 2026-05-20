@@ -4,7 +4,7 @@
 import json
 import argparse
 from pathlib import Path
-from app.config import DATA_DIR
+from app.config import settings
 
 
 SKELETONS = {
@@ -15,7 +15,7 @@ SKELETONS = {
 
 
 def run(domain_name: str, from_detect_file: str = None):
-    domain_dir = DATA_DIR / domain_name
+    domain_dir = settings.data_home / domain_name
     domain_dir.mkdir(parents=True, exist_ok=True)
 
     domain_json_path = domain_dir / "domain.json"

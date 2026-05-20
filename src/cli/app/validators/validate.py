@@ -4,14 +4,14 @@
 import json
 import argparse
 from pathlib import Path
-from app.config import DATA_DIR
+from app.config import settings
 
 
 REQUIRED_FILES = ["domain.json", "ontologies.json", "instances.json", "relations.json"]
 
 
 def run(data_dir=None):
-    base = Path(data_dir) if data_dir else DATA_DIR
+    base = Path(data_dir) if data_dir else settings.data_home
     if not base.exists():
         print(f"数据目录不存在: {base}")
         return 1
@@ -48,7 +48,7 @@ def run(data_dir=None):
 
 def main():
     parser = argparse.ArgumentParser(description="领域目录结构完整性验证")
-    parser.add_argument("data_dir", nargs="?", default=DATA_DIR, help="data 目录路径")
+    parser.add_argument("data_dir", nargs="?", default=settings.data_home, help="data 目录路径")
     args = parser.parse_args()
     exit(run(args.data_dir))
 
