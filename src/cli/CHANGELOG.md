@@ -1,5 +1,15 @@
 # 变更记录
 
+## [0.0.1] - 2026-05-20
+
+### 初始版本
+
+- 从 `knowl-agent` 实验项目移植到 `qtcloud-knowl` 作为 `src/cli`
+- 核心模块：detectors、reporters、reviewers、validators
+- CLI 入口 `cli.py`
+- 测试套件：加载、校验、抽象、汇总
+- 项目名称：`qtcloud-knowl-cli`
+
 ## [1.0.0] - 2026-05-19
 
 ### 第一阶段：本体重构
