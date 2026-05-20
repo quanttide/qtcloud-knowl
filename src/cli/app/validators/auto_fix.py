@@ -19,6 +19,9 @@ MAX_ITER = 10
 
 def run(data_dir=None, sample_dir=None):
     base = Path(data_dir) if data_dir else DATA_DIR
+    if not base.exists():
+        print(f"数据目录不存在: {base}")
+        return 1
     print("骨架文件自动补全开始（不修复 JSON 格式错误）\n")
 
     for i in range(1, MAX_ITER + 1):

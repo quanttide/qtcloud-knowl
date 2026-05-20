@@ -16,3 +16,9 @@ class TestValidate:
         assert result == 0
         for domain in ("biz-ops", "doc-std", "hr", "org-gov"):
             assert domain in captured.out
+
+    def test_validate_missing_dir(self, capsys):
+        result = run("/nonexistent")
+        captured = capsys.readouterr()
+        assert result == 1
+        assert "数据目录不存在" in captured.out

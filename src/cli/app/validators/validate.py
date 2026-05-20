@@ -12,6 +12,9 @@ REQUIRED_FILES = ["domain.json", "ontologies.json", "instances.json", "relations
 
 def run(data_dir=None):
     base = Path(data_dir) if data_dir else DATA_DIR
+    if not base.exists():
+        print(f"数据目录不存在: {base}")
+        return 1
     errors = 0
 
     for domain_dir in sorted(base.iterdir()):
