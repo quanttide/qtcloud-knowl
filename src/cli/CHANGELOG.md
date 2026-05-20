@@ -1,14 +1,5 @@
 # 变更记录
 
-## [0.0.5] - 2026-05-20
-
-### 模型升级
-
-- `app/models.py`：`dataclasses` → `pydantic.BaseModel`，字段使用 `quanttide` v0.1.1 类型注释
-- `Domain.name`、`Ontology.name` → `NameField`（str, max_length=100）
-- `Ontology.label` → `LabelField`
-- `Domain.perspective`、`Ontology.perspective`、`Ontology.description`、`Relation.description` → `DescriptionField`
-
 ## [0.0.4] - 2026-05-20
 
 ### CLI 重设计
@@ -27,6 +18,13 @@
 - 新增 `tests/test_docs.py` —— CLI help 输出验证、storage.md env var 一致性、Settings 字段校验
 - `app/cli.py`、`app/config.py` 模块 docstring 含 doctest 示例
 - `README.md` 重写、STATUS.md 同步、storage.md 路径修正
+
+### 模型升级
+
+- `app/models.py`：`dataclasses` → `pydantic.BaseModel`，字段使用 `quanttide` v0.1.1 类型注释
+- `Domain.name`、`Ontology.name` → `NameField`（str, max_length=100）
+- `Ontology.label` → `LabelField`
+- `Domain.perspective`、`Ontology.perspective`、`Ontology.description`、`Relation.description` → `DescriptionField`
 
 ## [0.0.3] - 2026-05-20
 
