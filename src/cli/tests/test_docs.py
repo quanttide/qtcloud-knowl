@@ -57,8 +57,9 @@ class TestStorageDoc:
         assert "QTCLOUD_KNOWL_SAMPLE_HOME" in doc
         assert hasattr(settings, "sample_home")
 
-    def test_cli_docs_index_exists(self):
-        assert (CLI_DOCS_DIR / "index.md").exists()
+    def test_cli_docs_exist(self):
+        for name in ("index.md", "commands.md", "config.md"):
+            assert (CLI_DOCS_DIR / name).exists(), f"缺失文档: {name}"
 
 
 class TestSettingsDoc:
