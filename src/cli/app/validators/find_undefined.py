@@ -2,9 +2,8 @@
 """扫描全库加粗术语，对比所有领域定义，找出未定义术语"""
 
 import re
-import argparse
 from pathlib import Path
-from app.config import settings, SAMPLE_DIR
+from app.config import settings
 from app.loader import load_all_domains
 
 
@@ -38,7 +37,7 @@ def collect_defined_terms(sample_dir, data_dir):
 
 
 def run(sample_dir=None, data_dir=None):
-    sdir = Path(sample_dir) if sample_dir else SAMPLE_DIR
+    sdir = Path(sample_dir) if sample_dir else settings.sample_home
     ddir = Path(data_dir) if data_dir else settings.data_home
     defined = collect_defined_terms(sdir, ddir)
     defined_clean = {t.replace(" ", "") for t in defined}
@@ -71,13 +70,4 @@ def run(sample_dir=None, data_dir=None):
     return 0
 
 
-def main():
-    parser = argparse.ArgumentParser(description="扫描全库加粗术语，找出未定义术语")
-    parser.add_argument("sample_dir", nargs="?", default=SAMPLE_DIR, help="sample 目录路径")
-    parser.add_argument("data_dir", nargs="?", default=settings.data_home, help="data 目录路径")
-    args = parser.parse_args()
-    exit(run(args.sample_dir, args.data_dir))
 
-
-if __name__ == "__main__":
-    main()

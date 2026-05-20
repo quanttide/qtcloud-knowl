@@ -64,6 +64,14 @@ store.data_dir
 
 环境变量的优先级高于操作系统默认路径，不会修改原始默认目录。
 
+### 源文档目录
+
+原始 Markdown 文件通过 `QTCLOUD_KNOWL_SAMPLE_HOME` 指定。不设置则依赖源文档的命令（如 `validate --undefined`）无法使用：
+
+```bash
+export QTCLOUD_KNOWL_SAMPLE_HOME=~/my-knowledge-base/raw
+```
+
 ## 应用数据与测试数据
 
 `src/cli/tests/fixtures/` 下包含一套完整的测试夹具数据，结构与应用数据一致。安装后的生产数据存放在 `store.data_dir`，两者不冲突。

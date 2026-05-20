@@ -29,9 +29,13 @@ class TestConfig:
         importlib.reload(config)
         assert config.settings.data_home == Path("/tmp/custom-data")
 
-    def test_sample_dir_points_to_input(self):
-        assert "input" in str(config.SAMPLE_DIR)
-        assert config.SAMPLE_DIR.exists()
+    def test_sample_home_none_by_default(self):
+        assert config.settings.sample_home is None
+
+    def test_sample_home_from_env(self, monkeypatch):
+        monkeypatch.setenv("QTCLOUD_KNOWL_SAMPLE_HOME", "/tmp/my-sources")
+        importlib.reload(config)
+        assert config.settings.sample_home == Path("/tmp/my-sources")
 
     def test_production_data_dir_works_end_to_end(self, monkeypatch, tmp_path):
         monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", str(tmp_path))
