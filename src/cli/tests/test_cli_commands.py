@@ -8,11 +8,8 @@ from tests.conftest import FIXTURE_DIR, SAMPLE_DIR
 
 class TestCliCommands:
     def _invoke(self, monkeypatch, *args):
-        monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", str(FIXTURE_DIR))
-        monkeypatch.setenv("QTCLOUD_KNOWL_SAMPLE_HOME", str(SAMPLE_DIR))
-        import importlib
-        from app import config
-        importlib.reload(config)
+        monkeypatch.setattr("app.cli.settings.data_home", FIXTURE_DIR)
+        monkeypatch.setattr("app.cli.settings.sample_home", SAMPLE_DIR)
         from app.cli import app
         return CliRunner().invoke(app, list(args))
 
@@ -59,10 +56,7 @@ class TestCliCommands:
 
 class TestCliMain:
     def test_main_function(self, monkeypatch):
-        monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", str(FIXTURE_DIR))
-        import importlib
-        from app import config
-        importlib.reload(config)
+        monkeypatch.setattr("app.cli.settings.data_home", FIXTURE_DIR)
         from app.cli import main
         import sys
         monkeypatch.setattr(sys, "argv", ["qtcloud-knowl", "summary"])
@@ -70,10 +64,7 @@ class TestCliMain:
             main()
 
     def test_main_exit_code_zero(self, monkeypatch):
-        monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", str(FIXTURE_DIR))
-        import importlib
-        from app import config
-        importlib.reload(config)
+        monkeypatch.setattr("app.cli.settings.data_home", FIXTURE_DIR)
         from app.cli import main
         import sys
         monkeypatch.setattr(sys, "argv", ["qtcloud-knowl", "summary"])
@@ -84,6 +75,7 @@ class TestCliMain:
 
 class TestCliCommandInitDomain:
     def test_init_domain(self, monkeypatch, tmp_path):
+        monkeypatch.setattr("app.cli.settings.data_home", tmp_path)
         monkeypatch.setattr("app.detectors.init_domain.settings.data_home", tmp_path)
         from app.cli import app
         result = CliRunner().invoke(app, ["init-domain", "test-domain"])

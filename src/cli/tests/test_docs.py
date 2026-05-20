@@ -12,17 +12,26 @@ DOCS_DIR = Path(__file__).resolve().parent.parent / "docs"
 class TestCliHelp:
     """CLI --help 输出与文档一致"""
 
-    def test_all_commands_listed(self):
+    def test_public_commands_listed(self):
         from app.cli import app
         from typer.testing import CliRunner
 
         runner = CliRunner()
         result = runner.invoke(app, ["--help"])
         assert result.exit_code == 0
+        for cmd in ["audit", "extract"]:
+            assert cmd in result.output, f"命令 {cmd} 未出现在 --help 输出中"
+
+    def test_hidden_commands_not_listed(self):
+        from app.cli import app
+        from typer.testing import CliRunner
+
+        runner = CliRunner()
+        result = runner.invoke(app, ["--help"])
         for cmd in ["summary", "validate", "find-undefined-terms",
                      "fusion-check", "check-abstraction", "auto-fix",
                      "cross-domain-report", "detect-domain", "init-domain"]:
-            assert cmd in result.output, f"命令 {cmd} 未出现在 --help 输出中"
+            assert cmd not in result.output, f"命令 {cmd} 不应出现在 --help 输出中"
 
     def test_validate_help(self):
         from app.cli import app

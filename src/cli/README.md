@@ -5,15 +5,8 @@
 ## 命令
 
 ```
-summary              领域概况统计
-validate             领域目录结构完整性验证
-find-undefined-terms 扫描源文档中出现的术语是否已定义
-fusion-check         跨领域融合检测（名称冲突、引用断裂、效力声明）
-check-abstraction    本体抽象度检测
-auto-fix             骨架文件自动补全
-cross-domain-report  跨领域关系覆盖率报告
-detect-domain        推荐所属领域
-init-domain          初始化新领域目录和骨架文件
+audit    全量质量审计 — 串行执行全部检测并聚合报告
+extract  知识抽取 — 从源文件自动抽取知识到知识库
 ```
 
 ## 快速开始
@@ -23,9 +16,8 @@ init-domain          初始化新领域目录和骨架文件
    export QTCLOUD_KNOWL_DATA_HOME=~/my-knowledge/models
    export QTCLOUD_KNOWL_SAMPLE_HOME=~/my-knowledge/raw
    ```
-2. 创建领域：`qtcloud-knowl init-domain 组织治理`
-3. 填充 JSON 模型文件
-4. 校验：`qtcloud-knowl validate`
+2. 审计已有知识库：`qtcloud-knowl audit`
+3. 从源文档抽取知识：`qtcloud-knowl extract`
 
 详细说明见 `docs/storage.md`。
 
