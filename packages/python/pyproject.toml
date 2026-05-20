@@ -1,0 +1,17 @@
+[project]
+name = "qtcloud-knowl"
+version = "0.1.0"
+description = "Knowledge Agent core — data models and loaders"
+requires-python = ">=3.12"
+dependencies = [
+    "pydantic>=2.0",
+]
+
+[project.optional-dependencies]
+test = [
+    "pytest>=8.0",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "-v --doctest-modules"
