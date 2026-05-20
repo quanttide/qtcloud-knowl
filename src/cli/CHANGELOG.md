@@ -9,6 +9,10 @@
 - `reviewers/data.py` 底层调用 SDK，向上保持 dict 接口兼容
 - 修复 `Instance.data` 可变默认值 bug（SDK 已用 `Field(default_factory=dict)`）
 
+### 功能
+
+- 新增 `product-refactor` skill
+
 ## [0.0.11] - 2026-05-20
 
 ### 修复
