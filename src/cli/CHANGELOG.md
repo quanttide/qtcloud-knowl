@@ -1,5 +1,30 @@
 # 变更记录
 
+## [0.0.2] - 2026-05-20
+
+### 修复检测精度
+
+- find-undefined-terms 扩展 `IGNORED_CHAPTER_RE` 覆盖中文数字、阿拉伯数字、`第X` 占位符
+- fusion-check 新增 `HUMAN_CONFIRM_TERMS` 和 `HUMAN_CONFIRM_REFS`，输出标记 `【需人确认】`
+
+### 测试增强
+
+- 测试从 5 个扩至 30 个，用 `capsys` 捕获 stdout 校验输出内容
+- 新增 `test_config.py` 覆盖 `KNOWL_DATA_DIR` 环境变量
+
+### 数据目录可配置化
+
+- `config.py` 支持 `KNOWL_DATA_DIR` 环境变量，fallback 到 `~/.local/share/quanttide/qtcloud-knowl/`
+- 新增 `docs/storage.md` 阐述存储方案
+- 修复 4 个模块中 `data_dir` 字符串→`Path` 转换缺失的 bug
+
+### 重构与修复
+
+- `reviewers/__init__.py` 引用路径 `src.validators.*` → `app.validators.*`
+- `cli.py` 帮助信息更新为 `qtcloud-knowl`
+- `detect_domain.py` 新增 `--data-dir` 参数
+- `auto_fix.py` 移除未使用的 `sample_dir` 参数
+
 ## [0.0.1] - 2026-05-20
 
 ### 初始版本
