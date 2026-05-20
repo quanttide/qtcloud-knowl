@@ -63,6 +63,9 @@
 | `config.py` 改用 `quanttide.LocalStorage` | ✅ 替换 `Path.home()` 硬编码，`docs/storage.md` 与代码一致 |
 | `HUMAN_CONFIRM_TERMS` 清理 | ✅ "交接" 经人确认为合法跨领域重叠，不再标记 |
 | 环境变量命名统一 | ✅ 标准化为 `QTCLOUD_KNOWL_DATA_HOME`，与 `quanttide` SDK `env_override` 一致 |
+| CLI 改用 typer | ✅ `sys.argv` → `typer`，自动 `--help`，无位置参数 |
+| `sample_home` 环境变量 | ✅ `QTCLOUD_KNOWL_SAMPLE_HOME`，`config.py` 移除所有模块级常量 |
+| 文档测试 | ✅ CLI help 输出验证、`storage.md` env var 验证、doctest 2 处 |
 
 ## 文件结构
 

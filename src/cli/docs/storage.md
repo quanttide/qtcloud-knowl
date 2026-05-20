@@ -74,7 +74,7 @@ export QTCLOUD_KNOWL_SAMPLE_HOME=~/my-knowledge-base/raw
 
 ## 应用数据与测试数据
 
-`src/cli/tests/fixtures/` 下包含一套完整的测试夹具数据，结构与应用数据一致。安装后的生产数据存放在 `store.data_dir`，两者不冲突。
+`tests/fixtures/` 下包含一套完整的测试夹具数据，结构与应用数据一致。安装后的生产数据存放在 `store.data_dir`，两者不冲突。
 
 ## 为什么不是数据库
 
