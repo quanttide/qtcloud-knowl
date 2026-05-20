@@ -2,16 +2,16 @@
 ReAct 智能体实验 — 基于 quanttide-agent 的工具调用循环。
 
 用法:
-    from app.agent import ActionParser, Agent, Message, Tool
+    from app.agent import ActionParser, Message, ReActAgent, Tool
     from quanttide_agent import LLM
 
     llm = LLM(model="deepseek-v4-flash")
     tools = [Tool(name="validate", description="检查目录结构", executor=validate_fn)]
-    agent = Agent(llm, tools)
+    agent = ReActAgent(llm, tools)
 
     tool_desc = "\\n".join(f"- {t.name}: {t.description}" for t in tools)
     result = agent.run([
-        Message(role="system", content=Agent.system_prompt(tool_desc)),
+        Message(role="system", content=ReActAgent.system_prompt(tool_desc)),
         Message(role="user", content="检查一下"),
     ])
 """
@@ -86,7 +86,7 @@ class Tool(BaseModel):
             return f"执行错误: {e}"
 
 
-class Agent:
+class ReActAgent:
     def __init__(self, llm: LLM, tools: list[Tool], *, parser: ActionParser | None = None, max_steps: int = 10):
         self.llm = llm
         self._tools = {t.name: t for t in tools}
@@ -134,7 +134,7 @@ Final Answer: 你的最终回复
 """
 
 
-def default_agent(llm: LLM | None = None) -> Agent:
+def default_agent(llm: LLM | None = None) -> ReActAgent:
     from app.validators.validate import run as validate_run
     from app.validators.fusion_check import run as fusion_run
     from app.reporters.abstraction import run as abstraction_run

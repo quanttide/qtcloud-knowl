@@ -5,7 +5,7 @@ from unittest.mock import MagicMock
 import pytest
 from quanttide_agent import ChatResponse, LLM
 
-from app.agent import Action, ActionParser, Agent, Message, Tool
+from app.agent import Action, ActionParser, Message, ReActAgent, Tool
 
 
 @pytest.fixture
@@ -80,7 +80,7 @@ class TestRun:
         mock_llm.chat.return_value = ChatResponse(
             content="Thought: 无需工具\nFinal Answer: 一切正常", model="deepseek"
         )
-        agent = Agent(mock_llm, [], max_steps=5)
+        agent = ReActAgent(mock_llm, [], max_steps=5)
         result = agent.run(self._msgs("检查状态"))
         assert result == "一切正常"
         assert mock_llm.chat.call_count == 1
@@ -96,7 +96,7 @@ class TestRun:
             exec_records.append(args)
             return "结构完整"
 
-        agent = Agent(mock_llm, [_tool("validate", executor=validate)])
+        agent = ReActAgent(mock_llm, [_tool("validate", executor=validate)])
         result = agent.run(self._msgs("验证一下"))
         assert result == "验证通过"
         assert mock_llm.chat.call_count == 2
@@ -118,7 +118,7 @@ class TestRun:
             calls.append("fusion")
             return "OK"
 
-        agent = Agent(mock_llm, [_tool("validate", executor=validate), _tool("fusion-check", executor=fusion)])
+        agent = ReActAgent(mock_llm, [_tool("validate", executor=validate), _tool("fusion-check", executor=fusion)])
         result = agent.run(self._msgs("全面检查"))
         assert result == "全部通过"
         assert calls == ["validate", "fusion"]
@@ -131,7 +131,7 @@ class TestRun:
         def validate(args):
             return "结果"
 
-        agent = Agent(mock_llm, [_tool("validate", executor=validate)], max_steps=3)
+        agent = ReActAgent(mock_llm, [_tool("validate", executor=validate)], max_steps=3)
         result = agent.run(self._msgs("检查"))
         assert "达到最大步数" in result
         assert mock_llm.chat.call_count == 3
@@ -146,7 +146,7 @@ class TestRun:
         def validate(args):
             return "ok"
 
-        agent = Agent(mock_llm, [_tool("validate", executor=validate)], max_steps=5)
+        agent = ReActAgent(mock_llm, [_tool("validate", executor=validate)], max_steps=5)
         result = agent.run(self._msgs("测试"))
         assert result == "好了"
         assert mock_llm.chat.call_count == 3
@@ -160,7 +160,7 @@ class TestRun:
         def failing(args):
             raise ValueError("崩溃")
 
-        agent = Agent(mock_llm, [_tool("failing", executor=failing)])
+        agent = ReActAgent(mock_llm, [_tool("failing", executor=failing)])
         result = agent.run(self._msgs("测试"))
         assert result == "已处理"
 
@@ -170,7 +170,7 @@ class TestInit:
         def fn(args):
             return ""
 
-        agent = Agent(MagicMock(spec=LLM), [Tool(name="t1", executor=fn)])
+        agent = ReActAgent(MagicMock(spec=LLM), [Tool(name="t1", executor=fn)])
         assert len(agent._tools) == 1
         assert "t1" in agent._tools
 
