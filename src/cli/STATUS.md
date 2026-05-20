@@ -47,8 +47,8 @@
 | 2 | `cli.py` 帮助信息仍写 `python -m src.cli`，未更新为 `kcli` | `app/cli.py:6` | 用户困惑 | ✅ 已修复 |
 | 3 | `detect_domain.py` 的 `main()` 未传递 `data_dir` 给 `run()` | `app/detectors/detect_domain.py:32` | 与核心函数接口不一致 | ✅ 已修复 |
 | 4 | `auto_fix.py` 的 `run()` 接受 `sample_dir` 参数但未使用 | `app/validators/auto_fix.py:17` | 死参数 | ✅ 已移除 |
-| 5 | 缺少 `KNOWL_DATA_DIR` 环境变量的测试覆盖 | — | 配置可测试性弱 | 🟡 待补充 |
-| 6 | 测试仅覆盖夹具数据，未覆盖生产 DATA_DIR 路径 | `tests/` | 安装后行为未验证 | 🟡 待补充 |
+| 5 | 缺少 `KNOWL_DATA_DIR` 环境变量的测试覆盖 | `tests/test_config.py` | 配置可测试性弱 | ✅ 已有覆盖 |
+| 6 | 测试仅覆盖夹具数据，未覆盖生产 DATA_DIR 路径 | `tests/` | 安装后行为未验证 | ✅ 已补充 |
 | 7 | fusion-check "交接" 重叠 | `app/validators/fusion_check.py:182` | 需人判断 | 【需人确认】 |
 | 8 | fusion-check qtdata-index.md 引用 `《量潮数据项目岗位权责章程》` 文件不存在 | `app/validators/fusion_check.py:183` | 需人确认 | 【需人确认】 |
 
