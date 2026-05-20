@@ -17,12 +17,13 @@ class TestExtract:
         from app.cli import app
         result = CliRunner().invoke(app, ["extract", str(SAMPLE_DIR)])
         assert result.exit_code == 0
-        assert "抽取完成" in result.output or "推荐领域" in result.output
+        assert "抽取完成" in result.output
 
     def test_extract_nonexistent_dir(self):
         from app.cli import app
         result = CliRunner().invoke(app, ["extract", "/nonexistent"])
         assert "不存在" in result.output
+        assert "确认目录路径" in result.output
 
     def test_extract_creates_skeleton(self, tmp_path):
         from app.cli import app
@@ -34,4 +35,4 @@ class TestExtract:
         out = tmp_path / "out"
         result = CliRunner().invoke(app, ["extract", str(sample), "--data-dir", str(out)])
         assert result.exit_code == 0
-        assert "抽取完成" in result.output or "推荐领域" in result.output or "词汇表" in result.output
+        assert "抽取完成" in result.output

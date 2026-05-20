@@ -69,8 +69,8 @@ def run(data_dir=None, sample_dir=None, mode="full"):
     import typer
     if not ddir.exists():
         print("审计中止：数据目录不存在")
-        print(f"  路径: {ddir}")
-        print("请确认 QTCLOUD_KNOWL_DATA_HOME 已正确设置。")
+        print(f"  当前路径: {ddir}")
+        print("请确认 QTCLOUD_KNOWL_DATA_HOME 环境变量已正确设置，或传入 data_dir 参数。")
         raise typer.Exit(code=1)
 
     if mode not in ("simple", "full"):

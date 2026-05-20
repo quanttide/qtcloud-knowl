@@ -100,10 +100,11 @@ def audit(
 def extract(
     sample_dir: str = typer.Argument(None, help="源文档目录路径（默认从 settings 读取）"),
     data_dir: str = typer.Option(None, "--data-dir", help="数据目录路径"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="显示详细匹配信息"),
 ):
-    """知识抽取 — 从源文件自动抽取知识到知识库"""
+    """知识抽取 — 从源文件自动创建知识库骨架"""
     from app.agents.extract import run
-    return run(sample_dir, data_dir)
+    return run(sample_dir, data_dir, verbose)
 
 
 def main():
