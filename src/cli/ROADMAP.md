@@ -37,6 +37,26 @@
 - `openai` / `anthropic` SDK（择一，可配置）
 - `jinja2`（Prompt 模板）
 
+## [0.0.6] — 面向任务的 CLI 重构
+
+当前 9 个命令（validate、fusion-check、find-undefined-terms 等）是工具级 API，需要人编排，不符合"规则引擎 vs 智能体 vs 人类"分工。v0.0.6 将其收敛为 2–3 个面向任务的高层入口。
+
+### CLI 收敛
+
+- `qtcloud-knowl audit` — 全量质量审计
+  - Agent 自动串行执行全部检测（validate + fusion-check + find-undefined-terms + check-abstraction + cross-domain-report）
+  - 聚合结果，解释根因，标记 **【需人确认】**
+  - 输出一份可读审计报告
+- `qtcloud-knowl extract` — 从源文件自动抽取知识到知识库
+  - 输入：源文档目录
+  - Agent 自动执行完整知识发现流程（领域→本体→实例→关系→跨域融合）
+  - 输出：填充完成的 domain/ontologies/instances/relations JSON
+
+### 保留底层 API
+
+底层命令（validate、fusion-check 等）不删除，降级为不公开/仅 `--help` 隐藏的接口，供 agent 内部调用。用户面向的是 `audit` 和 `extract`。
+
 ---
 
-所有已发布版本记录见 [CHANGELOG.md](./CHANGELOG.md)。
+- 所有已发布版本记录见 [CHANGELOG.md](./CHANGELOG.md)
+- v0.0.5 的 agent 基础设施是 v0.0.6 的前置依赖
