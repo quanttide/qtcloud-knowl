@@ -3,9 +3,9 @@
 from unittest.mock import MagicMock
 
 import pytest
-from quanttide_agent import ChatResponse, LLM, ToolDef
+from quanttide_agent import ChatResponse, LLM
 
-from app.agent import Agent
+from app.agent import Agent, Tool
 
 
 @pytest.fixture
@@ -13,8 +13,8 @@ def mock_llm() -> MagicMock:
     return MagicMock(spec=LLM)
 
 
-def _tool(name: str, desc: str = "") -> ToolDef:
-    return ToolDef(name=name, description=desc)
+def _tool(name: str, desc: str = "", fn: callable = None) -> Tool:
+    return Tool(name=name, description=desc, execute=fn)
 
 
 class TestParseAction:
@@ -59,7 +59,7 @@ class TestExecute:
             return "执行成功"
 
         agent = Agent.__new__(Agent)
-        agent._tools = {"my-tool": (_tool("my-tool"), tool_fn)}
+        agent._tools = {"my-tool": _tool("my-tool", fn=tool_fn)}
         result = agent._execute("my-tool", {"key": "val"})
         assert result == "执行成功"
         assert exec_records == [{"key": "val"}]
@@ -70,12 +70,18 @@ class TestExecute:
         result = agent._execute("unknown", {})
         assert "未知工具" in result
 
+    def test_execute_tool_no_execute(self):
+        agent = Agent.__new__(Agent)
+        agent._tools = {"noop": _tool("noop")}
+        result = agent._execute("noop", {})
+        assert "未知工具" in result
+
     def test_execute_tool_error(self):
         def failing_fn(args):
             raise ValueError("工具崩溃")
 
         agent = Agent.__new__(Agent)
-        agent._tools = {"failing": (_tool("failing"), failing_fn)}
+        agent._tools = {"failing": _tool("failing", fn=failing_fn)}
         result = agent._execute("failing", {})
         assert "执行错误" in result
         assert "工具崩溃" in result
@@ -102,7 +108,7 @@ class TestRun:
             exec_records.append(args)
             return "结构完整"
 
-        agent = Agent(mock_llm, [(_tool("validate"), validate)])
+        agent = Agent(mock_llm, [_tool("validate", fn=validate)])
         result = agent.run("验证一下")
         assert result == "验证通过"
         assert mock_llm.chat.call_count == 2
@@ -124,7 +130,7 @@ class TestRun:
             calls.append("fusion")
             return "OK"
 
-        agent = Agent(mock_llm, [(_tool("validate"), validate), (_tool("fusion-check"), fusion)])
+        agent = Agent(mock_llm, [_tool("validate", fn=validate), _tool("fusion-check", fn=fusion)])
         result = agent.run("全面检查")
         assert result == "全部通过"
         assert calls == ["validate", "fusion"]
@@ -137,7 +143,7 @@ class TestRun:
         def validate(args):
             return "结果"
 
-        agent = Agent(mock_llm, [(_tool("validate"), validate)], max_steps=3)
+        agent = Agent(mock_llm, [_tool("validate", fn=validate)], max_steps=3)
         result = agent.run("检查")
         assert "达到最大步数" in result
         assert mock_llm.chat.call_count == 3
@@ -152,7 +158,7 @@ class TestRun:
         def validate(args):
             return "ok"
 
-        agent = Agent(mock_llm, [(_tool("validate"), validate)], max_steps=5)
+        agent = Agent(mock_llm, [_tool("validate", fn=validate)], max_steps=5)
         result = agent.run("测试")
         assert result == "好了"
         assert mock_llm.chat.call_count == 3
@@ -166,17 +172,22 @@ class TestRun:
         def failing(args):
             raise ValueError("崩溃")
 
-        agent = Agent(mock_llm, [(_tool("failing"), failing)])
+        agent = Agent(mock_llm, [_tool("failing", fn=failing)])
         result = agent.run("测试")
         assert result == "已处理"
 
 
 class TestInit:
-    def test_accepts_tool_pairs(self):
+    def test_accepts_tools(self):
         def fn(args):
             return ""
 
-        agent = Agent(MagicMock(spec=LLM), [(_tool("t1"), fn)])
+        agent = Agent(MagicMock(spec=LLM), [Tool(name="t1", execute=fn)])
         assert len(agent._tools) == 1
         assert "t1" in agent._tools
+
+    def test_tool_schema_no_execute(self):
+        tool = Tool(name="t1", description="d1")
+        assert tool.name == "t1"
+        assert tool.execute is None
 
