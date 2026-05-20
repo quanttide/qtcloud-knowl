@@ -1,5 +1,24 @@
 # 变更记录
 
+## [0.0.4] - 2026-05-20
+
+### CLI 重设计
+
+- `sys.argv` 手动分发 → `typer`，自动 `--help` / `--show-completion`
+- 所有 CLI 命令不再接受 `data_dir`、`sample_dir` 位置参数，统一从 `Settings` 读取
+- `find-undefined-terms`、`fusion-check` 默认路径改读 `settings.sample_home`（环境变量 `QTCLOUD_KNOWL_SAMPLE_HOME`）
+
+### 配置层统一
+
+- `config.py` 新增 `Settings.sample_home`（`QTCLOUD_KNOWL_SAMPLE_HOME`），无默认值
+- 移除模块级 `SAMPLE_DIR` 常量，`config.py` 只保留 `Settings`
+
+### 文档与测试
+
+- 新增 `tests/test_docs.py` —— CLI help 输出验证、storage.md env var 一致性、Settings 字段校验
+- `app/cli.py`、`app/config.py` 模块 docstring 含 doctest 示例
+- `README.md` 重写、STATUS.md 同步、storage.md 路径修正
+
 ## [0.0.3] - 2026-05-20
 
 ### 重构
