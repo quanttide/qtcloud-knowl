@@ -30,7 +30,7 @@ def run(filepath: str, data_dir=None):
 
     results.sort(key=lambda x: -x[1])
     for name, score, total in results:
-        print(f"  {name}: 命中 {score} 次（词汇表 {total} 词）")
+        print(f"  {name}")
     return 0
 
 

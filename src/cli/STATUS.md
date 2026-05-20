@@ -69,6 +69,19 @@
 | P3 | #4 init_domain 噪音 | verbose 模式也过滤内部日志 |
 | P4 | #6 帮助文字格式不一致 | 统一括号风格 |
 
+### v0.0.11 修复进展
+
+2026-05-21 — 6 个问题全部修复，151 测试通过。
+
+| 问题 | 修复 |
+|------|------|
+| 无效路径崩溃 | `default_factory` 替代类级 LocalStorage 调用，仅在使用时求值 |
+| diff 跨模式假阳性 | `_load_audit_state(mode=)` 仅匹配同 mode 状态 |
+| env var 空串不 fallback | `model_validator` 将空串转为 None 后补默认值 |
+| extract verbose 噪音 | 始终抑制 init_domain 日志，verbose 只显示领域匹配详情 |
+| help 括号不一致 | 统一为中文括号 |
+| detect-domain 技术分数 | 只输出推荐领域名，无"命中"等指标 |
+
 ## 文件结构
 
 ```

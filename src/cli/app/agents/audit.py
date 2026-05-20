@@ -26,11 +26,14 @@ def _issue_key(item):
     return f"{item['category']}|{item['group']}|{item['label']}"
 
 
-def _load_audit_state():
+def _load_audit_state(mode=None):
     fpath = settings.state_home / AUDIT_STATE_FILE
     if fpath.exists():
         try:
-            return json.loads(fpath.read_text(encoding="utf-8"))
+            state = json.loads(fpath.read_text(encoding="utf-8"))
+            if mode and state.get("mode") != mode:
+                return None
+            return state
         except Exception:
             return None
     return None
@@ -171,7 +174,7 @@ def run(data_dir=None, sample_dir=None, mode="full"):
         auto_fixable = []
 
     current_issues = _collect_issues(need_confirm, auto_fixable, suggestions)
-    previous = _load_audit_state()
+    previous = _load_audit_state(mode=mode)
     _save_audit_state(current_issues, mode)
 
     mode_label = "快速检查模式" if mode == "simple" else "全面审计模式"

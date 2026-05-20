@@ -72,14 +72,11 @@ def run(sample_dir=None, data_dir=None, verbose=False):
 
     import io, sys
     for domain_id in sorted(set([d for d in domain_hits.keys()] + list(existing_domains.keys()))):
-        if verbose:
+        old, sys.stdout = sys.stdout, io.StringIO()
+        try:
             init_domain_run(domain_id, data_dir=str(ddir))
-        else:
-            old, sys.stdout = sys.stdout, io.StringIO()
-            try:
-                init_domain_run(domain_id, data_dir=str(ddir))
-            finally:
-                sys.stdout = old
+        finally:
+            sys.stdout = old
 
     summary = _describe(domain_hits, existing_domains)
     if summary:

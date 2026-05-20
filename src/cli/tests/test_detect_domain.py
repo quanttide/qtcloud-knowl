@@ -13,7 +13,7 @@ class TestDetectDomain:
         captured = capsys.readouterr()
         assert result == 0
         assert "basic-charter.md" in captured.out
-        assert "命中" in captured.out
+        assert "doc-std" in captured.out
 
     def test_detect_returns_scores(self, capsys):
         sample = SAMPLE_DIR / "basic-charter.md"
@@ -38,4 +38,5 @@ class TestDetectDomain:
         sample = SAMPLE_DIR / "basic-charter.md"
         run(str(sample), FIXTURE_DIR)
         captured = capsys.readouterr()
-        assert "词汇表" in captured.out
+        assert "doc-std" in captured.out
+        assert "org-gov" in captured.out
