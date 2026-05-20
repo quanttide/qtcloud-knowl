@@ -14,10 +14,10 @@
 
 ### 剩余工作（同版本内迭代）
 
-- [ ] **#22a** 操作路径改为绝对路径，拼完整 `data/{domain}/{file}`
-- [ ] **#22b** MISS 类问题优先推荐 `auto-fix`，手动创建作为 fallback
-- [ ] **#22c** `_parse_issues` 加空结果兜底：解析出 0 条但 ret 有错时，输出"请查看上方原始日志"
-- [ ] **#22d** 空目录场景下 domain=None 不生成 `data/None/xxx`
+✅ **#22a** 操作路径改为绝对路径
+✅ **#22b** MISS 类问题优先推荐 `auto-fix`
+✅ **#22c** `_parse_issues` 加空结果兜底
+✅ **#22d** 防 domain=None 路径
 
 ## v0.0.8 — 新手被空骨架的大量报错吓到
 

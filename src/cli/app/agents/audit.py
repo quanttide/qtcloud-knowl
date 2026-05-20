@@ -23,22 +23,10 @@ def capture_run(fn, *args, **kwargs):
 
 
 def _has_issue(output):
-    return "[MISS]" in output or "[FAIL]" in output or "[检测到]" in output or "未定义" in output or "需人确认" in output
+    return "[MISS]" in output or "[FAIL]" in output or "[检测到]" in output or "使用了术语" in output or "需人确认" in output
 
 
-def _has_undefined_terms(output):
-    return "使用了术语" in output
-
-
-def _has_broken_refs(output):
-    return "需人确认" in output
-
-
-def _count(output, marker):
-    return len(re.findall(marker, output))
-
-
-def _parse_issues(output):
+def _parse_issues(output, data_dir=None):
     issues = []
     current_domain = None
     for line in output.split("\n"):
@@ -51,10 +39,17 @@ def _parse_issues(output):
             continue
         if "[MISS] " in stripped:
             fname = stripped.split("[MISS] ", 1)[-1].strip()
-            issues.append((f"• 缺少文件 {fname}", f"创建文件 data/{current_domain}/{fname}" if current_domain else None))
+            label = f"• 缺少文件 {fname}"
+            if current_domain:
+                action = f"运行 qtcloud-knowl auto-fix 自动补全，或创建文件 {data_dir}/{current_domain}/{fname}"
+            else:
+                action = "运行 qtcloud-knowl auto-fix 自动补全缺失文件"
+            issues.append((label, action))
         elif "[FAIL] " in stripped:
             detail = stripped.split("[FAIL] ", 1)[-1].strip()
-            issues.append((f"• JSON 格式错误: {detail}", f"修复 data/{current_domain} 下的对应 JSON 文件" if current_domain else None))
+            label = f"• JSON 格式错误: {detail}"
+            action = f"修复 {data_dir}/{current_domain}/ 下对应的 JSON 文件" if current_domain else "修复对应 JSON 文件格式"
+            issues.append((label, action))
         elif "使用了术语" in stripped:
             issues.append((f"• {stripped}", "在对应领域 domain.json 的 vocabulary 字段中补充该术语"))
         elif "需人确认" in stripped:
@@ -62,7 +57,8 @@ def _parse_issues(output):
             issues.append((f"• {label}", "确认该引用是否必要，如必要则补充源文件或删除引用"))
         elif "[检测到] " in stripped:
             label = stripped.split("[检测到] ", 1)[-1].strip()
-            issues.append((f"• {label}", "重构 ontologies.json 中的 pattern，将具体值改为变量"))
+            dest = f"{data_dir}/{current_domain}/ontologies.json" if current_domain else "对应 ontologies.json"
+            issues.append((f"• {label}", f"重构 {dest} 中的 pattern，将具体值改为变量"))
     return issues
 
 
@@ -103,7 +99,9 @@ def run(data_dir=None, sample_dir=None):
 
         output, ret = capture_run(fn, **kwargs)
 
-        issues = _parse_issues(output)
+        issues = _parse_issues(output, str(ddir))
+        if not issues and _has_issue(output):
+            issues.append(("• 检测到异常但无法解析具体位置", "请查看上方原始日志确认问题"))
 
         if name == "validate" and issues:
             auto_fixable.append(("文件结构问题", issues))
