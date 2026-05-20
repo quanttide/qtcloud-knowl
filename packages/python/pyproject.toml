@@ -1,6 +1,6 @@
 [project]
 name = "qtcloud-knowl"
-version = "0.1.0"
+version = "0.0.1"
 description = "Knowledge Agent core — data models and loaders"
 requires-python = ">=3.12"
 dependencies = [
