@@ -18,27 +18,30 @@ def _tool(name: str, desc: str = "", executor=None) -> Tool:
 
 
 class TestParseAction:
+    def setup_method(self):
+        self.parser = ActionParser()
+
     def test_parse_valid(self):
-        result = ActionParser.parse("Thought: 需要检查\nAction name: validate\nAction args: {}")
+        result = self.parser.parse("Thought: 需要检查\nAction name: validate\nAction args: {}")
         assert isinstance(result, Action)
         assert result.name == "validate"
         assert result.args == {}
 
     def test_parse_with_json_args(self):
-        result = ActionParser.parse(
+        result = self.parser.parse(
             'Thought: 检查特定领域\nAction name: validate\nAction args: {"domain": "org-gov"}'
         )
         assert result.name == "validate"
         assert result.args == {"domain": "org-gov"}
 
     def test_parse_no_action(self):
-        assert ActionParser.parse("这是一段普通文本") is None
+        assert self.parser.parse("这是一段普通文本") is None
 
     def test_parse_missing_input(self):
-        assert ActionParser.parse("Action name: validate\nSomething else") is None
+        assert self.parser.parse("Action name: validate\nSomething else") is None
 
     def test_parse_final_answer(self):
-        assert ActionParser.parse("Thought: 完成\nFinal Answer: 结果") is None
+        assert self.parser.parse("Thought: 完成\nFinal Answer: 结果") is None
 
 
 class TestExecute:

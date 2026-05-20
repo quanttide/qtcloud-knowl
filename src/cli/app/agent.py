@@ -47,13 +47,13 @@ class Action(BaseModel):
 class ActionParser:
     """从 LLM 回复中解析 Action 指令"""
 
-    KEY_ACTION_NAME = "Action name"
-    KEY_ACTION_ARGS = "Action args"
-    _pattern = rf"{KEY_ACTION_NAME}:\s*(.+)\n{KEY_ACTION_ARGS}:\s*(.+)"
+    def __init__(self, key_action_name: str = "Action name", key_action_args: str = "Action args", pattern: str | None = None):
+        self.key_action_name = key_action_name
+        self.key_action_args = key_action_args
+        self._pattern = pattern or rf"{key_action_name}:\s*(.+)\n{key_action_args}:\s*(.+)"
 
-    @classmethod
-    def parse(cls, text: str) -> Action | None:
-        m = re.search(cls._pattern, text)
+    def parse(self, text: str) -> Action | None:
+        m = re.search(self._pattern, text)
         if not m:
             return None
         name = m.group(1).strip()
@@ -63,6 +63,23 @@ class ActionParser:
         except json.JSONDecodeError:
             inp = raw
         return Action(name=name, args=inp)
+
+    def build_prompt(self, tool_descriptions: str) -> str:
+        return f"""你是一个知识工程助手。你有以下工具可用：
+
+{tool_descriptions}
+
+每次回复按以下格式（不要输出其他内容）：
+
+Thought: 你当前的思考
+{self.key_action_name}: 工具名称
+{self.key_action_args}: 给工具的参数（JSON 格式）
+
+当得到最终答案时：
+
+Thought: 我得到答案了
+Final Answer: 你的最终回复
+"""
 
 
 class Tool(BaseModel):
@@ -82,34 +99,17 @@ class Tool(BaseModel):
             return f"执行错误: {e}"
 
 
-REACT_PROMPT = f"""你是一个知识工程助手。你有以下工具可用：
-
-{{tool_descriptions}}
-
-每次回复按以下格式（不要输出其他内容）：
-
-Thought: 你当前的思考
-{ActionParser.KEY_ACTION_NAME}: 工具名称
-{ActionParser.KEY_ACTION_ARGS}: 给工具的参数（JSON 格式）
-
-当得到最终答案时：
-
-Thought: 我得到答案了
-Final Answer: 你的最终回复
-"""
-
-
 class Agent:
-    def __init__(self, llm: LLM, tools: list[Tool], max_steps: int = 10):
+    def __init__(self, llm: LLM, tools: list[Tool], *, parser: ActionParser | None = None, max_steps: int = 10):
         self.llm = llm
         self._tools = {t.name: t for t in tools}
+        self._parser = parser or ActionParser()
         self.max_steps = max_steps
 
     def run(self, task: str) -> str:
         tool_desc = "\n".join(f"- {t.name}: {t.description}" for t in self._tools.values())
-        system = REACT_PROMPT.format(tool_descriptions=tool_desc)
         messages: list[Message] = [
-            Message(role="system", content=system),
+            Message(role="system", content=self._parser.build_prompt(tool_desc)),
             Message(role="user", content=task),
         ]
 
@@ -120,7 +120,7 @@ class Agent:
             if "Final Answer:" in output:
                 return output.split("Final Answer:", 1)[1].strip()
 
-            action = ActionParser.parse(output)
+            action = self._parser.parse(output)
             messages.append(Message(role="assistant", content=output))
             if not action:
                 messages.append(Message(role="user", content="无法解析指令，请使用正确的 ReAct 格式。"))
