@@ -8,7 +8,7 @@ from datetime import datetime
 from pathlib import Path
 from app.config import settings
 from app.agents.tools import all_detection_tools
-from app.loader import load_all_domains
+from qtcloud_knowl.loader import load_all_domains
 
 AUDIT_STATE_FILE = "audit.json"
 

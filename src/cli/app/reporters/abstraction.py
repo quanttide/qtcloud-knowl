@@ -5,7 +5,7 @@ import re
 import argparse
 from pathlib import Path
 from app.config import settings
-from app.loader import load_all_domains
+from qtcloud_knowl.loader import load_all_domains
 
 
 SIGNAL_PATTERNS = [

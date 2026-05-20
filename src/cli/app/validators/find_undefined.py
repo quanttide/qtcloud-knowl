@@ -4,7 +4,7 @@
 import re
 from pathlib import Path
 from app.config import settings
-from app.loader import load_all_domains
+from qtcloud_knowl.loader import load_all_domains
 
 
 IGNORED_TERMS = {

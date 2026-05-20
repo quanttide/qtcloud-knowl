@@ -2,31 +2,27 @@ import json
 from pathlib import Path
 from datetime import datetime
 from app.config import settings
+from qtcloud_knowl.loader import load_all_domains as _load_all
 
 REVIEW_FILE = settings.data_home / ".review.json"
 
 
+def _flatten(data: dict) -> dict:
+    extra = data.pop("data", {})
+    data.update(extra)
+    return data
+
+
 def load_domains():
     domains = []
-    if not settings.data_home.exists():
-        return domains
-    for d in sorted(settings.data_home.iterdir()):
-        if d.is_dir() and (d / "domain.json").exists():
-            with open(d / "domain.json") as f:
-                info = json.load(f)
-            with open(d / "ontologies.json") as f:
-                ont = json.load(f)
-            with open(d / "instances.json") as f:
-                inst = json.load(f)
-            with open(d / "relations.json") as f:
-                rel = json.load(f)
-            domains.append({
-                "dir": d.name,
-                "info": info,
-                "ontologies": ont["ontologies"],
-                "instances": inst["instances"],
-                "relations": rel["relations"],
-            })
+    for d, domain, ontologies, instances, relations in _load_all(settings.data_home):
+        domains.append({
+            "dir": d.name,
+            "info": domain.model_dump(),
+            "ontologies": [o.model_dump() for o in ontologies],
+            "instances": [_flatten(i.model_dump()) for i in instances],
+            "relations": [r.model_dump() for r in relations],
+        })
     return domains
 
 

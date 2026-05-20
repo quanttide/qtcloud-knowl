@@ -1,5 +1,14 @@
 # 变更记录
 
+## [0.0.12] - 2026-05-21
+
+### 重构
+
+- CLI 改用 `qtcloud-knowl` SDK 包（`packages/python/`）的模型和加载器
+- 删除 `app/models.py` 和 `app/loader.py`（三套重复逻辑合一）
+- `reviewers/data.py` 底层调用 SDK，向上保持 dict 接口兼容
+- 修复 `Instance.data` 可变默认值 bug（SDK 已用 `Field(default_factory=dict)`）
+
 ## [0.0.11] - 2026-05-20
 
 ### 修复

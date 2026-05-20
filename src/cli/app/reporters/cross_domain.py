@@ -4,7 +4,7 @@
 import argparse
 from pathlib import Path
 from app.config import settings
-from app.loader import load_all_domains
+from qtcloud_knowl.loader import load_all_domains
 
 
 def run(data_dir=None):

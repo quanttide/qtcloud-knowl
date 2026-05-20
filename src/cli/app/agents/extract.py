@@ -3,7 +3,7 @@
 from pathlib import Path
 from collections import Counter
 from app.config import settings
-from app.loader import load_all_domains
+from qtcloud_knowl.loader import load_all_domains
 
 
 def _describe(domain_hits, existing_domains):
