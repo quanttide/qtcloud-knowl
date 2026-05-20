@@ -10,7 +10,7 @@ from app.config import settings
 REQUIRED_FILES = ["domain.json", "ontologies.json", "instances.json", "relations.json"]
 
 
-def run(data_dir=None):
+def run(data_dir=None, **kwargs) -> str:
     base = Path(data_dir) if data_dir else settings.data_home
     if not base.exists():
         print(f"数据目录不存在: {base}")
@@ -39,11 +39,9 @@ def run(data_dir=None):
 
     print("")
     if errors == 0:
-        print("全部验证通过")
-        return 0
+        return "全部验证通过"
     else:
-        print(f"发现 {errors} 个问题")
-        return 1
+        return f"发现 {errors} 个问题"
 
 
 def main():

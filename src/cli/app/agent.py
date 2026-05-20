@@ -17,7 +17,6 @@ from __future__ import annotations
 import json
 import re
 from collections.abc import Callable
-from pathlib import Path
 from typing import Any, Literal
 
 from pydantic import BaseModel
@@ -124,26 +123,17 @@ class Agent:
             messages.append(Message(role="tool", tool_call_id=action.name, content=result))
 
         return "达到最大步数，未得到最终答案。"
-def _import_run(module_path: str) -> Callable:
-    def fn(_args: dict | None = None) -> str:
-        import importlib
-
-        mod = importlib.import_module(module_path)
-        result = mod.run()
-        if result is None or result == 0:
-            return "成功"
-        return f"退出码 {result}"
-
-    return fn
-
-
 def default_agent(llm: LLM | None = None) -> Agent:
+    from app.validators.validate import run as validate_run
+    from app.validators.fusion_check import run as fusion_run
+    from app.reporters.abstraction import run as abstraction_run
+    from app.reporters.cross_domain import run as cross_domain_run
     from quanttide_agent import LLM as _LLM
 
     llm = llm or _LLM(model="deepseek-v4-flash")
     return Agent(llm, [
-        Tool(name="validate", description="检查领域目录结构完整性", executor=_import_run("app.validators.validate")),
-        Tool(name="fusion-check", description="跨领域融合检测（名称冲突、引用断裂）", executor=_import_run("app.validators.fusion_check")),
-        Tool(name="check-abstraction", description="本体抽象度检测", executor=_import_run("app.reporters.abstraction")),
-        Tool(name="cross-domain-report", description="跨领域关系覆盖率报告", executor=_import_run("app.reporters.cross_domain")),
+        Tool(name="validate", description="检查领域目录结构完整性", executor=validate_run),
+        Tool(name="fusion-check", description="跨领域融合检测（名称冲突、引用断裂）", executor=fusion_run),
+        Tool(name="check-abstraction", description="本体抽象度检测", executor=abstraction_run),
+        Tool(name="cross-domain-report", description="跨领域关系覆盖率报告", executor=cross_domain_run),
     ])
