@@ -35,6 +35,24 @@
     ...
 ```
 
+## SDK 支持
+
+路径解析已封装为 `quanttide` Python SDK，可直接使用：
+
+```python
+from quanttide import LocalStorage
+
+store = LocalStorage("qtcloud-knowl", vendor="quanttide")
+data_dir = store.data_dir
+# → ~/.local/share/quanttide/qtcloud-knowl/
+```
+
+SDK 还提供 `config_dir`、`cache_dir`、`state_dir`、`log_dir`、`runtime_dir` 等属性，并支持目录自动创建和环境变量覆写。
+
+```bash
+pip install quanttide
+```
+
 ## 覆盖默认路径
 
 设置环境变量 `KNOWL_DATA_DIR` 可指向任意目录：
