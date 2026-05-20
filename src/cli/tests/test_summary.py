@@ -1,4 +1,4 @@
-from src.reporters.summary import run
+from app.reporters.summary import run
 
 
 class TestSummary:

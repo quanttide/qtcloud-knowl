@@ -25,42 +25,42 @@ def main():
     args = sys.argv[2:]
 
     if command == "summary":
-        from src.reporters.summary import run
+        from app.reporters.summary import run
         return run(*args)
 
     elif command == "validate":
-        from src.validators.validate import run
+        from app.validators.validate import run
         return run(*args)
 
     elif command == "auto-fix":
-        from src.validators.auto_fix import run
+        from app.validators.auto_fix import run
         return run(*args)
 
     elif command == "check-abstraction":
-        from src.reporters.abstraction import run
+        from app.reporters.abstraction import run
         return run(*args)
 
     elif command == "cross-domain-report":
-        from src.reporters.cross_domain import run
+        from app.reporters.cross_domain import run
         return run(*args)
 
     elif command == "find-undefined-terms":
-        from src.validators.find_undefined import run
+        from app.validators.find_undefined import run
         return run(*args)
 
     elif command == "fusion-check":
-        from src.validators.fusion_check import run
+        from app.validators.fusion_check import run
         return run(*args)
 
     elif command == "detect-domain":
-        from src.detectors.detect_domain import run
+        from app.detectors.detect_domain import run
         if not args:
             print("用法: python -m src.cli detect-domain <file>")
             return 1
         return run(args[0])
 
     elif command == "init-domain":
-        from src.detectors.init_domain import run
+        from app.detectors.init_domain import run
         if not args:
             print("用法: python -m src.cli init-domain <domain_name> [--from-detect <file>]")
             return 1

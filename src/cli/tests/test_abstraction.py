@@ -1,4 +1,4 @@
-from src.reporters.abstraction import run
+from app.reporters.abstraction import run
 
 
 class TestAbstraction:

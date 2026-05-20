@@ -4,7 +4,7 @@
 import json
 import argparse
 from pathlib import Path
-from src.config import DATA_DIR
+from app.config import DATA_DIR
 
 
 REQUIRED_FILES = ["domain.json", "ontologies.json", "instances.json", "relations.json"]

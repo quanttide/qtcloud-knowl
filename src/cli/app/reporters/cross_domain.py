@@ -2,8 +2,8 @@
 """统计每个领域的跨领域关系覆盖率"""
 
 import argparse
-from src.config import DATA_DIR
-from src.loader import load_all_domains
+from app.config import DATA_DIR
+from app.loader import load_all_domains
 
 
 def run(data_dir=None):

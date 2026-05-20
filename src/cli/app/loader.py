@@ -1,6 +1,6 @@
 import json
 from pathlib import Path
-from src.models import Domain, Ontology, Instance, Relation
+from app.models import Domain, Ontology, Instance, Relation
 
 
 def load_json(path: Path) -> dict:

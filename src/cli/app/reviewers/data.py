@@ -1,7 +1,7 @@
 import json
 from pathlib import Path
 from datetime import datetime
-from src.config import DATA_DIR
+from app.config import DATA_DIR
 
 REVIEW_FILE = DATA_DIR / ".review.json"
 

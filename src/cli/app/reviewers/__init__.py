@@ -1,8 +1,8 @@
-from src.reviewers.ui import clear, header, bold, dim, green, yellow, red, cyan, badge, wait, confirm, subheader
-from src.reviewers.data import load_domains, load_reviews, get_review_status
-from src.reviewers.ontology_review import run as run_ontology_review
-from src.reviewers.instance_review import run as run_instance_review
-from src.reviewers.relation_review import run as run_relation_review
+from app.reviewers.ui import clear, header, bold, dim, green, yellow, red, cyan, badge, wait, confirm, subheader
+from app.reviewers.data import load_domains, load_reviews, get_review_status
+from app.reviewers.ontology_review import run as run_ontology_review
+from app.reviewers.instance_review import run as run_instance_review
+from app.reviewers.relation_review import run as run_relation_review
 
 
 def show_overview(domains, reviews):
@@ -108,7 +108,7 @@ def main():
         elif choice == "4":
             view_review_summary(domains, reviews)
         elif choice == "5":
-            from src.reviewers.data import REVIEW_FILE
+            from app.reviewers.data import REVIEW_FILE
             if confirm("确定要重置所有评审记录"):
                 if REVIEW_FILE.exists():
                     REVIEW_FILE.unlink()

@@ -4,8 +4,8 @@
 import re
 import argparse
 from pathlib import Path
-from src.config import DATA_DIR, SAMPLE_DIR
-from src.loader import load_all_domains
+from app.config import DATA_DIR, SAMPLE_DIR
+from app.loader import load_all_domains
 
 
 IGNORED_TERMS = {

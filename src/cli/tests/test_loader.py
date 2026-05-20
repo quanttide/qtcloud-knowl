@@ -1,6 +1,6 @@
 from pathlib import Path
-from src.config import DATA_DIR
-from src.loader import load_all_domains
+from app.config import DATA_DIR
+from app.loader import load_all_domains
 
 
 class TestLoader:

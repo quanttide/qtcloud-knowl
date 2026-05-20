@@ -3,8 +3,8 @@
 
 import argparse
 from pathlib import Path
-from src.config import DATA_DIR
-from src.loader import load_all_domains
+from app.config import DATA_DIR
+from app.loader import load_all_domains
 
 
 def run(filepath: str, data_dir=None):

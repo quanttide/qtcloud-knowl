@@ -1,4 +1,4 @@
-from src.validators.validate import run
+from app.validators.validate import run
 
 
 class TestValidate:
