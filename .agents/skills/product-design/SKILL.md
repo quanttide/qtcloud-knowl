@@ -56,7 +56,7 @@ description: Prioritization heuristics — distinguish platform core from edge p
 
 3. **每条 task 可独立完成** — 不能出现"做 A 之前必须做 B，做 B 之前必须做 A"的循环依赖
 
-4. **tests 和 docs 不是单独的 task** — 嵌在每个 task 的停止条件里。反例："撰写文档"作为一个单独的待办项无人执行；正例：停止条件包含"extract --list-drafts 列出所有草稿"
+4. **tests 和 docs 必须是单独的 task** — 不嵌入功能 task，否则会被跳过。每个版本至少有一条 "tests" 和一条 "docs" task，确保覆盖率和文档同步。反例：停止条件写"含测试"但从未执行；正例：独立的 `[ ] tests（覆盖 X/Y/Z 场景）` 和 `[ ] 更新 CHANGELOG + docs/commands.md`
 
 5. **版本停止条件 = 用户新能力的可操作描述** — 问：怎么证明这个版本做完了？打开终端跑什么命令、看到什么输出，证明用户能做之前做不到的事
 
