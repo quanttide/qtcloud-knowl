@@ -15,29 +15,31 @@ def summary():
 
 
 @app.command()
-def validate(
-    undefined: bool = typer.Option(False, "--undefined", help="扫描源文档未定义术语"),
-    fusion: bool = typer.Option(False, "--fusion", help="跨领域融合检测"),
-    abstraction: bool = typer.Option(False, "--abstraction", help="本体抽象度检测"),
-):
-    """领域目录完整性验证，可组合子检测"""
-    result = 0
-    from app.validators.validate import run as validate_run
-    result |= validate_run(settings.data_home)
+def validate():
+    """领域目录结构完整性验证"""
+    from app.validators.validate import run
+    return run(settings.data_home)
 
-    if undefined:
-        from app.validators.find_undefined import run as find_run
-        result |= find_run(settings.sample_home, settings.data_home)
 
-    if fusion:
-        from app.validators.fusion_check import run as fusion_run
-        result |= fusion_run(settings.data_home, settings.sample_home)
+@app.command(name="find-undefined-terms")
+def find_undefined_terms():
+    """扫描源文档中出现的术语是否已定义"""
+    from app.validators.find_undefined import run
+    return run(settings.sample_home, settings.data_home)
 
-    if abstraction:
-        from app.reporters.abstraction import run as abstraction_run
-        result |= abstraction_run(settings.data_home)
 
-    return result
+@app.command(name="fusion-check")
+def fusion_check():
+    """跨领域融合检测（名称冲突、引用断裂、效力声明）"""
+    from app.validators.fusion_check import run
+    return run(settings.data_home, settings.sample_home)
+
+
+@app.command(name="check-abstraction")
+def check_abstraction():
+    """本体抽象度检测"""
+    from app.reporters.abstraction import run
+    return run(settings.data_home)
 
 
 @app.command(name="auto-fix")
