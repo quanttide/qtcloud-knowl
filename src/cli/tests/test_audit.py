@@ -8,6 +8,10 @@ from app.agents.audit import _collect_issues, _compute_diff, _load_audit_state, 
 
 
 class TestAuditState:
+    def _setup_state(self, monkeypatch, tmp_path):
+        from app import config
+        monkeypatch.setattr(config.settings, "state_home", tmp_path)
+
     def test_collect_issues_flattens_all_categories(self):
         issues = _collect_issues(
             [("g1", [("l1", "a1")])],
@@ -19,28 +23,31 @@ class TestAuditState:
         assert issues[1]["category"] == "auto_fixable"
         assert issues[2]["category"] == "suggestions"
 
-    def test_compute_diff_all_cases(self):
-        prev = [{"label": "a"}, {"label": "b"}, {"label": "c"}]
-        curr = [{"label": "b"}, {"label": "c"}, {"label": "d"}]
+    def test_compute_diff_uses_hash(self):
+        prev = [{"category": "a", "group": "x", "label": "l1"}, {"category": "a", "group": "x", "label": "l2"}]
+        curr = [{"category": "a", "group": "x", "label": "l2"}, {"category": "a", "group": "x", "label": "l3"}]
         fixed, new, pending, _, _ = _compute_diff(prev, curr)
-        assert fixed == {"a"}
-        assert new == {"d"}
-        assert pending == {"b", "c"}
+        assert "a|x|l1" in fixed
+        assert "a|x|l3" in new
+        assert "a|x|l2" in pending
 
-    def test_save_and_load_audit_state(self, tmp_path):
+    def test_save_and_load_audit_state(self, monkeypatch, tmp_path):
+        self._setup_state(monkeypatch, tmp_path)
         issues = [{"category": "need_confirm", "group": "t", "label": "l"}]
-        _save_audit_state(tmp_path, issues, "full")
-        state = _load_audit_state(tmp_path)
+        _save_audit_state(issues, "full")
+        state = _load_audit_state()
         assert state is not None
         assert state["mode"] == "full"
         assert len(state["issues"]) == 1
 
-    def test_load_nonexistent_returns_none(self, tmp_path):
-        assert _load_audit_state(tmp_path) is None
+    def test_load_nonexistent_returns_none(self, monkeypatch, tmp_path):
+        self._setup_state(monkeypatch, tmp_path)
+        assert _load_audit_state() is None
 
-    def test_load_corrupted_returns_none(self, tmp_path):
-        (tmp_path / ".audit.json").write_text("{invalid}", encoding="utf-8")
-        assert _load_audit_state(tmp_path) is None
+    def test_load_corrupted_returns_none(self, monkeypatch, tmp_path):
+        self._setup_state(monkeypatch, tmp_path)
+        (tmp_path / "audit.json").write_text("{invalid}", encoding="utf-8")
+        assert _load_audit_state() is None
 
 
 class TestAudit:

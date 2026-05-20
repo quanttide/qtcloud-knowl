@@ -8,6 +8,7 @@ from app import config
 class _FakeLocalStorage:
     def __init__(self, app_name, vendor=None):
         self.data_dir = Path.home() / ".local" / "share" / vendor / app_name
+        self.state_dir = Path.home() / ".local" / "state" / vendor / app_name
 
 
 @pytest.fixture(autouse=True)

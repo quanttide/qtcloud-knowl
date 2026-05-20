@@ -20,6 +20,7 @@ class Settings(BaseSettings):
     model_config = {"env_prefix": "QTCLOUD_KNOWL_"}
 
     data_home: Path = LocalStorage("qtcloud-knowl", vendor="quanttide").data_dir
+    state_home: Path = LocalStorage("qtcloud-knowl", vendor="quanttide").state_dir
     sample_home: Optional[Path] = None
 
     llm_api_key: str = Field(

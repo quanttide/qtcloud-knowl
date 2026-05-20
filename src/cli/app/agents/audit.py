@@ -10,7 +10,7 @@ from app.config import settings
 from app.agents.tools import all_detection_tools
 from app.loader import load_all_domains
 
-AUDIT_STATE_FILE = ".audit.json"
+AUDIT_STATE_FILE = "audit.json"
 
 
 def _collect_issues(need_confirm, auto_fixable, suggestions):
@@ -22,8 +22,12 @@ def _collect_issues(need_confirm, auto_fixable, suggestions):
     return flat
 
 
-def _load_audit_state(ddir):
-    fpath = ddir / AUDIT_STATE_FILE
+def _issue_key(item):
+    return f"{item['category']}|{item['group']}|{item['label']}"
+
+
+def _load_audit_state():
+    fpath = settings.state_home / AUDIT_STATE_FILE
     if fpath.exists():
         try:
             return json.loads(fpath.read_text(encoding="utf-8"))
@@ -32,8 +36,8 @@ def _load_audit_state(ddir):
     return None
 
 
-def _save_audit_state(ddir, issues, mode):
-    fpath = ddir / AUDIT_STATE_FILE
+def _save_audit_state(issues, mode):
+    fpath = settings.state_home / AUDIT_STATE_FILE
     state = {
         "timestamp": datetime.now().isoformat(),
         "mode": mode,
@@ -43,8 +47,8 @@ def _save_audit_state(ddir, issues, mode):
 
 
 def _compute_diff(previous_issues, current_issues):
-    prev_set = {i["label"] for i in previous_issues}
-    curr_set = {i["label"] for i in current_issues}
+    prev_set = {_issue_key(i) for i in previous_issues}
+    curr_set = {_issue_key(i) for i in current_issues}
     fixed = prev_set - curr_set
     new = curr_set - prev_set
     pending = prev_set & curr_set
@@ -167,8 +171,8 @@ def run(data_dir=None, sample_dir=None, mode="full"):
         auto_fixable = []
 
     current_issues = _collect_issues(need_confirm, auto_fixable, suggestions)
-    previous = _load_audit_state(ddir)
-    _save_audit_state(ddir, current_issues, mode)
+    previous = _load_audit_state()
+    _save_audit_state(current_issues, mode)
 
     mode_label = "快速检查模式" if mode == "simple" else "全面审计模式"
     print("=" * 60)
@@ -183,15 +187,17 @@ def run(data_dir=None, sample_dir=None, mode="full"):
     if previous:
         fixed, new, pending, _, _ = _compute_diff(previous.get("issues", []), current_issues)
         prev_time = previous.get("timestamp", "未知")[:10]
-        parts = []
-        if fixed:
-            parts.append(f"✅ 已修复 {len(fixed)} 项")
-        if new:
-            parts.append(f"🆕 新增 {len(new)} 项")
-        if pending:
-            parts.append(f"⏳ 待处理 {len(pending)} 项")
-        if parts:
+        if fixed or new or pending:
+            parts = []
+            if fixed:
+                parts.append(f"✅ 已修复 {len(fixed)} 项")
+            if new:
+                parts.append(f"🆕 新增 {len(new)} 项")
+            if pending:
+                parts.append(f"⏳ 待处理 {len(pending)} 项")
             print(f"相比上次审计（{prev_time}）：{' / '.join(parts)}")
+        else:
+            print(f"✓ 与上次审计一致，无新增问题（{prev_time}）")
 
     print()
 
