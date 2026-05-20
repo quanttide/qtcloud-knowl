@@ -1,5 +1,14 @@
 # 变更记录
 
+## [0.0.5] - 2026-05-20
+
+### 模型升级
+
+- `app/models.py`：`dataclasses` → `pydantic.BaseModel`，字段使用 `quanttide` v0.1.1 类型注释
+- `Domain.name`、`Ontology.name` → `NameField`（str, max_length=100）
+- `Ontology.label` → `LabelField`
+- `Domain.perspective`、`Ontology.perspective`、`Ontology.description`、`Relation.description` → `DescriptionField`
+
 ## [0.0.4] - 2026-05-20
 
 ### CLI 重设计

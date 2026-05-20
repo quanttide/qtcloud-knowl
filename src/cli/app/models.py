@@ -1,44 +1,40 @@
-from dataclasses import dataclass, field
-from typing import Optional
+from pydantic import BaseModel
+from quanttide import NameField, LabelField, DescriptionField
 
 
-@dataclass
-class Domain:
-    id: str
-    name: str = ""
-    perspective: str = ""
-    files: list[str] = field(default_factory=list)
-    vocabulary: list[str] = field(default_factory=list)
+class Domain(BaseModel):
+    id: str = ""
+    name: NameField = ""
+    perspective: DescriptionField = ""
+    files: list[str] = []
+    vocabulary: list[str] = []
 
 
-@dataclass
-class Ontology:
-    id: str
-    name: str = ""
-    label: str = ""
-    perspective: str = ""
-    description: str = ""
+class Ontology(BaseModel):
+    id: str = ""
+    name: NameField = ""
+    label: LabelField = ""
+    perspective: DescriptionField = ""
+    description: DescriptionField = ""
     pattern: str = ""
-    source_files: list[str] = field(default_factory=list)
+    source_files: list[str] = []
 
 
-@dataclass
-class Instance:
-    id: str
+class Instance(BaseModel):
+    id: str = ""
     ontology: str = ""
     subject: str = ""
     source: str = ""
     article: str = ""
-    data: dict = field(default_factory=dict)
+    data: dict = {}
 
 
-@dataclass
-class Relation:
-    id: str
+class Relation(BaseModel):
+    id: str = ""
     source_ontology: str = ""
     target_ontology: str = ""
     source_instance: str = ""
     target_instance: str = ""
     relation: str = ""
-    description: str = ""
+    description: DescriptionField = ""
     detail: str = ""

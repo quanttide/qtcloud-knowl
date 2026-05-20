@@ -1,5 +1,21 @@
 # ROADMAP
 
+## v0.0.5: 使用 quanttide v0.1.1 升级模型字段注释 ✅
+
+### 变更
+
+| 之前 | 之后 |
+|------|------|
+| Python `dataclasses` | `pydantic.BaseModel` |
+| `id: str` / `name: str` 裸类型 | `name: NameField` / `label: LabelField` / `perspective: DescriptionField` |
+| `field(default_factory=list)` | `list[str] = []`（pydantic 自动深拷贝） |
+
+### 验收结果
+
+- ✅ 42/42 测试通过
+- ✅ 加载器构造方式不变（``Domain(id=..., name=...)`` 仍可用）
+- ✅ `NameField` 注入 `str` 验证（max_length=100），`LabelField`/`DescriptionField` 注入语义类型约束
+
 ## v0.0.4: CLI 重设计 — 统一配置层、typer 替换 ✅
 
 ### 变更
