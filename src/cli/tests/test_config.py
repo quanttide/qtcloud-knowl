@@ -30,3 +30,20 @@ class TestConfig:
     def test_sample_dir_points_to_input(self):
         assert "input" in str(config.SAMPLE_DIR)
         assert config.SAMPLE_DIR.exists()
+
+    def test_production_data_dir_works_end_to_end(self, monkeypatch, tmp_path):
+        monkeypatch.setenv("KNOWL_DATA_DIR", str(tmp_path))
+        importlib.reload(config)
+        domain_dir = tmp_path / "test-domain"
+        domain_dir.mkdir()
+        for fname, content in [
+            ("domain.json", '{"id": "test", "name": "test", "vocabulary": []}'),
+            ("ontologies.json", '{"ontologies": []}'),
+            ("instances.json", '{"instances": []}'),
+            ("relations.json", '{"relations": []}'),
+        ]:
+            (domain_dir / fname).write_text(content, encoding="utf-8")
+        from app.validators.validate import run as validate_run
+        from app.reporters.summary import run as summary_run
+        assert validate_run(tmp_path) == 0
+        assert summary_run(tmp_path) == 0
