@@ -7,7 +7,7 @@ ReAct 智能体实验 — 基于 quanttide-agent 的工具调用循环。
 
     llm = LLM(model="deepseek-v4-flash")
     agent = Agent(llm, [
-        Tool(name="validate", description="检查目录结构", execute=validate_fn),
+        Tool(name="validate", description="检查目录结构", executor=validate_fn),
     ])
     result = agent.run("检查 org-gov 领域有没有问题")
 """
@@ -38,13 +38,28 @@ class Message(BaseModel):
         return d
 
 
+class Action(BaseModel):
+    """LLM 输出的动作指令"""
+
+    name: str
+    input: dict = {}
+
+
 class Tool(BaseModel):
     """工具定义（schema + execute）"""
 
     name: str
     description: str = ""
     parameters: dict | None = None
-    execute: Callable | None = None
+    executor: Callable | None = None
+
+    def execute(self, inp: dict) -> str:
+        if not self.executor:
+            return f"未知工具: {self.name}"
+        try:
+            return str(self.executor(inp))
+        except Exception as e:
+            return f"执行错误: {e}"
 
 
 REACT_PROMPT = """你是一个知识工程助手。你有以下工具可用：
@@ -85,18 +100,20 @@ class Agent:
             if "Final Answer:" in output:
                 return output.split("Final Answer:", 1)[1].strip()
 
-            action = self._parse_action(output)
+            action = parse_action(output)
             messages.append(Message(role="assistant", content=output))
             if not action:
                 messages.append(Message(role="user", content="无法解析指令，请使用正确的 ReAct 格式。"))
                 continue
 
-            result = self._execute(action["name"], action["input"])
-            messages.append(Message(role="tool", tool_call_id=action["name"], content=str(result)))
+            tool = self._tools.get(action.name)
+            result = tool.execute(action.input) if tool else f"未知工具: {action.name}"
+            messages.append(Message(role="tool", tool_call_id=action.name, content=result))
 
         return "达到最大步数，未得到最终答案。"
 
-    def _parse_action(self, text: str) -> dict | None:
+
+def parse_action(text: str) -> Action | None:
         m = re.search(r"Action:\s*(.+)\nAction Input:\s*(.+)", text)
         if not m:
             return None
@@ -106,16 +123,7 @@ class Agent:
             inp = json.loads(raw)
         except json.JSONDecodeError:
             inp = raw
-        return {"name": name, "input": inp}
-
-    def _execute(self, name: str, inp: dict) -> str:
-        tool = self._tools.get(name)
-        if not tool or not tool.execute:
-            return f"未知工具: {name}"
-        try:
-            return str(tool.execute(inp))
-        except Exception as e:
-            return f"执行错误: {e}"
+        return Action(name=name, input=inp)
 
 
 def _import_run(module_path: str) -> Callable:
@@ -136,8 +144,8 @@ def default_agent(llm: LLM | None = None) -> Agent:
 
     llm = llm or _LLM(model="deepseek-v4-flash")
     return Agent(llm, [
-        Tool(name="validate", description="检查领域目录结构完整性", execute=_import_run("app.validators.validate")),
-        Tool(name="fusion-check", description="跨领域融合检测（名称冲突、引用断裂）", execute=_import_run("app.validators.fusion_check")),
-        Tool(name="check-abstraction", description="本体抽象度检测", execute=_import_run("app.reporters.abstraction")),
-        Tool(name="cross-domain-report", description="跨领域关系覆盖率报告", execute=_import_run("app.reporters.cross_domain")),
+        Tool(name="validate", description="检查领域目录结构完整性", executor=_import_run("app.validators.validate")),
+        Tool(name="fusion-check", description="跨领域融合检测（名称冲突、引用断裂）", executor=_import_run("app.validators.fusion_check")),
+        Tool(name="check-abstraction", description="本体抽象度检测", executor=_import_run("app.reporters.abstraction")),
+        Tool(name="cross-domain-report", description="跨领域关系覆盖率报告", executor=_import_run("app.reporters.cross_domain")),
     ])
