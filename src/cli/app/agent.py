@@ -17,7 +17,7 @@ from __future__ import annotations
 import json
 import re
 from collections.abc import Callable
-from typing import Any, Literal
+from typing import Any, ClassVar, Literal
 
 from pydantic import BaseModel
 from quanttide_agent import LLM, ToolDef
@@ -42,10 +42,11 @@ class Action(BaseModel):
 
     name: str
     args: dict = {}
+    pattern: ClassVar[str] = r"Action:\s*(.+)\nAction Input:\s*(.+)"
 
     @classmethod
     def from_text(cls, text: str) -> Action | None:
-        m = re.search(r"Action:\s*(.+)\nAction Input:\s*(.+)", text)
+        m = re.search(cls.pattern, text)
         if not m:
             return None
         name = m.group(1).strip()
