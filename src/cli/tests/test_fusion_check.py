@@ -1,5 +1,5 @@
 from pathlib import Path
-from app.config import FIXTURE_DIR, SAMPLE_DIR
+from tests.conftest import FIXTURE_DIR, SAMPLE_DIR
 from app.validators.fusion_check import (
     run, check_term_overlap, check_broken_references,
     HUMAN_CONFIRM_TERMS, HUMAN_CONFIRM_REFS, IGNORE_LIST, NAME_MAP,

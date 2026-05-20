@@ -4,7 +4,7 @@
 import json
 import argparse
 from pathlib import Path
-from app.config import DATA_DIR
+from app.config import settings
 from app.validators.validate import run as validate_run
 
 

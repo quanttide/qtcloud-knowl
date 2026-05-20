@@ -1,5 +1,5 @@
 from pathlib import Path
-from app.config import SAMPLE_DIR, FIXTURE_DIR
+from tests.conftest import SAMPLE_DIR, FIXTURE_DIR
 from app.validators.find_undefined import run, IGNORED_TERMS, IGNORED_CHAPTER_RE
 
 

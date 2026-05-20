@@ -4,7 +4,7 @@
 import re
 import argparse
 from pathlib import Path
-from app.config import DATA_DIR, SAMPLE_DIR
+from app.config import settings, SAMPLE_DIR
 from app.loader import load_all_domains, load_json
 
 
@@ -162,7 +162,7 @@ def check_effectiveness_consistency(sample_dir=None):
 
 
 def run(data_dir=None, sample_dir=None):
-    ddir = Path(data_dir) if data_dir else DATA_DIR
+    ddir = Path(data_dir) if data_dir else settings.data_home
     sdir = Path(sample_dir) if sample_dir else SAMPLE_DIR
     check_name_conflict(ddir)
     check_term_overlap(ddir)
@@ -173,7 +173,7 @@ def run(data_dir=None, sample_dir=None):
 
 def main():
     parser = argparse.ArgumentParser(description="跨领域融合检测")
-    parser.add_argument("data_dir", nargs="?", default=DATA_DIR, help="data 目录路径")
+    parser.add_argument("data_dir", nargs="?", default=settings.data_home, help="data 目录路径")
     parser.add_argument("sample_dir", nargs="?", default=SAMPLE_DIR, help="sample 目录路径")
     args = parser.parse_args()
     exit(run(args.data_dir, args.sample_dir))

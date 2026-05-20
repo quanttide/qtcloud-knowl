@@ -1,4 +1,4 @@
-from app.config import FIXTURE_DIR
+from tests.conftest import FIXTURE_DIR
 from app.validators.validate import run
 
 

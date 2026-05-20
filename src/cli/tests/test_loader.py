@@ -1,5 +1,5 @@
 from pathlib import Path
-from app.config import FIXTURE_DIR
+from tests.conftest import FIXTURE_DIR
 from app.loader import load_all_domains, get_domain_dirs, load_json
 
 

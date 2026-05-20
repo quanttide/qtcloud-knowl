@@ -13,7 +13,4 @@ class Settings(BaseSettings):
 
 
 settings = Settings()
-DATA_DIR = settings.data_home
-
-FIXTURE_DIR = BASE_DIR / "tests" / "fixtures" / "output"
 SAMPLE_DIR = BASE_DIR / "tests" / "fixtures" / "input"
