@@ -27,8 +27,19 @@ pip install -e /path/to/qtcloud-knowl/src/cli
 ## 使用方法
 
 ```bash
-# 删除下载的示例源文档
-./examples/cleanup.sh
+# 下载示例源文档
+./examples/setup.sh
+
+# 抽取：从源文档创建知识库骨架（数据存到系统默认目录）
+qtcloud-knowl extract ./examples/qtcloud-bylaw-of-business-entity
+
+# 审计：对知识库运行质量检测
+qtcloud-knowl audit
 ```
 
 数据默认存储在 `~/.local/share/quanttide/qtcloud-knowl/`，对环境变量 `QTCLOUD_KNOWL_DATA_HOME` 可自定义。
+
+```bash
+# 删除下载的示例源文档
+./examples/cleanup.sh
+```
