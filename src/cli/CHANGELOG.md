@@ -1,5 +1,11 @@
 # 变更记录
 
+## [0.0.20] - 2026-05-21
+
+### Fixed
+
+- 补全 `pyproject.toml` 缺失的 `typer`、`pydantic-settings`、`quanttide` 依赖
+
 ## [0.0.19] - 2026-05-21
 
 ### 重构
