@@ -1,82 +1,125 @@
-from __future__ import annotations
+#!/usr/bin/env python3
+"""知识工程智能体 — 统一 CLI 入口。
 
-import argparse
-import sys
+所有命令从 `settings` 读取路径，不接受位置参数。
+
+    >>> from app.cli import app
+    >>> from typer.testing import CliRunner
+    >>> runner = CliRunner()
+    >>> result = runner.invoke(app, ["--help"])
+    >>> result.exit_code
+    0
+"""
+
+import typer
 from app.config import settings
 
+app = typer.Typer()
 
-def cmd_summary(args):
+
+@app.command(hidden=True)
+def summary():
+    """领域概况统计"""
     from app.reporters.summary import run
-    return run(settings.data_home) or 0
+    return run(settings.data_home)
 
 
-def cmd_validate(args):
+@app.command(hidden=True)
+def validate():
+    """领域目录结构完整性验证"""
     from app.validators.validate import run
-    return 0 if run(settings.data_home) else 1
+    return run(settings.data_home)
 
 
-def cmd_find_undefined_terms(args):
+@app.command(name="find-undefined-terms", hidden=True)
+def find_undefined_terms():
+    """扫描源文档中出现的术语是否已定义"""
     from app.validators.find_undefined import run
-    run(settings.sample_home, settings.data_home)
-    return 0
+    return run(settings.sample_home, settings.data_home)
 
 
-def cmd_fusion_check(args):
+@app.command(name="fusion-check", hidden=True)
+def fusion_check():
+    """跨领域融合检测（名称冲突、引用断裂、效力声明）"""
     from app.validators.fusion_check import run
-    return run(settings.data_home, settings.sample_home) or 0
+    return run(settings.data_home, settings.sample_home)
 
 
-def cmd_check_abstraction(args):
+@app.command(name="check-abstraction", hidden=True)
+def check_abstraction():
+    """本体抽象度检测"""
     from app.reporters.abstraction import run
-    run(settings.data_home)
-    return 0
+    return run(settings.data_home)
 
 
-def cmd_auto_fix(args):
+@app.command(name="auto-fix", hidden=True)
+def auto_fix():
+    """骨架文件自动补全"""
     from app.validators.auto_fix import run
-    return run(settings.data_home) or 0
+    return run(settings.data_home)
 
 
-def cmd_cross_domain_report(args):
+@app.command(name="cross-domain-report", hidden=True)
+def cross_domain_report():
+    """跨领域关系覆盖率报告"""
     from app.reporters.cross_domain import run
-    return run(settings.data_home) or 0
+    return run(settings.data_home)
 
 
-def cmd_detect_domain(args):
+@app.command(hidden=True)
+def detect_domain(
+    filepath: str = typer.Argument(..., help="要检测的文件路径"),
+):
+    """推荐所属领域"""
     from app.detectors.detect_domain import run
-    return run(args.filepath, settings.data_home) or 0
+    return run(filepath, settings.data_home)
 
 
-def cmd_init_domain(args):
+@app.command(name="init-domain", hidden=True)
+def init_domain(
+    domain_name: str = typer.Argument(..., help="新领域名称"),
+    from_detect: str = typer.Option(None, "--from-detect", help="从检测结果文件初始化"),
+):
+    """初始化新领域目录和骨架文件"""
     from app.detectors.init_domain import run
-    run(args.domain_name, from_detect_file=args.from_detect)
-    return 0
+    return run(domain_name, from_detect_file=from_detect)
 
 
-def cmd_audit(args):
+@app.command()
+def audit(
+    data_dir: str = typer.Argument(None, help="数据目录路径（默认从 settings 读取）"),
+    sample_dir: str = typer.Option(None, "--sample-dir", help="源文件目录路径"),
+    mode: str = typer.Option("full", "--mode", help="审计模式：simple（快速检查）/ full（全面审计）"),
+):
+    """全量质量审计 — 串行执行全部检测并聚合报告"""
     from app.agents.audit import run
-    return run(args.data_dir, args.sample_dir, args.mode) or 0
+    return run(data_dir, sample_dir, mode)
 
 
-def cmd_source(args):
+@app.command()
+def source(
+    action: str = typer.Argument("list", help="操作：download / list / remove"),
+    name: str = typer.Option(None, "--name", "-n", help="源文档名称（download / remove 时必填）"),
+):
+    """管理源文档 — 下载、列出、清理"""
     from app.source import SOURCES, download, download_all, list_sources, remove, remove_all
 
-    if args.action == "list":
+    if action == "list":
         downloaded = list_sources()
         if not downloaded:
             print("未下载任何源文档。可用:")
             for k, v in SOURCES.items():
                 print(f"  {k}: {v['desc']}")
             print("\n运行 qtcloud-knowl source download --name <名称> 下载")
-            return 0
+            return
         print("已下载的源文档:")
         for d in downloaded:
             print(f"  {d}")
         print(f"\n共 {len(downloaded)} 项")
 
-    elif args.action == "download":
-        if args.name:
-            result = download(args.name)
+    elif action == "download":
+        if name:
+            result = download(name)
             print(result)
         else:
             print("可用源文档:")
@@ -84,25 +127,32 @@ def cmd_source(args):
                 print(f"  {k}: {v['desc']}")
             print("\n指定名称下载: qtcloud-knowl source download --name qtcloud-bylaw")
 
-    elif args.action == "remove":
-        if args.name:
-            result = remove(args.name)
+    elif action == "remove":
+        if name:
+            result = remove(name)
             print(result)
         else:
             results = remove_all()
             for r in results:
                 print(r)
-    return 0
 
 
-def cmd_review(args):
+@app.command()
+def review(
+    action: str = typer.Argument("list", help="操作：list / approve / reject / reset"),
+    item_id: str = typer.Option(None, "--id", help="条目 ID（如 biz-ops:ontology:o1）"),
+    domain: str = typer.Option(None, "--domain", help="按领域过滤"),
+    reason: str = typer.Option("", "--reason", help="拒绝原因（仅 reject）"),
+    pending: bool = typer.Option(False, "--pending", help="仅显示待审项（仅 list）"),
+):
+    """评审知识条目 — 批量通过/拒绝，查看评审状态"""
     from app.review import list_items, approve_item, approve_all, reject_item, reset_reviews
 
-    if args.action == "list":
-        items = list_items(domain_filter=args.domain, pending_only=args.pending)
+    if action == "list":
+        items = list_items(domain_filter=domain, pending_only=pending)
         if not items:
             print("没有符合条件的条目。")
-            return 0
+            return
         print(f"{'领域':<12} {'类型':<8} {'ID/名称':<24} {'状态':<8} {'备注'}")
         print(f"{'─'*12} {'─'*8} {'─'*24} {'─'*8} {'─'*20}")
         for item in items:
@@ -111,109 +161,49 @@ def cmd_review(args):
         pending_count = sum(1 for i in items if i["status"] == "待评审")
         print(f"\n共 {total} 项，{pending_count} 项待评审")
 
-    elif args.action == "approve":
-        if args.id:
-            approve_item(args.id)
-            print(f"已通过：{args.id}")
+    elif action == "approve":
+        if item_id:
+            approve_item(item_id)
+            print(f"已通过：{item_id}")
         else:
             n = approve_all()
             print(f"已全部通过：{n} 项")
 
-    elif args.action == "reject":
-        if not args.id:
+    elif action == "reject":
+        if not item_id:
             print("错误：--id 为必填（如 --id biz-ops:ontology:o1）")
-            sys.exit(1)
-        reject_item(args.id, args.reason)
-        print(f"已拒绝：{args.id}" + (f" 原因：{args.reason}" if args.reason else ""))
+            raise typer.Exit(1)
+        reject_item(item_id, reason)
+        print(f"已拒绝：{item_id}" + (f" 原因：{reason}" if reason else ""))
 
-    elif args.action == "reset":
+    elif action == "reset":
         reset_reviews()
         print("评审记录已重置。")
-    return 0
 
 
-def cmd_extract(args):
+@app.command()
+def extract(
+    sample_dir: str = typer.Argument(None, help="源文档目录路径（默认从 settings 读取）"),
+    data_dir: str = typer.Option(None, "--data-dir", help="数据目录路径"),
+    verbose: bool = typer.Option(False, "--verbose", "-v", help="显示详细匹配信息"),
+    llm: str = typer.Option(None, "--llm", help="对指定文档运行 LLM 抽取（传文件路径）"),
+):
+    """知识抽取 — 从源文件自动创建知识库骨架"""
     from app.agents.extract import extract_with_llm, run
 
-    if args.llm:
+    if llm:
         if not settings.llm_api_key:
             print("错误: 未设置 QTCLOUD_KNOWL_LLM_API_KEY")
-            sys.exit(1)
-        result = extract_with_llm(args.llm)
+            raise typer.Exit(code=1)
+        result = extract_with_llm(llm)
         print(result)
-        return 0
+        return
 
-    return run(args.sample_dir, args.data_dir, args.verbose) or 0
-
-
-def build_parser() -> argparse.ArgumentParser:
-    parser = argparse.ArgumentParser(prog="qtcloud-knowl", description="知识工程智能体 — 统一 CLI")
-    sub = parser.add_subparsers(dest="command", required=True)
-
-    p = sub.add_parser("summary", help="领域概况统计")
-    p.set_defaults(func=cmd_summary)
-
-    p = sub.add_parser("validate", help="领域目录结构完整性验证")
-    p.set_defaults(func=cmd_validate)
-
-    p = sub.add_parser("find-undefined-terms", help="扫描源文档中未定义术语")
-    p.set_defaults(func=cmd_find_undefined_terms)
-
-    p = sub.add_parser("fusion-check", help="跨领域融合检测")
-    p.set_defaults(func=cmd_fusion_check)
-
-    p = sub.add_parser("check-abstraction", help="本体抽象度检测")
-    p.set_defaults(func=cmd_check_abstraction)
-
-    p = sub.add_parser("auto-fix", help="骨架文件自动补全")
-    p.set_defaults(func=cmd_auto_fix)
-
-    p = sub.add_parser("cross-domain-report", help="跨领域关系覆盖率报告")
-    p.set_defaults(func=cmd_cross_domain_report)
-
-    p = sub.add_parser("detect-domain", help="推荐所属领域")
-    p.add_argument("filepath", help="要检测的文件路径")
-    p.set_defaults(func=cmd_detect_domain)
-
-    p = sub.add_parser("init-domain", help="初始化新领域目录和骨架文件")
-    p.add_argument("domain_name", help="新领域名称")
-    p.add_argument("--from-detect", help="从检测结果文件初始化")
-    p.set_defaults(func=cmd_init_domain)
-
-    p = sub.add_parser("audit", help="全量质量审计")
-    p.add_argument("data_dir", nargs="?", default=None, help="数据目录路径")
-    p.add_argument("--sample-dir", default=None, help="源文件目录路径")
-    p.add_argument("--mode", default="full", choices=("simple", "full"), help="审计模式")
-    p.set_defaults(func=cmd_audit)
-
-    p = sub.add_parser("source", help="管理源文档")
-    p.add_argument("action", nargs="?", default="list", choices=("list", "download", "remove"), help="操作")
-    p.add_argument("--name", "-n", default=None, help="源文档名称")
-    p.set_defaults(func=cmd_source)
-
-    p = sub.add_parser("review", help="评审知识条目")
-    p.add_argument("action", nargs="?", default="list", choices=("list", "approve", "reject", "reset"), help="操作")
-    p.add_argument("--id", default=None, help="条目 ID")
-    p.add_argument("--domain", default=None, help="按领域过滤")
-    p.add_argument("--reason", default="", help="拒绝原因")
-    p.add_argument("--pending", action="store_true", help="仅显示待审项")
-    p.set_defaults(func=cmd_review)
-
-    p = sub.add_parser("extract", help="知识抽取")
-    p.add_argument("sample_dir", nargs="?", default=None, help="源文档目录路径")
-    p.add_argument("--data-dir", default=None, help="数据目录路径")
-    p.add_argument("--verbose", "-v", action="store_true", help="显示详细匹配信息")
-    p.add_argument("--llm", default=None, help="对指定文档运行 LLM 抽取")
-    p.set_defaults(func=cmd_extract)
-
-    return parser
+    return run(sample_dir, data_dir, verbose)
 
 
 def main():
-    parser = build_parser()
-    args = parser.parse_args()
-    return args.func(args)
-
+    return app()
 
 if __name__ == "__main__":
-    sys.exit(main())
+    exit(main())

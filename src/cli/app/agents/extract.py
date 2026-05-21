@@ -42,7 +42,7 @@ def extract_with_llm(document_path, prompt_name="ontology_discovery.txt"):
     if settings.llm_base_url:
         kwargs["base_url"] = settings.llm_base_url
     llm = LLM(model=settings.llm_model, api_key=settings.llm_api_key, **kwargs)
-    response = llm.chat(filled)
+    response = llm.complete(filled)
     return response.content
 
 
@@ -61,16 +61,16 @@ def run(sample_dir=None, data_dir=None, verbose=False):
     sdir = Path(sample_dir) if sample_dir else settings.sample_home
     ddir = Path(data_dir) if data_dir else settings.data_home
 
-    import sys
+    import typer
     if not sdir:
         print("错误: 未设置源文档目录")
         print("请设置 QTCLOUD_KNOWL_SAMPLE_HOME 环境变量，或传入 --sample-dir 参数。")
-        sys.exit(1)
+        raise typer.Exit(code=1)
     if not sdir.exists():
         print(f"错误: 源文档目录不存在")
         print(f"  路径: {sdir}")
         print("请确认目录路径是否正确。")
-        sys.exit(1)
+        raise typer.Exit(code=1)
 
     md_files = list(sdir.glob("*.md"))
 

@@ -17,7 +17,7 @@ class TestAutoFix:
         monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", str(tmp_path))
         import importlib
         from app import config
-        config.settings.reload_from_env()
+        importlib.reload(config)
         domain_dir = tmp_path / "test-domain"
         domain_dir.mkdir()
         (domain_dir / "domain.json").write_text(
@@ -33,7 +33,7 @@ class TestAutoFix:
         monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", str(tmp_path))
         import importlib
         from app import config
-        config.settings.reload_from_env()
+        importlib.reload(config)
         domain_dir = tmp_path / "test-domain"
         domain_dir.mkdir()
         for name, content in [
@@ -51,7 +51,7 @@ class TestAutoFix:
         monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", str(tmp_path))
         import importlib
         from app import config
-        config.settings.reload_from_env()
+        importlib.reload(config)
         domain_dir = tmp_path / "bad-domain"
         domain_dir.mkdir()
         (domain_dir / "domain.json").write_text("{invalid json}", encoding="utf-8")

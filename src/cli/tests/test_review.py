@@ -5,20 +5,11 @@ import json
 from pathlib import Path
 
 import pytest
+from typer.testing import CliRunner
 
+from app.cli import app
 from app.review import list_items, approve_item, reject_item, reset_reviews
 from app.reviewers.data import load_domains, load_reviews, save_reviews
-
-
-def _invoke(monkeypatch, capsys, *args):
-    import sys
-    monkeypatch.setattr(sys, "argv", ["qtcloud-knowl", *args])
-    from app.cli import main
-    try:
-        code = main() or 0
-    except SystemExit as e:
-        code = e.code or 0
-    return code, capsys.readouterr().out
 
 
 @pytest.fixture
@@ -27,7 +18,7 @@ def review_env(tmp_path, monkeypatch):
     monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", str(tmp_path))
     import importlib
     from app import config
-    config.settings.reload_from_env()
+    importlib.reload(config)
 
     domain_dir = tmp_path / "test-domain"
     domain_dir.mkdir()
@@ -82,7 +73,7 @@ class TestListItems:
     def test_list_empty_dir(self, tmp_path, monkeypatch):
         monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", str(tmp_path))
         from app import config
-        config.settings.reload_from_env()
+        importlib.reload(config)
         import app.reviewers.data as rdata
         import app.review as rmod
         importlib.reload(rdata)
@@ -133,39 +124,47 @@ class TestResetReviews:
 
 
 class TestCliCommands:
-    def test_list_via_cli(self, review_env, monkeypatch, capsys):
-        code, out = _invoke(monkeypatch, capsys, "review", "list")
-        assert code == 0
-        assert "测试领域" in out or "本体" in out
+    def test_list_via_cli(self, review_env):
+        runner = CliRunner()
+        result = runner.invoke(app, ["review", "list"])
+        assert result.exit_code == 0
+        assert "测试领域" in result.stdout or "本体" in result.stdout
 
-    def test_approve_via_cli(self, review_env, monkeypatch, capsys):
-        code, out = _invoke(monkeypatch, capsys, "review", "approve", "--id", "test-domain:ontology:o1")
-        assert code == 0
-        assert "已通过" in out
+    def test_approve_via_cli(self, review_env):
+        runner = CliRunner()
+        result = runner.invoke(app, ["review", "approve", "--id", "test-domain:ontology:o1"])
+        assert result.exit_code == 0
+        assert "已通过" in result.stdout
 
-    def test_approve_all_via_cli(self, review_env, monkeypatch, capsys):
-        code, out = _invoke(monkeypatch, capsys, "review", "approve")
-        assert code == 0
-        assert "已全部通过" in out
+    def test_approve_all_via_cli(self, review_env):
+        runner = CliRunner()
+        result = runner.invoke(app, ["review", "approve"])
+        assert result.exit_code == 0
+        assert "已全部通过" in result.stdout
 
-    def test_list_shows_count(self, review_env, monkeypatch, capsys):
-        code, out = _invoke(monkeypatch, capsys, "review", "list")
-        assert "待评审" in out
+    def test_list_shows_count(self, review_env):
+        runner = CliRunner()
+        result = runner.invoke(app, ["review", "list"])
+        assert "待评审" in result.stdout
 
-    def test_reject_via_cli(self, review_env, monkeypatch, capsys):
-        code, out = _invoke(monkeypatch, capsys, "review", "reject", "--id", "test-domain:ontology:o1", "--reason", "不完整")
-        assert code == 0
-        assert "已拒绝" in out
+    def test_reject_via_cli(self, review_env):
+        runner = CliRunner()
+        result = runner.invoke(app, ["review", "reject", "--id", "test-domain:ontology:o1", "--reason", "不完整"])
+        assert result.exit_code == 0
+        assert "已拒绝" in result.stdout
 
-    def test_reject_without_id_errors(self, review_env, monkeypatch, capsys):
-        code, out = _invoke(monkeypatch, capsys, "review", "reject")
-        assert code == 1
+    def test_reject_without_id_errors(self, review_env):
+        runner = CliRunner()
+        result = runner.invoke(app, ["review", "reject"])
+        assert result.exit_code == 1
 
-    def test_reset_via_cli(self, review_env, monkeypatch, capsys):
-        code, out = _invoke(monkeypatch, capsys, "review", "reset")
-        assert code == 0
-        assert "已重置" in out
+    def test_reset_via_cli(self, review_env):
+        runner = CliRunner()
+        result = runner.invoke(app, ["review", "reset"])
+        assert result.exit_code == 0
+        assert "已重置" in result.stdout
 
-    def test_list_pending_via_cli(self, review_env, monkeypatch, capsys):
-        code, out = _invoke(monkeypatch, capsys, "review", "list", "--pending")
-        assert code == 0
+    def test_list_pending_via_cli(self, review_env):
+        runner = CliRunner()
+        result = runner.invoke(app, ["review", "list", "--pending"])
+        assert result.exit_code == 0

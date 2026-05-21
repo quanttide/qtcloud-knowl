@@ -13,7 +13,7 @@ class TestData:
         monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", str(tmp_path))
         import importlib
         from app import config
-        config.settings.reload_from_env()
+        importlib.reload(config)
         importlib.reload(data)
         reviews = data.load_reviews()
         assert reviews == {}
@@ -22,7 +22,7 @@ class TestData:
         monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", str(tmp_path))
         import importlib
         from app import config
-        config.settings.reload_from_env()
+        importlib.reload(config)
         importlib.reload(data)
         reviews = {"k1": {"status": "通过", "comment": "ok"}}
         data.save_reviews(reviews)
@@ -34,7 +34,7 @@ class TestData:
         monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", str(tmp_path))
         import importlib
         from app import config
-        config.settings.reload_from_env()
+        importlib.reload(config)
         importlib.reload(data)
         s, c = data.get_review_status({}, "nonexistent")
         assert s == "待评审"
@@ -44,7 +44,7 @@ class TestData:
         monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", str(tmp_path))
         import importlib
         from app import config
-        config.settings.reload_from_env()
+        importlib.reload(config)
         importlib.reload(data)
         reviews = {"k1": {"status": "通过", "comment": "good"}}
         s, c = data.get_review_status(reviews, "k1")
@@ -55,7 +55,7 @@ class TestData:
         monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", str(tmp_path))
         import importlib
         from app import config
-        config.settings.reload_from_env()
+        importlib.reload(config)
         importlib.reload(data)
         reviews = {}
         data.set_review_status(reviews, "k1", "需修改", "有问题")
@@ -67,7 +67,7 @@ class TestData:
         monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", str(tmp_path))
         import importlib
         from app import config
-        config.settings.reload_from_env()
+        importlib.reload(config)
         importlib.reload(data)
         domains = data.load_domains()
         assert domains == []
@@ -76,7 +76,7 @@ class TestData:
         monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", str(tmp_path))
         import importlib
         from app import config
-        config.settings.reload_from_env()
+        importlib.reload(config)
         importlib.reload(data)
         domain_dir = tmp_path / "test-domain"
         domain_dir.mkdir()
@@ -139,7 +139,7 @@ class TestShowOverview:
         monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", str(tmp_path))
         import importlib
         from app import config
-        config.settings.reload_from_env()
+        importlib.reload(config)
         domains = [
             {
                 "dir": "test-domain",
@@ -158,7 +158,7 @@ class TestShowOverview:
         monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", str(tmp_path))
         import importlib
         from app import config
-        config.settings.reload_from_env()
+        importlib.reload(config)
         domains = [
             {
                 "dir": "d1",
