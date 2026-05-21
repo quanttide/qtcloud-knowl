@@ -1,13 +1,12 @@
 """
 OCL 全链路集成测试：文档 → 抽取 → 审核 → 质检
-
-验证完整产品工作流可走通。
 """
 
 from unittest.mock import patch
 from pathlib import Path
 
 from typer.testing import CliRunner
+from conftest import setup_env
 
 
 class FakeResponse:
@@ -15,31 +14,11 @@ class FakeResponse:
         self.content = content
 
 
-def _setup(monkeypatch, sample_dir, data_home, api_key="test-key", state_home=None):
-    if state_home is None:
-        state_home = data_home
-    monkeypatch.setenv("QTCLOUD_KNOWL_SAMPLE_HOME", str(sample_dir))
-    monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", str(data_home))
-    monkeypatch.setenv("QTCLOUD_KNOWL_STATE_HOME", str(state_home))
-    monkeypatch.setenv("QTCLOUD_KNOWL_LLM_API_KEY", api_key)
-    import importlib
-    from app import config
-    importlib.reload(config)
-    import app.reviewers.data as rdata
-    import app.review as rmod
-    importlib.reload(rdata)
-    importlib.reload(rmod)
-    import app.cli as cli_mod
-    importlib.reload(cli_mod)
-    return cli_mod.app
-
-
 class TestPipeline:
     """完整 OCL 工作流：骨架创建 → LLM 抽取 → 评审 → 审计"""
 
     def test_skeleton_then_audit(self, real_sample_dir, real_knowledge_base, monkeypatch):
-        """知识工程用户的一天：建骨架 → 审计"""
-        app = _setup(monkeypatch, real_sample_dir, real_knowledge_base)
+        app = setup_env(monkeypatch, sample_dir=real_sample_dir, data_home=real_knowledge_base)
         runner = CliRunner()
 
         assert (real_knowledge_base / "org-gov" / "domain.json").exists()
@@ -49,29 +28,20 @@ class TestPipeline:
         assert "审计" in result_audit.output
 
     def test_audit_incremental_diff(self, real_sample_dir, real_knowledge_base, monkeypatch):
-        """二次 audit 显示增量对比 — 业务价值：持续改进可见性"""
         state_dir = real_knowledge_base / ".audit-state"
         state_dir.mkdir(exist_ok=True)
-        monkeypatch.setenv("QTCLOUD_KNOWL_SAMPLE_HOME", str(real_sample_dir))
-        monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", str(real_knowledge_base))
-        monkeypatch.setenv("QTCLOUD_KNOWL_STATE_HOME", str(state_dir))
-        import importlib
-        from app import config
-        importlib.reload(config)
-        import app.cli as cli_mod
-        importlib.reload(cli_mod)
+        app = setup_env(monkeypatch, sample_dir=real_sample_dir, data_home=real_knowledge_base, state_home=state_dir)
         runner = CliRunner()
 
-        result_first = runner.invoke(cli_mod.app, ["audit"])
+        result_first = runner.invoke(app, ["audit"])
         assert result_first.exit_code == 0
 
-        result_second = runner.invoke(cli_mod.app, ["audit"])
+        result_second = runner.invoke(app, ["audit"])
         assert result_second.exit_code == 0
         assert "与上次审计一致" in result_second.output
 
     def test_audit_mode_simple_vs_full(self, real_sample_dir, real_knowledge_base, monkeypatch):
-        """simple 和 full 的输出不同 — 业务价值：快速检查 vs 全面审计"""
-        app = _setup(monkeypatch, real_sample_dir, real_knowledge_base)
+        app = setup_env(monkeypatch, sample_dir=real_sample_dir, data_home=real_knowledge_base)
         runner = CliRunner()
 
         result_full = runner.invoke(app, ["audit", "--mode", "full"])
@@ -82,35 +52,22 @@ class TestPipeline:
         assert len(result_full.output) > len(result_simple.output)
 
     def test_review_reduces_audit_issues(self, real_sample_dir, real_knowledge_base, monkeypatch):
-        """评审确认后审计待处理项减少 — 业务价值：评审驱动质量改进"""
         state_dir = real_knowledge_base / ".audit-state"
         state_dir.mkdir(exist_ok=True)
-        monkeypatch.setenv("QTCLOUD_KNOWL_SAMPLE_HOME", str(real_sample_dir))
-        monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", str(real_knowledge_base))
-        monkeypatch.setenv("QTCLOUD_KNOWL_STATE_HOME", str(state_dir))
-        import importlib
-        from app import config
-        importlib.reload(config)
-        import app.reviewers.data as rdata
-        import app.review as rmod
-        importlib.reload(rdata)
-        importlib.reload(rmod)
-        import app.cli as cli_mod
-        importlib.reload(cli_mod)
+        app = setup_env(monkeypatch, sample_dir=real_sample_dir, data_home=real_knowledge_base, state_home=state_dir)
         runner = CliRunner()
 
-        result_before = runner.invoke(cli_mod.app, ["audit"])
+        result_before = runner.invoke(app, ["audit"])
         assert result_before.exit_code == 0
 
-        runner.invoke(cli_mod.app, ["review", "approve"])
+        runner.invoke(app, ["review", "approve"])
 
-        result_after = runner.invoke(cli_mod.app, ["audit"])
+        result_after = runner.invoke(app, ["audit"])
         assert result_after.exit_code == 0
         assert "与上次审计一致" in result_after.output
 
     def test_review_then_audit(self, real_sample_dir, real_knowledge_base, monkeypatch):
-        """评审条目后运行审计，验证状态变更不影响审计"""
-        app = _setup(monkeypatch, real_sample_dir, real_knowledge_base)
+        app = setup_env(monkeypatch, sample_dir=real_sample_dir, data_home=real_knowledge_base)
         runner = CliRunner()
 
         result_review = runner.invoke(app, ["review", "approve"])
@@ -120,8 +77,7 @@ class TestPipeline:
         assert result_audit.exit_code == 0
 
     def test_extract_llm_then_review(self, real_sample_dir, real_knowledge_base, monkeypatch):
-        """LLM 抽取后评审能看到结果（mock LLM 返回）"""
-        app = _setup(monkeypatch, real_sample_dir, real_knowledge_base, api_key="test-key")
+        app = setup_env(monkeypatch, sample_dir=real_sample_dir, data_home=real_knowledge_base, api_key="test-key")
 
         with patch("quanttide_agent.LLM") as MockLLM:
             mock = MockLLM.return_value
@@ -134,8 +90,7 @@ class TestPipeline:
             assert "数据治理委员会" in result_llm.output
 
     def test_full_pipeline_no_llm_key(self, real_sample_dir, real_knowledge_base, monkeypatch):
-        """无 LLM key 时，非 LLM 功能仍正常工作"""
-        app = _setup(monkeypatch, real_sample_dir, real_knowledge_base, api_key="")
+        app = setup_env(monkeypatch, sample_dir=real_sample_dir, data_home=real_knowledge_base, api_key="")
         runner = CliRunner()
 
         result_extract = runner.invoke(app, ["extract"])
@@ -145,7 +100,6 @@ class TestPipeline:
         assert result_audit.exit_code == 0
 
     def test_full_pipeline_multiple_domains(self, tmp_path, monkeypatch):
-        """多领域知识库的完整流程"""
         kbase = tmp_path / "kbase"
         for domain_id in ["a", "b"]:
             d = kbase / domain_id
@@ -155,7 +109,7 @@ class TestPipeline:
             (d / "instances.json").write_text('{"instances":[]}', encoding="utf-8")
             (d / "relations.json").write_text('{"relations":[]}', encoding="utf-8")
 
-        app = _setup(monkeypatch, tmp_path, kbase, api_key="")
+        app = setup_env(monkeypatch, data_home=kbase, api_key="")
         runner = CliRunner()
 
         result_review = runner.invoke(app, ["review", "list"])
