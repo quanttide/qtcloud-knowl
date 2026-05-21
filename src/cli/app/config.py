@@ -1,74 +1,39 @@
-"""配置管理。
+from __future__ import annotations
 
-支持 Vault 读取 API key，通过 pydantic-settings 提供运行时路径。
-"""
-
+import os
+from dataclasses import dataclass, field
 from pathlib import Path
-from typing import Optional
-
-from pydantic import Field, field_validator, model_validator
-from pydantic_settings import BaseSettings, PydanticBaseSettingsSource
-from quanttide import LocalStorage
-
-_local = LocalStorage("qtcloud-knowl", vendor="quanttide")
-
-try:
-    from pydantic_vault import VaultSettingsSource
-except ImportError:
-    VaultSettingsSource = None
 
 
-class Settings(BaseSettings):
-    model_config = {"env_prefix": "QTCLOUD_KNOWL_"}
+_PREFIX = "QTCLOUD_KNOWL_"
 
-    data_home: Optional[Path] = None
-    state_home: Optional[Path] = None
-    sample_home: Optional[Path] = None
-    source_home: Optional[Path] = None
 
-    llm_api_key: str = Field(
-        default="",
-        json_schema_extra=(
-            {"vault_secret_path": "quanttide/deepseek", "vault_secret_key": "api_key"}
-            if VaultSettingsSource
-            else {}
-        ),
-    )
-    llm_model: str = Field(default="deepseek-chat")
-    llm_base_url: str = Field(default="")
+def _env_path(key: str, default: Path | None = None) -> Path | None:
+    v = os.environ.get(key)
+    return Path(v) if v else default
 
-    @field_validator("data_home", "state_home", mode="before")
-    @classmethod
-    def _empty_str_to_none(cls, v):
-        if isinstance(v, str) and v.strip() == "":
-            return None
-        return v
 
-    @model_validator(mode="after")
-    def _default_paths(self):
-        if self.data_home is None:
-            self.data_home = _local.data_dir
-        if self.state_home is None:
-            self.state_home = _local.state_dir
-        if self.sample_home is None:
-            self.sample_home = self.data_home / "samples"
-        if self.source_home is None:
-            self.source_home = self.data_home / "sources"
-        return self
+@dataclass
+class Settings:
+    data_home: Path | None = None
+    state_home: Path | None = None
+    sample_home: Path | None = None
+    source_home: Path | None = None
+    llm_api_key: str = ""
+    llm_model: str = "deepseek-chat"
+    llm_base_url: str = ""
 
-    @classmethod
-    def settings_customise_sources(
-        cls,
-        settings_cls: type[BaseSettings],
-        init_settings: PydanticBaseSettingsSource,
-        env_settings: PydanticBaseSettingsSource,
-        dotenv_settings: PydanticBaseSettingsSource,
-        file_secret_settings: PydanticBaseSettingsSource,
-    ) -> tuple[PydanticBaseSettingsSource, ...]:
-        sources = (init_settings, env_settings, dotenv_settings)
-        if VaultSettingsSource:
-            sources += (VaultSettingsSource(settings_cls),)
-        return sources + (file_secret_settings,)
+    def __post_init__(self):
+        self.reload_from_env()
+
+    def reload_from_env(self):
+        self.data_home = _env_path(_PREFIX + "DATA_HOME") or Path.home() / ".local/share/quanttide/qtcloud-knowl"
+        self.state_home = _env_path(_PREFIX + "STATE_HOME") or Path.home() / ".local/state/quanttide/qtcloud-knowl"
+        self.sample_home = _env_path(_PREFIX + "SAMPLE_HOME") or self.data_home / "samples"
+        self.source_home = _env_path(_PREFIX + "SOURCE_HOME") or self.data_home / "sources"
+        self.llm_api_key = os.environ.get(_PREFIX + "LLM_API_KEY", "")
+        self.llm_model = os.environ.get(_PREFIX + "LLM_MODEL", "deepseek-chat")
+        self.llm_base_url = os.environ.get(_PREFIX + "LLM_BASE_URL", "")
 
 
 settings = Settings()
