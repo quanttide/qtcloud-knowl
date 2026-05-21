@@ -110,49 +110,6 @@ def audit(
 
 
 @app.command()
-def source(
-    action: str = typer.Argument(
-        "list", help="操作：download / list / remove / remove-all"
-    ),
-    name: str = typer.Option(
-        None, "--name", "-n", help="源文档名称（download / remove 时必填）"
-    ),
-    url: str = typer.Option(
-        None, "--url", "-u", help="Git 仓库 URL（download 时必填）"
-    ),
-):
-    """管理源文档 — 下载、列出、清理"""
-    from app.source import download, download_all, list_sources, remove, remove_all
-
-    if action == "list":
-        downloaded = list_sources()
-        if not downloaded:
-            print(f"source_home: {settings.source_home}")
-            print("(暂无已下载的源文档)")
-            return
-        print("已下载的源文档:")
-        for d in downloaded:
-            print(f"  {d}")
-        print(f"\n共 {len(downloaded)} 项")
-
-    elif action == "download":
-        result = download(name=name, url=url)
-        print(result)
-
-    elif action == "remove":
-        if not name:
-            print("错误: 请指定 --name")
-            return
-        result = remove(name)
-        print(result)
-
-    elif action == "remove-all":
-        results = remove_all()
-        for r in results:
-            print(r)
-
-
-@app.command()
 def review(
     action: str = typer.Argument("list", help="操作：list / approve / reject / reset"),
     item_id: str = typer.Option(None, "--id", help="条目 ID（如 biz-ops:ontology:o1）"),
@@ -206,9 +163,7 @@ def review(
 
 @app.command()
 def extract(
-    sample_dir: str = typer.Argument(
-        None, help="源文档目录路径（默认从 settings 读取）"
-    ),
+    source: str = typer.Option(None, "--source", "-s", help="源文档目录路径"),
     data_dir: str = typer.Option(None, "--data-dir", help="数据目录路径"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="显示详细匹配信息"),
     llm: str = typer.Option(
@@ -226,7 +181,7 @@ def extract(
         print(result)
         return
 
-    return run(sample_dir, data_dir, verbose)
+    return run(source, data_dir, verbose)
 
 
 def main():

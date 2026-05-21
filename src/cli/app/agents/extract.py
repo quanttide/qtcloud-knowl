@@ -1,9 +1,11 @@
 """知识抽取 — 从源文档自动创建知识库骨架。"""
 
-from pathlib import Path
 from collections import Counter
-from app.config import settings
+from pathlib import Path
+
 from qtcloud_knowl.loader import load_all_domains
+
+from app.config import settings
 
 PROMPT_DIR = Path(__file__).resolve().parent.parent / "prompts"
 
@@ -57,14 +59,15 @@ def _describe(domain_hits, existing_domains):
     return "，".join(parts) if parts else None
 
 
-def run(sample_dir=None, data_dir=None, verbose=False):
-    sdir = Path(sample_dir) if sample_dir else settings.sample_home
+def run(source=None, data_dir=None, verbose=False):
+    sdir = Path(source) if source else settings.sample_home
     ddir = Path(data_dir) if data_dir else settings.data_home
 
     import typer
+
     if not sdir:
         print("错误: 未设置源文档目录")
-        print("请设置 QTCLOUD_KNOWL_SAMPLE_HOME 环境变量，或传入 --sample-dir 参数。")
+        print("请设置 QTCLOUD_KNOWL_SAMPLE_HOME 环境变量，或传入 --source 参数。")
         raise typer.Exit(code=1)
     if not sdir.exists():
         print(f"错误: 源文档目录不存在")
@@ -108,10 +111,14 @@ def run(sample_dir=None, data_dir=None, verbose=False):
             domain_hits[best_domain] += 1
             file_domains[f.name] = best_domain
 
+    import io
+    import sys
+
     from app.detectors.init_domain import run as init_domain_run
 
-    import io, sys
-    for domain_id in sorted(set([d for d in domain_hits.keys()] + list(existing_domains.keys()))):
+    for domain_id in sorted(
+        set([d for d in domain_hits.keys()] + list(existing_domains.keys()))
+    ):
         old, sys.stdout = sys.stdout, io.StringIO()
         try:
             init_domain_run(domain_id, data_dir=str(ddir))
@@ -122,7 +129,9 @@ def run(sample_dir=None, data_dir=None, verbose=False):
     if summary:
         print(f"抽取完成。{summary}。骨架文件已保存到 {ddir}。")
     else:
-        print("抽取完成。未匹配到已有领域词汇表，可先配置 domain.json 中的 vocabulary 后再试。")
+        print(
+            "抽取完成。未匹配到已有领域词汇表，可先配置 domain.json 中的 vocabulary 后再试。"
+        )
 
     if verbose:
         print()
@@ -140,7 +149,9 @@ def run(sample_dir=None, data_dir=None, verbose=False):
 
         if settings.llm_api_key:
             print()
-            print("LLM 已就绪，可执行语义抽取。运行 qtcloud-knowl audit 检查骨架完整性。")
+            print(
+                "LLM 已就绪，可执行语义抽取。运行 qtcloud-knowl audit 检查骨架完整性。"
+            )
         else:
             print()
             print("提示: 设置 QTCLOUD_KNOWL_LLM_API_KEY 可启用语义抽取。")
