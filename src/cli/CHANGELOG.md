@@ -1,5 +1,12 @@
 # 变更记录
 
+## [0.1.2] - 2026-05-22
+
+### Fixed
+
+- 移除 `Relation` 引用，对齐 PyPI `quanttide-knowl` 模型结构
+- `audit` 命令恢复正常
+
 ## [0.1.1] - 2026-05-22
 
 ### Changed
