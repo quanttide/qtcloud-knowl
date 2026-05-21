@@ -64,12 +64,12 @@ description: Prioritization heuristics — distinguish platform core from edge p
 
 每个版本发布后，立即执行以下清理，否则 ROADMAP 和 TODO 会随时间膨胀到无法维护：
 
-1. **ROADMAP：已发布的版本只保留痛点摘要，不保留解决细节** — 细节已记录到 CHANGELOG。ROADMAP 是前瞻工具，不是历史档案
-2. **TODO：整个版本节标记为 [已发布]**，所有 task 标 `[x]`，或移动到下一版本
+1. **ROADMAP：从规划中移除已完成版本** — 全部删掉，只留一行"已发布版本见 CHANGELOG.md"。ROADMAP 是前瞻工具，不是历史档案
+2. **TODO：从 TODO 中移除已完成版本的 task 详情** — 在"已发布"小节更新范围即可（如"v0.0.5→v0.0.13 全部完成"）。不保留已发布版本的 task 列表——细节已记录到 CHANGELOG
 3. **不保留"待清理"或"以后再说"的残留 task** — 要么做完，要么正式推迟到规划中的版本，否则删除
 4. **CHANGELOG 必须在发布前更新**，作为版本完成的最终确认步骤
 
-反例：v0.0.12 发布后 ROADMAP 仍保留 v0.0.12 的完整痛点/解决描述（占 5 行），v0.0.11 也保留着。ROADMAP 一半篇幅是已完成内容，干扰视线。
+反例：v0.0.12 发布后 ROADMAP 仍保留完整痛点/解决描述，TODO 仍保留已发布的 task 列表。ROADMAP 和 TODO 一半篇幅是已完成内容，干扰视线。
 
 ## 经验：如何设计 v0.0.x 到 v0.1.0 的过渡
 
