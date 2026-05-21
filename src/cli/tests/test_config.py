@@ -30,8 +30,9 @@ class TestConfig:
         importlib.reload(config)
         assert config.settings.data_home == Path("/tmp/custom-data")
 
-    def test_sample_home_none_by_default(self):
-        assert config.settings.sample_home is None
+    def test_sample_home_defaults_to_data_home_samples(self):
+        assert config.settings.sample_home is not None
+        assert config.settings.sample_home.name == "samples"
 
     def test_sample_home_from_env(self, monkeypatch):
         monkeypatch.setenv("QTCLOUD_KNOWL_SAMPLE_HOME", "/tmp/my-sources")

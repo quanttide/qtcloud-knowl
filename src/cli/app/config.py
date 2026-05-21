@@ -49,6 +49,8 @@ class Settings(BaseSettings):
             self.data_home = _local.data_dir
         if self.state_home is None:
             self.state_home = _local.state_dir
+        if self.sample_home is None:
+            self.sample_home = self.data_home / "samples"
         return self
 
     @classmethod

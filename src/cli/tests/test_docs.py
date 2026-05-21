@@ -73,6 +73,6 @@ class TestSettingsDoc:
     def test_data_home_is_path(self):
         assert isinstance(settings.data_home, Path)
 
-    def test_sample_home_is_optional(self):
-        """sample_home 允许 None"""
-        assert settings.sample_home is None or isinstance(settings.sample_home, Path)
+    def test_sample_home_defaults_to_path(self):
+        """sample_home 有默认值"""
+        assert isinstance(settings.sample_home, Path)

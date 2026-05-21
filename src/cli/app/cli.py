@@ -97,6 +97,47 @@ def audit(
 
 
 @app.command()
+def source(
+    action: str = typer.Argument("list", help="操作：download / list / remove"),
+    name: str = typer.Option(None, "--name", "-n", help="源文档名称（download / remove 时必填）"),
+):
+    """管理源文档 — 下载、列出、清理"""
+    from app.source import SOURCES, download, download_all, list_sources, remove, remove_all
+
+    if action == "list":
+        downloaded = list_sources()
+        if not downloaded:
+            print("未下载任何源文档。可用:")
+            for k, v in SOURCES.items():
+                print(f"  {k}: {v['desc']}")
+            print("\n运行 qtcloud-knowl source download --name <名称> 下载")
+            return
+        print("已下载的源文档:")
+        for d in downloaded:
+            print(f"  {d}")
+        print(f"\n共 {len(downloaded)} 项")
+
+    elif action == "download":
+        if name:
+            result = download(name)
+            print(result)
+        else:
+            print("可用源文档:")
+            for k, v in SOURCES.items():
+                print(f"  {k}: {v['desc']}")
+            print("\n指定名称下载: qtcloud-knowl source download --name qtcloud-bylaw")
+
+    elif action == "remove":
+        if name:
+            result = remove(name)
+            print(result)
+        else:
+            results = remove_all()
+            for r in results:
+                print(r)
+
+
+@app.command()
 def review(
     action: str = typer.Argument("list", help="操作：list / approve / reject / reset"),
     item_id: str = typer.Option(None, "--id", help="条目 ID（如 biz-ops:ontology:o1）"),

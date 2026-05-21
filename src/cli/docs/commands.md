@@ -51,6 +51,28 @@ extract [SAMPLE_DIR] [--data-dir PATH] [--verbose] [--llm FILE]
 抽取完成。共收录 10 份文档。骨架文件已保存到 ~/.local/share/quanttide/qtcloud-knowl/。
 ```
 
+## source
+
+```
+source list
+source download [--name NAME]
+source remove [--name NAME]
+```
+
+管理源文档——从 GitHub 下载、列出、清理。
+
+关键行为：
+- `list`：列出已下载的源文档；如无已下载项，显示可用源文档列表
+- `download --name <name>`：下载指定源文档到 `sample_home`（默认 `data_home/samples/`）
+- `download`（不传 name）：列出可用源文档
+- `remove --name <name>`：删除指定源文档
+- `remove`（不传 name）：删除所有源文档
+
+可用源文档：
+- `qtcloud-bylaw`：量潮科技工作章程
+- `qtcloud-handbook`：量潮科技工作手册
+- `qtcloud-tutorial`：量潮科技工作教程
+
 ## review
 
 ```

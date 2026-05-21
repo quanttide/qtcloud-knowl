@@ -2,7 +2,7 @@
 
 ## 已发布
 
-v0.0.5 → v0.0.14 全部完成，见 [CHANGELOG.md](CHANGELOG.md)。
+v0.0.5 → v0.0.17 全部完成，见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## v0.0.15 — LLM 抽取结果不能落库
 

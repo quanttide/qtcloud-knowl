@@ -18,6 +18,8 @@ pip install -e /path/to/qtcloud-knowl/src/cli
 
 ## 可用示例
 
+CLI 内置了以下源文档，通过 `source download` 命令获取：
+
 | 项目 | 说明 | 源文档仓库 |
 |------|------|-----------|
 | `qtcloud-bylaw-of-business-entity` | 量潮科技工作章程，8 个领域，14 个 OCL 本体 | [GitHub](https://github.com/quanttide/quanttide-bylaw-of-business-entity) |
@@ -27,11 +29,11 @@ pip install -e /path/to/qtcloud-knowl/src/cli
 ## 使用方法
 
 ```bash
-# 下载示例源文档
-./examples/setup.sh
+# 下载示例源文档到 sample_home（默认 data_home/samples/）
+qtcloud-knowl source download --name qtcloud-bylaw
 
-# 抽取：从源文档创建知识库骨架（数据存到系统默认目录）
-qtcloud-knowl extract ./examples/qtcloud-bylaw-of-business-entity
+# 抽取：从源文档创建知识库骨架
+qtcloud-knowl extract
 
 # 审计：对知识库运行质量检测
 qtcloud-knowl audit
@@ -40,6 +42,9 @@ qtcloud-knowl audit
 数据默认存储在 `~/.local/share/quanttide/qtcloud-knowl/`，对环境变量 `QTCLOUD_KNOWL_DATA_HOME` 可自定义。
 
 ```bash
-# 删除下载的示例源文档
-./examples/cleanup.sh
+# 查看已下载的源文档
+qtcloud-knowl source list
+
+# 删除所有源文档
+qtcloud-knowl source remove
 ```

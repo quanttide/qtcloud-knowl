@@ -1,5 +1,20 @@
 # 变更记录
 
+## [0.0.17] - 2026-05-21
+
+### 功能
+
+- 新增 `source` CLI 命令：`source download`、`source list`、`source remove`
+- `source download --name <name>` 从 GitHub 下载源文档到 `sample_home`
+- `source list` 查看已下载的源文档，如无则显示可用列表
+- `source remove` 删除已下载的源文档
+- `sample_home` 新增默认值：`data_home / samples/`（环境变量 `QTCLOUD_KNOWL_SAMPLE_HOME` 仍可覆盖）
+
+### 测试
+
+- 新增 6 项 source 命令测试
+- 更新 config 和 docs 测试适配 `sample_home` 默认值
+
 ## [0.0.14] - 2026-05-21
 
 ### 功能
