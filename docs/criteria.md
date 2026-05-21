@@ -88,16 +88,7 @@
 }
 ```
 
-## 评审流程
-
-1. 跑 `qtcloud-knowl check-abstraction` 检测未抽象信号
-2. 跑 `qtcloud-knowl cross-domain-report` 检查跨域关系覆盖率
-3. 跑 `qtcloud-knowl summary` 概览各领域数据量
-4. 跑 `qtcloud-knowl fusion-check` 检测名称冲突、引用断裂、效力一致性
-5. 跑 `qtcloud-knowl find-undefined-terms` 检测未定义术语
-6. 逐项检查实例-源文件一致性（人工）
-7. 逐项评审跨域关系合理性（人工）
-8. 更新 `.review.json` 记录评审结果
+> 质量标准的具体检测可以通过 CLI 自动完成。操作步骤见 CLI 参考文档。
 
 ## 反例
 
