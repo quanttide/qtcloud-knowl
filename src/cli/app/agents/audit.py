@@ -171,11 +171,13 @@ def run(data_dir=None, sample_dir=None, mode="full"):
 
     if domains:
         print("  领域清单:")
-        for d in domains:
+        for domain in domains:
             vocab = (
-                len(d.vocabulary) if hasattr(d, "vocabulary") and d.vocabulary else 0
+                len(domain.vocabulary)
+                if hasattr(domain, "vocabulary") and domain.vocabulary
+                else 0
             )
-            print(f"    {d.id:<20} {d.name:<12} vocabulary={vocabulary} 项")
+            print(f"    {domain.id:<20} {domain.name:<12} vocabulary={vocab} 项")
         print()
 
     # ── 第二步：检测问题 ──
