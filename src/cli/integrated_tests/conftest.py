@@ -2,12 +2,24 @@
 
 import importlib
 import shutil
+import sys
 from pathlib import Path
 
 import pytest
 
 FIXTURE_DIR = Path(__file__).resolve().parent / "fixtures" / "output"
 SAMPLE_DIR = Path(__file__).resolve().parent / "fixtures" / "input"
+
+
+def _reload_all_app_modules():
+    """重载所有已加载的 app.* 模块，确保 settings 引用刷新。
+
+    每个模块都通过 `from app.config import settings` 在模块级缓存了 settings
+    引用。仅 reload config 不够——必须 reload 所有缓存旧引用的子模块。
+    """
+    for mod_name in list(sys.modules.keys()):
+        if mod_name.startswith("app.") and mod_name != "app.config":
+            importlib.reload(sys.modules[mod_name])
 
 
 def setup_env(monkeypatch, *, data_home, sample_dir=None, api_key="", state_home=None):
@@ -27,12 +39,8 @@ def setup_env(monkeypatch, *, data_home, sample_dir=None, api_key="", state_home
 
     from app import config
     importlib.reload(config)
-    import app.reviewers.data as rdata
-    import app.review as rmod
-    importlib.reload(rdata)
-    importlib.reload(rmod)
+    _reload_all_app_modules()
     import app.cli as cli_mod
-    importlib.reload(cli_mod)
     return cli_mod.app
 
 
