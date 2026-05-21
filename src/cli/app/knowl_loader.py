@@ -3,7 +3,7 @@
 import json
 from pathlib import Path
 
-from quanttide_knowl.models import Domain, Instance, Ontology, Relation
+from quanttide_knowl.models import Domain, Instance, Ontology
 
 
 def load_json(path: Path) -> dict:
@@ -55,25 +55,11 @@ def load_instances(domain_dir: Path) -> list[Instance]:
     ]
 
 
-def load_relations(domain_dir: Path) -> list[Relation]:
-    data = load_json(domain_dir / "relations.json")
-    return [
-        Relation(
-            id=r.get("id", ""),
-            name=r.get("name", ""),
-            label=r.get("label", ""),
-            description=r.get("description", ""),
-        )
-        for r in data.get("relations", [])
-    ]
-
-
 def load_all_domains(data_dir: Path):
     result = []
     for d in get_domain_dirs(data_dir):
         domain = load_domain(d)
         ontologies = load_ontologies(d)
         instances = load_instances(d)
-        relations = load_relations(d)
-        result.append((d, domain, ontologies, instances, relations))
+        result.append((d, domain, ontologies, instances))
     return result

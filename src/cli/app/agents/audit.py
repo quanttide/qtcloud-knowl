@@ -146,13 +146,11 @@ def run(data_dir=None, sample_dir=None, mode="full"):
     domains = []
     ontology_count = 0
     instance_count = 0
-    relation_count = 0
     try:
-        for d, domain, ontologies, instances, relations in load_all_domains(ddir):
+        for d, domain, ontologies, instances in load_all_domains(ddir):
             domains.append(domain)
             ontology_count += len(ontologies)
             instance_count += len(instances)
-            relation_count += len(relations)
     except Exception:
         pass
 
@@ -163,7 +161,6 @@ def run(data_dir=None, sample_dir=None, mode="full"):
     print(f"  领域数量: {len(domains)}")
     print(f"  本体数量: {ontology_count}")
     print(f"  实例数量: {instance_count}")
-    print(f"  关系数量: {relation_count}")
     if sdir:
         print(f"  源文件目录: {sdir}")
     print()
