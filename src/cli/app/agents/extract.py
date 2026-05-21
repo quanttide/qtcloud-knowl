@@ -15,10 +15,13 @@ def _make_uuid(name: str) -> str:
 
 
 def _clean(item):
-    """只保留 id/name/label/description 四个字段，id 转为 UUID。"""
+    """只保留 id/name/label/description 四个字段，id 转为 UUID。
+    返回 (uuid_cleaned, original_id) 元组。
+    """
+    original_id = item.get("id", "") or item.get("name", "unknown")
     cleaned = {k: item.get(k, "") for k in ALLOWED_FIELDS}
-    cleaned["id"] = _make_uuid(cleaned["id"] or cleaned["name"] or "unknown")
-    return cleaned
+    cleaned["id"] = _make_uuid(original_id)
+    return cleaned, original_id
 
 
 PROMPT_DIR = Path(__file__).resolve().parent.parent / "prompts"
@@ -58,9 +61,12 @@ def _extract_dir(sdir, prompt_template="full_extraction.txt"):
     """对目录中所有 .md 文件执行 LLM 抽取，合并结果。"""
     from quanttide_agent import LLM
 
-    prompt = _load_prompt(prompt_template)
-    if not prompt:
+    prompt_template_raw = _load_prompt(prompt_template)
+    if not prompt_template_raw:
         return f"错误: prompt 模板不存在 {prompt_template}"
+
+    # 注入目录名信息
+    prompt = prompt_template_raw.replace("{directory_name}", sdir.name)
 
     md_files = sorted(sdir.glob("*.md"))
     if not md_files:
@@ -103,23 +109,22 @@ def _extract_dir(sdir, prompt_template="full_extraction.txt"):
             f"✓ {len(data.get('ontologies', []))}本体/{len(data.get('instances', []))}实例"
         )
 
-        domain = _clean(data.get("domain", {}))
-        did = domain.get("id", f"from-{f.stem}")
+        domain, did = _clean(data.get("domain", {}))
         if did not in all_domains:
             all_domains[did] = domain
 
         for o in data.get("ontologies", []):
-            o = _clean(o)
+            o, _ = _clean(o)
             oid = o.get("id", "")
             if oid and oid not in all_ontologies:
                 all_ontologies[oid] = o
 
         for inst in data.get("instances", []):
-            inst = _clean(inst)
+            inst, _ = _clean(inst)
             all_instances.append(inst)
 
         for r in data.get("relations", []):
-            r = _clean(r)
+            r, _ = _clean(r)
             all_relations.append(r)
 
     return all_domains, list(all_ontologies.values()), all_instances, all_relations
@@ -148,8 +153,7 @@ def run(source=None, data_dir=None, verbose=False):
     ddir.mkdir(parents=True, exist_ok=True)
 
     domain_count = 0
-    for domain in all_domains.values():
-        did = domain.get("id", "")
+    for did, domain in all_domains.items():
         if not did:
             continue
         domain_dir = ddir / did
