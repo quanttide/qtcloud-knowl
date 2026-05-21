@@ -13,11 +13,16 @@
 ## 使用方法
 
 ```bash
-# 下载示例源文档
+# 下载所有示例
 ./examples/setup.sh
 
-# 对示例运行抽取
-qtcloud-knowl extract ./examples/qtcloud-bylaw-of-business-entity/samples
+# 对示例运行抽取（当前 extract 只扫描目录下的 .md 文件，不递归子目录）
+# 可指向具体子目录作为源文档目录
+qtcloud-knowl extract ./examples/qtcloud-bylaw-of-business-entity/audit
+
+# 或复制到平面目录：
+# mkdir -p /tmp/samples && find ./examples -name '*.md' -exec cp {} /tmp/samples \;
+# qtcloud-knowl extract /tmp/samples
 
 # 运行审计
 qtcloud-knowl audit --data-dir ./examples/qtcloud-bylaw-of-business-entity/kbase
