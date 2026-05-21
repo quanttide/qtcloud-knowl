@@ -111,7 +111,9 @@ def audit(
 
 @app.command()
 def source(
-    action: str = typer.Argument("list", help="操作：download / list / remove"),
+    action: str = typer.Argument(
+        "list", help="操作：download / list / remove / remove-all"
+    ),
     name: str = typer.Option(
         None, "--name", "-n", help="源文档名称（download / remove 时必填）"
     ),
@@ -120,22 +122,13 @@ def source(
     ),
 ):
     """管理源文档 — 下载、列出、清理"""
-    from app.source import (
-        SOURCES,
-        download,
-        download_all,
-        list_sources,
-        remove,
-        remove_all,
-    )
+    from app.source import download, download_all, list_sources, remove, remove_all
 
     if action == "list":
         downloaded = list_sources()
         if not downloaded:
-            print("未下载任何源文档。可用:")
-            for k, v in SOURCES.items():
-                print(f"  {k}: {v['desc']}")
-            print("\n运行 qtcloud-knowl source download --name <名称> 下载")
+            print(f"source_home: {settings.source_home}")
+            print("(暂无已下载的源文档)")
             return
         print("已下载的源文档:")
         for d in downloaded:
@@ -143,30 +136,20 @@ def source(
         print(f"\n共 {len(downloaded)} 项")
 
     elif action == "download":
-        if name and url:
-            result = download(name, url=url)
-            print(result)
-        elif name:
-            result = download(name)
-            print(result)
-        else:
-            print("可用源文档:")
-            for k, v in SOURCES.items():
-                print(f"  {k}: {v['desc']}")
-            print()
-            print("从预设源下载: qtcloud-knowl source download --name qtcloud-bylaw")
-            print(
-                "从任意仓库:    qtcloud-knowl source download --name my-docs --url https://github.com/user/repo.git"
-            )
+        result = download(name=name, url=url)
+        print(result)
 
     elif action == "remove":
-        if name:
-            result = remove(name)
-            print(result)
-        else:
-            results = remove_all()
-            for r in results:
-                print(r)
+        if not name:
+            print("错误: 请指定 --name")
+            return
+        result = remove(name)
+        print(result)
+
+    elif action == "remove-all":
+        results = remove_all()
+        for r in results:
+            print(r)
 
 
 @app.command()

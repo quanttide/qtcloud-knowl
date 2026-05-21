@@ -18,24 +18,23 @@ from pathlib import Path
 
 from app.config import settings
 
-SOURCES = {
-    "qtcloud-bylaw": {
-        "url": "https://github.com/quanttide/quanttide-bylaw-of-business-entity.git",
-        "desc": "量潮科技工作章程",
-    },
-    "qtcloud-handbook": {
-        "url": "https://github.com/quanttide/quanttide-handbook-of-business-entity.git",
-        "desc": "量潮科技工作手册",
-    },
-    "qtcloud-tutorial": {
-        "url": "https://github.com/quanttide/quanttide-tutorial-of-business-entity.git",
-        "desc": "量潮科技工作教程",
-    },
-}
-
 
 def _sources_dir():
     return settings.source_home
+
+
+def _repo_name_from_url(url: str) -> str:
+    """从 Git URL 提取仓库名。
+
+    >>> _repo_name_from_url("https://github.com/user/repo.git")
+    'repo'
+    >>> _repo_name_from_url("git@github.com:user/repo.git")
+    'repo'
+    """
+    name = url.rstrip("/").split("/")[-1]
+    if name.endswith(".git"):
+        name = name[:-4]
+    return name
 
 
 def list_sources():
@@ -46,12 +45,12 @@ def list_sources():
     return sorted(d.name for d in src_dir.iterdir() if d.is_dir())
 
 
-def download(name, url=None):
-    """下载指定源文档。
+def download(name=None, url=None):
+    """下载源文档。
 
     Args:
-        name: 源文档名称，用作本地目录名
-        url: Git 仓库 URL（不指定时从预设源查找）
+        name: 本地目录名（不指定时从 URL 自动提取）
+        url: Git 仓库 URL（download 时必填）
 
     Returns:
         str: 结果消息
@@ -60,9 +59,10 @@ def download(name, url=None):
     import sys
 
     if url is None:
-        if name not in SOURCES:
-            return f"错误: 未知源文档 '{name}'，可用: {', '.join(SOURCES.keys())}"
-        url = SOURCES[name]["url"]
+        return "错误: 请指定 --url"
+
+    if name is None:
+        name = _repo_name_from_url(url)
 
     target = _sources_dir() / name
     if target.exists():
