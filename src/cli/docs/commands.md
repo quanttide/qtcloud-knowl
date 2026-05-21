@@ -48,6 +48,24 @@ extract [SAMPLE_DIR] [--data-dir PATH] [--verbose]
 抽取完成。共收录 10 份文档。骨架文件已保存到 ~/.local/share/quanttide/qtcloud-knowl/。
 ```
 
+## review
+
+```
+review list [--pending] [--domain NAME]
+review approve [--id KEY]
+review reject --id KEY [--reason TEXT]
+review reset
+```
+
+评审知识条目，支持批量操作。替代旧的 TUI 评审工具。
+
+关键行为：
+- `list`：列出所有条目及评审状态，`--pending` 只显示待审项
+- `approve`：不传 `--id` 时全部通过；传 `--id` 时通过指定项
+- `reject`：需传 `--id` 和可选的 `--reason` 说明原因
+- `reset`：清空所有评审记录
+- 条目 ID 格式：`{领域}:{类型}:{ID}`（如 `biz-ops:ontology:role-responsibility`）
+
 ## 内部命令（不公开）
 
 以下 9 个命令标记为 `hidden=True`，不出现在 `--help` 中，可通过 CliRunner 或直接 import 调用，供 `audit` 和 `extract` 内部编排：
