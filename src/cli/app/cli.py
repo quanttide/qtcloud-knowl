@@ -110,58 +110,6 @@ def audit(
 
 
 @app.command()
-def review(
-    action: str = typer.Argument("list", help="操作：list / approve / reject / reset"),
-    item_id: str = typer.Option(None, "--id", help="条目 ID（如 biz-ops:ontology:o1）"),
-    domain: str = typer.Option(None, "--domain", help="按领域过滤"),
-    reason: str = typer.Option("", "--reason", help="拒绝原因（仅 reject）"),
-    pending: bool = typer.Option(False, "--pending", help="仅显示待审项（仅 list）"),
-):
-    """评审知识条目 — 批量通过/拒绝，查看评审状态"""
-    from app.review import (
-        approve_all,
-        approve_item,
-        list_items,
-        reject_item,
-        reset_reviews,
-    )
-
-    if action == "list":
-        items = list_items(domain_filter=domain, pending_only=pending)
-        if not items:
-            print("没有符合条件的条目。")
-            return
-        print(f"{'领域':<12} {'类型':<8} {'ID/名称':<24} {'状态':<8} {'备注'}")
-        print(f"{'─' * 12} {'─' * 8} {'─' * 24} {'─' * 8} {'─' * 20}")
-        for item in items:
-            print(
-                f"{item['domain']:<12} {item['type']:<8} {item['label'][:24]:<24} {item['status']:<8} {item['comment']}"
-            )
-        total = len(items)
-        pending_count = sum(1 for i in items if i["status"] == "待评审")
-        print(f"\n共 {total} 项，{pending_count} 项待评审")
-
-    elif action == "approve":
-        if item_id:
-            approve_item(item_id)
-            print(f"已通过：{item_id}")
-        else:
-            n = approve_all()
-            print(f"已全部通过：{n} 项")
-
-    elif action == "reject":
-        if not item_id:
-            print("错误：--id 为必填（如 --id biz-ops:ontology:o1）")
-            raise typer.Exit(1)
-        reject_item(item_id, reason)
-        print(f"已拒绝：{item_id}" + (f" 原因：{reason}" if reason else ""))
-
-    elif action == "reset":
-        reset_reviews()
-        print("评审记录已重置。")
-
-
-@app.command()
 def extract(
     source: str = typer.Option(None, "--source", "-s", help="源文档目录路径"),
     data_dir: str = typer.Option(None, "--data-dir", help="数据目录路径"),
