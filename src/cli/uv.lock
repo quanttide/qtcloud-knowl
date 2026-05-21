@@ -404,28 +404,12 @@ wheels = [
 ]
 
 [[package]]
-name = "qtcloud-knowl"
-version = "0.0.1"
-source = { editable = "../../packages/python" }
-dependencies = [
-    { name = "pydantic" },
-]
-
-[package.metadata]
-requires-dist = [
-    { name = "pydantic", specifier = ">=2.0" },
-    { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
-]
-provides-extras = ["test"]
-
-[[package]]
 name = "qtcloud-knowl-cli"
 version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "pydantic-settings" },
     { name = "pydantic-settings-vault" },
-    { name = "qtcloud-knowl" },
     { name = "quanttide" },
     { name = "quanttide-agent" },
     { name = "quanttide-knowl" },
@@ -441,7 +425,6 @@ dev = [
 requires-dist = [
     { name = "pydantic-settings" },
     { name = "pydantic-settings-vault" },
-    { name = "qtcloud-knowl", editable = "../../packages/python" },
     { name = "quanttide" },
     { name = "quanttide-agent", specifier = ">=0.3.0" },
     { name = "quanttide-knowl" },

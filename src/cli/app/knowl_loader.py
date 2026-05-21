@@ -1,0 +1,79 @@
+"""知识库加载器 — 读取目录结构中的 JSON 文件。"""
+
+import json
+from pathlib import Path
+
+from quanttide_knowl.models import Domain, Instance, Ontology, Relation
+
+
+def load_json(path: Path) -> dict:
+    with open(path, encoding="utf-8") as f:
+        return json.load(f)
+
+
+def get_domain_dirs(data_dir: Path) -> list[Path]:
+    if not data_dir.exists():
+        return []
+    return sorted(
+        d for d in data_dir.iterdir() if d.is_dir() and (d / "domain.json").exists()
+    )
+
+
+def load_domain(domain_dir: Path) -> Domain:
+    data = load_json(domain_dir / "domain.json")
+    return Domain(
+        id=data.get("id", domain_dir.name),
+        name=data.get("name", ""),
+        label=data.get("label", ""),
+        description=data.get("description", ""),
+    )
+
+
+def load_ontologies(domain_dir: Path) -> list[Ontology]:
+    data = load_json(domain_dir / "ontologies.json")
+    return [
+        Ontology(
+            id=o.get("id", ""),
+            name=o.get("name", ""),
+            label=o.get("label", ""),
+            description=o.get("description", ""),
+        )
+        for o in data.get("ontologies", [])
+    ]
+
+
+def load_instances(domain_dir: Path) -> list[Instance]:
+    data = load_json(domain_dir / "instances.json")
+    return [
+        Instance(
+            id=inst.get("id", ""),
+            name=inst.get("name", ""),
+            label=inst.get("label", ""),
+            description=inst.get("description", ""),
+        )
+        for inst in data.get("instances", [])
+    ]
+
+
+def load_relations(domain_dir: Path) -> list[Relation]:
+    data = load_json(domain_dir / "relations.json")
+    return [
+        Relation(
+            id=r.get("id", ""),
+            name=r.get("name", ""),
+            label=r.get("label", ""),
+            description=r.get("description", ""),
+        )
+        for r in data.get("relations", [])
+    ]
+
+
+def load_all_domains(data_dir: Path):
+    result = []
+    for d in get_domain_dirs(data_dir):
+        domain = load_domain(d)
+        ontologies = load_ontologies(d)
+        instances = load_instances(d)
+        relations = load_relations(d)
+        result.append((d, domain, ontologies, instances, relations))
+    return result

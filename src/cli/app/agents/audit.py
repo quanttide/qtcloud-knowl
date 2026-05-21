@@ -5,10 +5,9 @@ import re
 from datetime import datetime
 from pathlib import Path
 
-from quanttide_knowl.loader import load_all_domains
-
 from app.agents.tools import all_detection_tools
 from app.config import settings
+from app.knowl_loader import load_all_domains
 
 AUDIT_STATE_FILE = "audit.json"
 

@@ -18,14 +18,10 @@ dependencies = [
     "quanttide",
     "quanttide-agent>=0.3.0",
     "quanttide-knowl",
-    "qtcloud-knowl",
 ]
 
 [project.scripts]
 qtcloud-knowl = "app.cli:main"
-
-[tool.uv.sources]
-qtcloud-knowl = { path = "../../packages/python", editable = true }
 
 [dependency-groups]
 dev = [
