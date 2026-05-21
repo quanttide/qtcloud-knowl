@@ -1,22 +1,30 @@
 """全量质量审计 — 串行执行全部检测，生成业务语言报告。"""
 
-import re
 import json
+import re
 from datetime import datetime
 from pathlib import Path
-from app.config import settings
-from app.agents.tools import all_detection_tools
+
 from qtcloud_knowl.loader import load_all_domains
+
+from app.agents.tools import all_detection_tools
+from app.config import settings
 
 AUDIT_STATE_FILE = "audit.json"
 
 
 def _collect_issues(need_confirm, auto_fixable, suggestions):
     flat = []
-    for category, items in [("need_confirm", need_confirm), ("auto_fixable", auto_fixable), ("suggestions", suggestions)]:
+    for category, items in [
+        ("need_confirm", need_confirm),
+        ("auto_fixable", auto_fixable),
+        ("suggestions", suggestions),
+    ]:
         for group_title, issue_list in items:
             for label, action in issue_list:
-                flat.append({"category": category, "group": group_title, "label": label})
+                flat.append(
+                    {"category": category, "group": group_title, "label": label}
+                )
     return flat
 
 
@@ -57,7 +65,13 @@ def _compute_diff(previous_issues, current_issues):
 
 
 def _has_issue(output):
-    return "[MISS]" in output or "[FAIL]" in output or "[检测到]" in output or "使用了术语" in output or "需人确认" in output
+    return (
+        "[MISS]" in output
+        or "[FAIL]" in output
+        or "[检测到]" in output
+        or "使用了术语" in output
+        or "需人确认" in output
+    )
 
 
 def _parse_issues(output, data_dir=None):
@@ -82,16 +96,31 @@ def _parse_issues(output, data_dir=None):
         elif "[FAIL] " in stripped:
             detail = stripped.split("[FAIL] ", 1)[-1].strip()
             label = f"• JSON 格式错误: {detail}"
-            action = f"修复 {data_dir}/{current_domain}/ 下对应的 JSON 文件" if current_domain else "修复对应 JSON 文件格式"
+            action = (
+                f"修复 {data_dir}/{current_domain}/ 下对应的 JSON 文件"
+                if current_domain
+                else "修复对应 JSON 文件格式"
+            )
             issues.append((label, action))
         elif "使用了术语" in stripped:
-            issues.append((f"• {stripped}", "在对应领域 domain.json 的 vocabulary 字段中补充该术语"))
+            issues.append(
+                (
+                    f"• {stripped}",
+                    "在对应领域 domain.json 的 vocabulary 字段中补充该术语",
+                )
+            )
         elif "需人确认" in stripped:
             label = stripped.replace("【需人确认】", "").strip()
-            issues.append((f"• {label}", "确认该引用是否必要，如必要则补充源文件或删除引用"))
+            issues.append(
+                (f"• {label}", "确认该引用是否必要，如必要则补充源文件或删除引用")
+            )
         elif "[检测到] " in stripped:
             label = stripped.split("[检测到] ", 1)[-1].strip()
-            dest = f"{data_dir}/{current_domain}/ontologies.json" if current_domain else "对应 ontologies.json"
+            dest = (
+                f"{data_dir}/{current_domain}/ontologies.json"
+                if current_domain
+                else "对应 ontologies.json"
+            )
             issues.append((f"• {label}", f"重构 {dest} 中的 pattern，将具体值改为变量"))
     return issues
 
@@ -101,22 +130,59 @@ def run(data_dir=None, sample_dir=None, mode="full"):
     sdir = Path(sample_dir) if sample_dir else settings.sample_home
 
     import sys
+
     if not ddir.exists():
         print("审计中止：数据目录不存在")
         print(f"  当前路径: {ddir}")
-        print("请确认 QTCLOUD_KNOWL_DATA_HOME 环境变量已正确设置，或传入 data_dir 参数。")
+        print(
+            "请确认 QTCLOUD_KNOWL_DATA_HOME 环境变量已正确设置，或传入 data_dir 参数。"
+        )
         sys.exit(1)
 
     if mode not in ("simple", "full"):
         print(f"错误: 不支持的审计模式 '{mode}'，仅支持 simple（快速）/ full（全面）")
         sys.exit(1)
 
-    domain_count = 0
+    # ── 第一步：统计基本情况 ──
+    domains = []
+    ontology_count = 0
+    instance_count = 0
+    relation_count = 0
     try:
-        domains = load_all_domains(ddir)
-        domain_count = len(domains)
+        for d, domain, ontologies, instances, relations in load_all_domains(ddir):
+            domains.append(domain)
+            ontology_count += len(ontologies)
+            instance_count += len(instances)
+            relation_count += len(relations)
     except Exception:
         pass
+
+    print("=" * 60)
+    print("  知识库概览")
+    print("=" * 60)
+    print(f"\n  数据目录: {ddir}")
+    print(f"  领域数量: {len(domains)}")
+    print(f"  本体数量: {ontology_count}")
+    print(f"  实例数量: {instance_count}")
+    print(f"  关系数量: {relation_count}")
+    if sdir:
+        print(f"  源文件目录: {sdir}")
+    print()
+
+    if domains:
+        print("  领域清单:")
+        for d in domains:
+            vocab = (
+                len(d.vocabulary) if hasattr(d, "vocabulary") and d.vocabulary else 0
+            )
+            print(f"    {d.id:<20} {d.name:<12} vocabulary={vocabulary} 项")
+        print()
+
+    # ── 第二步：检测问题 ──
+    print("=" * 60)
+    print("  检测结果")
+    print("=" * 60)
+    print()
 
     need_confirm = []
     auto_fixable = []
@@ -132,7 +198,9 @@ def run(data_dir=None, sample_dir=None, mode="full"):
 
         issues = _parse_issues(output, str(ddir))
         if not issues and _has_issue(output):
-            issues.append(("• 检测到异常但无法解析具体位置", "请查看上方原始日志确认问题"))
+            issues.append(
+                ("• 检测到异常但无法解析具体位置", "请查看上方原始日志确认问题")
+            )
 
         if tool.name == "validate" and issues:
             auto_fixable.append(("文件结构问题", issues))
@@ -165,7 +233,9 @@ def run(data_dir=None, sample_dir=None, mode="full"):
         print(f"源文件目录: {sdir}")
 
     if previous:
-        fixed, new, pending, _, _ = _compute_diff(previous.get("issues", []), current_issues)
+        fixed, new, pending, _, _ = _compute_diff(
+            previous.get("issues", []), current_issues
+        )
         prev_time = previous.get("timestamp", "未知")[:10]
         if fixed or new or pending:
             parts = []
@@ -195,7 +265,11 @@ def run(data_dir=None, sample_dir=None, mode="full"):
 
     if need_confirm:
         title_label = "建议关注" if mode == "simple" else "需要你确认的问题"
-        desc = "以下问题可由平台自动修复，无需手动处理。" if mode == "simple" else "以下问题平台无法自动判断，需要你决定如何处理。"
+        desc = (
+            "以下问题可由平台自动修复，无需手动处理。"
+            if mode == "simple"
+            else "以下问题平台无法自动判断，需要你决定如何处理。"
+        )
         print(f"━━━ {title_label} ━━━")
         print(f"{desc}\n")
         for title, issues in need_confirm:
@@ -211,7 +285,11 @@ def run(data_dir=None, sample_dir=None, mode="full"):
 
     if suggestions:
         title_label = "建议关注"
-        desc = "以下优化建议在全面审计模式下提供。" if mode == "full" else "以下问题在快速模式下仅供参考，切换到 --mode full 进行全面审计。"
+        desc = (
+            "以下优化建议在全面审计模式下提供。"
+            if mode == "full"
+            else "以下问题在快速模式下仅供参考，切换到 --mode full 进行全面审计。"
+        )
         print(f"━━━ {title_label} ━━━")
         print(f"{desc}\n")
         for title, issues in suggestions:
