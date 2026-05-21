@@ -1,5 +1,11 @@
 # 变更记录
 
+## [0.1.6] - 2026-05-22
+
+### Changed
+
+- 移除 relations 输出，仅保留 domain/ontologies/instances
+
 ## [0.1.5] - 2026-05-22
 
 ### Changed
