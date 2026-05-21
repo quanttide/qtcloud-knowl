@@ -2,9 +2,25 @@
 
 每个版本交付的不是功能，是用户能力。
 
-## 下一阶段：多文件合并抽取
+## 下一阶段：多文件合并抽取 + World 层级
 
 **核心矛盾**：`qtcloud-knowl extract` 是按文件抽取的，每文件一 domain。但知识库是按故事系列组织的（夜市约会、深夜失眠、书房陪伴等），不是按文件。工具没有"合并多文件到同一个 domain"的能力。
+
+**层级扩展**：domain 上级增加 world（世界观），用于区分现实与虚构世界：
+
+```
+World（世界观）
+  └── Domain（领域）
+       ├── Ontology（本体）
+       └── Instance（实例）
+```
+
+例如：
+- world: `reality` → domain: `公司治理`、`岗位职责`
+- world: `fiction-romance` → domain: `职场言情`、`校园言情`
+
+domain 不再直接归属知识库根目录，而是归属到对应的 world 目录下。
+extract 需要支持 `--world` 参数指定世界观归属。
 
 **方案 A：工具侧合并**
 
