@@ -1,5 +1,7 @@
 """
 OCL 阶段五测试：结构完整性检查 — audit
+
+保留：环境变量启动 + 真实数据链路。mode 分支由单元测试覆盖。
 """
 
 from typer.testing import CliRunner
@@ -20,15 +22,3 @@ class TestAudit:
         result = runner.invoke(app, ["audit"])
         assert result.exit_code == 0
         assert "审计目标" in result.output
-
-    def test_audit_simple_mode(self, real_knowledge_base, monkeypatch):
-        app = setup_env(monkeypatch, data_home=real_knowledge_base)
-        runner = CliRunner()
-        result = runner.invoke(app, ["audit", "--mode", "simple"])
-        assert result.exit_code == 0
-
-    def test_audit_invalid_mode(self, real_knowledge_base, monkeypatch):
-        app = setup_env(monkeypatch, data_home=real_knowledge_base)
-        runner = CliRunner()
-        result = runner.invoke(app, ["audit", "--mode", "bogus"])
-        assert result.exit_code != 0
