@@ -1,5 +1,23 @@
 # 变更记录
 
+## [0.0.18] - 2026-05-21
+
+### 文档
+
+- 新增 `docs/tutorial.md` — 从源文档到知识库的完整流程教程
+- 教程对应 6 个集成测试，每步可验证
+
+### 重构
+
+- 集成测试从 11 个精简至 6 个，下沉 5 个单模块测试到单元测试
+- 集成测试文件统一命名：`test_extract.py`、`test_audit.py`、`test_main.py`
+- `setup_env` 用 settings 属性注入替代 `importlib.reload`，移除模块重载 hack
+
+### 工程
+
+- 新增 `[build-system]` 配置，支持 `pip install` 安装 CLI 为系统命令
+- 使用 `uv sync` 管理开发依赖
+
 ## [0.0.17] - 2026-05-21
 
 ### 功能
