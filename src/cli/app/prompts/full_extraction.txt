@@ -2,11 +2,13 @@
 
 请分析文档内容，识别其中的领域（Domain）、本体（Ontology）、实例（Instance）和关系（Relation），以 JSON 格式输出。
 
-每个条目只有四个字段：
+每个条目四个字段：
 - id: 唯一标识（英文短名）
 - name: 名称（英文）
 - label: 显示标签（中文）
-- description: 描述
+- description: 描述/内容（可包含任意结构化信息，如"职责：xxx；权限：xxx"）
+
+description 是主要的承载字段，可以把原文中的关键信息以"键：值"格式写入，不拘泥于单一描述。
 
 输出格式：
 
@@ -14,13 +16,13 @@
 {
   "domain": { "id": "", "name": "", "label": "", "description": "" },
   "ontologies": [
-    { "id": "", "name": "", "label": "", "description": "" }
+    { "id": "", "name": "", "label": "", "description": "" },
   ],
   "instances": [
-    { "id": "", "name": "", "label": "", "description": "" }
+    { "id": "", "name": "", "label": "", "description": "" },
   ],
   "relations": [
-    { "id": "", "name": "", "label": "", "description": "" }
+    { "id": "", "name": "", "label": "", "description": "" },
   ]
 }
 ```
