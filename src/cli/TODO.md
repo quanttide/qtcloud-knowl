@@ -2,25 +2,7 @@
 
 ## 已发布
 
-v0.0.5 → v0.0.12 全部完成，见 [CHANGELOG.md](CHANGELOG.md)。
-
----
-
-## [已发布] v0.0.13 — reviewers TUI 无法批量操作，也不支持 AI 草稿
-
-- [x] 新增 `review` CLI 命令
-  - [x] `review list` 列出所有待审项（支持 --domain 过滤）
-  - [x] `review list --pending` 只显示待审项
-  - [x] `review approve` 全部通过
-  - [x] `review approve --id <key>` 单条通过
-  - [x] `review reject --id <key> --reason x` 拒绝并注明原因
-  - [x] `review reset` 重置评审记录
-- [x] review CLI 同时支持已有知识库评审和 AI 草稿审核（接口预留）
-- [x] 保留 reviewers TUI 代码（不做破坏性删除）
-- [x] 测试（18 项，100% 覆盖 app/review.py）
-- [x] 更新 docs/commands.md
-
-停止条件：`review list` 列出待审项，`review approve --id <key>` 通过后再次 list 不再显示该项。
+v0.0.5 → v0.0.13 全部完成，见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## v0.0.14 — 不知道 LLM 抽出来效果怎么样
 
