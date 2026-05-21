@@ -72,6 +72,7 @@ def _extract_dir(sdir, prompt_template="full_extraction.txt"):
     all_relations = []
 
     for f in md_files:
+        print(f"  [{f.name}] 正在抽取...", end=" ", flush=True)
         content = f.read_text(encoding="utf-8")
         filled = prompt.replace("{document}", content)
 
@@ -89,6 +90,10 @@ def _extract_dir(sdir, prompt_template="full_extraction.txt"):
         except json.JSONDecodeError:
             print(f"⚠ 文件 {f.name} LLM 返回结果解析失败，跳过")
             continue
+
+        print(
+            f"✓ {len(data.get('ontologies', []))}本体/{len(data.get('instances', []))}实例"
+        )
 
         domain = _clean(data.get("domain", {}))
         did = domain.get("id", f"from-{f.stem}")
