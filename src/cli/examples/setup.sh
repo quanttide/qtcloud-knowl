@@ -17,8 +17,9 @@ download() {
     echo "下载 $name ..."
     git clone --depth 1 "$repo" "$target" 2>/dev/null
     echo "✓ $name 已下载到 $target"
-    echo "  源文档: $target/<domain>/*.md"
 }
 
 download "https://github.com/quanttide/quanttide-bylaw-of-business-entity.git"
+download "https://github.com/quanttide/quanttide-handbook-of-business-entity.git"
+download "https://github.com/quanttide/quanttide-tutorial-of-business-entity.git"
 
