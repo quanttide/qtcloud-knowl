@@ -124,9 +124,8 @@ def _parse_issues(output, data_dir=None):
     return issues
 
 
-def run(data_dir=None, sample_dir=None, mode="full"):
+def run(data_dir=None, mode="full"):
     ddir = Path(data_dir) if data_dir else settings.data_home
-    sdir = Path(sample_dir) if sample_dir else settings.sample_home
 
     import sys
 
@@ -161,8 +160,6 @@ def run(data_dir=None, sample_dir=None, mode="full"):
     print(f"  领域数量: {len(domains)}")
     print(f"  本体数量: {ontology_count}")
     print(f"  实例数量: {instance_count}")
-    if sdir:
-        print(f"  源文件目录: {sdir}")
     print()
 
     if domains:
@@ -189,8 +186,6 @@ def run(data_dir=None, sample_dir=None, mode="full"):
     tools = all_detection_tools(mode)
     for tool in tools:
         inp = {"data_dir": str(ddir)}
-        if tool.name in ("find-undefined-terms", "fusion-check") and sdir:
-            inp["sample_dir"] = str(sdir)
 
         output = tool.execute(inp)
 
@@ -219,16 +214,6 @@ def run(data_dir=None, sample_dir=None, mode="full"):
     current_issues = _collect_issues(need_confirm, auto_fixable, suggestions)
     previous = _load_audit_state(mode=mode)
     _save_audit_state(current_issues, mode)
-
-    mode_label = "快速检查模式" if mode == "simple" else "全面审计模式"
-    print("=" * 60)
-    print(f"  知识库质量审计报告（{mode_label}）")
-    print("=" * 60)
-
-    print(f"\n审计目标: {ddir}")
-    print(f"领域数量: {len(domains)}")
-    if sdir:
-        print(f"源文件目录: {sdir}")
 
     if previous:
         fixed, new, pending, _, _ = _compute_diff(

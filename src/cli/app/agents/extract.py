@@ -113,14 +113,13 @@ def _extract_dir(sdir, prompt_template="full_extraction.txt"):
 
 
 def run(source=None, data_dir=None, verbose=False):
-    sdir = Path(source) if source else settings.sample_home
+    sdir = Path(source) if source else None
     ddir = Path(data_dir) if data_dir else settings.data_home
 
     import typer
 
     if not sdir:
-        print("错误: 未设置源文档目录")
-        print("请设置 QTCLOUD_KNOWL_SAMPLE_HOME 环境变量，或传入 --source 参数。")
+        print("错误: 请指定 --source")
         raise typer.Exit(code=1)
     if not sdir.exists():
         print(f"错误: 源文档目录不存在: {sdir}")

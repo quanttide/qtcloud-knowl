@@ -23,8 +23,6 @@ class Settings(BaseSettings):
 
     data_home: Optional[Path] = None
     state_home: Optional[Path] = None
-    sample_home: Optional[Path] = None
-    source_home: Optional[Path] = None
 
     llm_api_key: str = Field(
         default="",
@@ -50,10 +48,6 @@ class Settings(BaseSettings):
             self.data_home = _local.data_dir
         if self.state_home is None:
             self.state_home = _local.state_dir
-        if self.sample_home is None:
-            self.sample_home = self.data_home / "samples"
-        if self.source_home is None:
-            self.source_home = self.data_home / "sources"
         return self
 
     @classmethod
