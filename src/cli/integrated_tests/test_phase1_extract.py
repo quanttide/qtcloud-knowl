@@ -18,6 +18,7 @@ def _setup(monkeypatch, sample_dir, data_home, api_key="test-key"):
     """统一环境设置，避免各测试重复 reload 逻辑。"""
     monkeypatch.setenv("QTCLOUD_KNOWL_SAMPLE_HOME", str(sample_dir))
     monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", str(data_home))
+    monkeypatch.setenv("QTCLOUD_KNOWL_STATE_HOME", str(data_home))
     monkeypatch.setenv("QTCLOUD_KNOWL_LLM_API_KEY", api_key)
     import importlib
     from app import config

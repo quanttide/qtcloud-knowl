@@ -9,6 +9,7 @@ from typer.testing import CliRunner
 
 def _setup(monkeypatch, data_home):
     monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", str(data_home))
+    monkeypatch.setenv("QTCLOUD_KNOWL_STATE_HOME", str(data_home))
     import importlib
     from app import config
     importlib.reload(config)

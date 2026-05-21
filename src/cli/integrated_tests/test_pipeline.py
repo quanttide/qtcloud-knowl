@@ -15,9 +15,12 @@ class FakeResponse:
         self.content = content
 
 
-def _setup(monkeypatch, sample_dir, data_home, api_key="test-key"):
+def _setup(monkeypatch, sample_dir, data_home, api_key="test-key", state_home=None):
+    if state_home is None:
+        state_home = data_home
     monkeypatch.setenv("QTCLOUD_KNOWL_SAMPLE_HOME", str(sample_dir))
     monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", str(data_home))
+    monkeypatch.setenv("QTCLOUD_KNOWL_STATE_HOME", str(state_home))
     monkeypatch.setenv("QTCLOUD_KNOWL_LLM_API_KEY", api_key)
     import importlib
     from app import config
@@ -44,6 +47,66 @@ class TestPipeline:
         result_audit = runner.invoke(app, ["audit"])
         assert result_audit.exit_code == 0
         assert "审计" in result_audit.output
+
+    def test_audit_incremental_diff(self, real_sample_dir, real_knowledge_base, monkeypatch):
+        """二次 audit 显示增量对比 — 业务价值：持续改进可见性"""
+        state_dir = real_knowledge_base / ".audit-state"
+        state_dir.mkdir(exist_ok=True)
+        monkeypatch.setenv("QTCLOUD_KNOWL_SAMPLE_HOME", str(real_sample_dir))
+        monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", str(real_knowledge_base))
+        monkeypatch.setenv("QTCLOUD_KNOWL_STATE_HOME", str(state_dir))
+        import importlib
+        from app import config
+        importlib.reload(config)
+        import app.cli as cli_mod
+        importlib.reload(cli_mod)
+        runner = CliRunner()
+
+        result_first = runner.invoke(cli_mod.app, ["audit"])
+        assert result_first.exit_code == 0
+
+        result_second = runner.invoke(cli_mod.app, ["audit"])
+        assert result_second.exit_code == 0
+        assert "与上次审计一致" in result_second.output
+
+    def test_audit_mode_simple_vs_full(self, real_sample_dir, real_knowledge_base, monkeypatch):
+        """simple 和 full 的输出不同 — 业务价值：快速检查 vs 全面审计"""
+        app = _setup(monkeypatch, real_sample_dir, real_knowledge_base)
+        runner = CliRunner()
+
+        result_full = runner.invoke(app, ["audit", "--mode", "full"])
+        result_simple = runner.invoke(app, ["audit", "--mode", "simple"])
+
+        assert result_full.exit_code == 0
+        assert result_simple.exit_code == 0
+        assert len(result_full.output) > len(result_simple.output)
+
+    def test_review_reduces_audit_issues(self, real_sample_dir, real_knowledge_base, monkeypatch):
+        """评审确认后审计待处理项减少 — 业务价值：评审驱动质量改进"""
+        state_dir = real_knowledge_base / ".audit-state"
+        state_dir.mkdir(exist_ok=True)
+        monkeypatch.setenv("QTCLOUD_KNOWL_SAMPLE_HOME", str(real_sample_dir))
+        monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", str(real_knowledge_base))
+        monkeypatch.setenv("QTCLOUD_KNOWL_STATE_HOME", str(state_dir))
+        import importlib
+        from app import config
+        importlib.reload(config)
+        import app.reviewers.data as rdata
+        import app.review as rmod
+        importlib.reload(rdata)
+        importlib.reload(rmod)
+        import app.cli as cli_mod
+        importlib.reload(cli_mod)
+        runner = CliRunner()
+
+        result_before = runner.invoke(cli_mod.app, ["audit"])
+        assert result_before.exit_code == 0
+
+        runner.invoke(cli_mod.app, ["review", "approve"])
+
+        result_after = runner.invoke(cli_mod.app, ["audit"])
+        assert result_after.exit_code == 0
+        assert "与上次审计一致" in result_after.output
 
     def test_review_then_audit(self, real_sample_dir, real_knowledge_base, monkeypatch):
         """评审条目后运行审计，验证状态变更不影响审计"""
