@@ -1,5 +1,12 @@
 # 变更记录
 
+## [0.1.1] - 2026-05-22
+
+### Changed
+
+- 移除本地 `qtcloud-knowl` SDK 依赖，loader 内置到 CLI 中
+- 依赖仅剩 `quanttide-knowl`（PyPI）+ `quanttide-agent`
+
 ## [0.1.0] - 2026-05-22
 
 ### Breaking changes
