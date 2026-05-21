@@ -80,15 +80,12 @@ def download(name=None, url=None):
 
 
 def download_all():
-    """下载所有源文档。
+    """下载所有源文档（预留，当前无操作）。
 
     Returns:
         list[str]: 每条下载结果
     """
-    results = []
-    for name in SOURCES:
-        results.append(download(name))
-    return results
+    return ["download_all 已弃用，请指定 --url 逐个下载"]
 
 
 def remove(name):

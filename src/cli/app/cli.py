@@ -118,7 +118,7 @@ def source(
         None, "--name", "-n", help="源文档名称（download / remove 时必填）"
     ),
     url: str = typer.Option(
-        None, "--url", "-u", help="Git 仓库 URL（不指定时从预设源查找）"
+        None, "--url", "-u", help="Git 仓库 URL（download 时必填）"
     ),
 ):
     """管理源文档 — 下载、列出、清理"""
