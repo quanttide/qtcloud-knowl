@@ -1,67 +1,60 @@
-"""工具定义 — 将 CLI 命令封装为可调用工具。"""
+from quanttide_agent import Tool
+import io
+import sys
+from typing import Callable
 
-from pathlib import Path
-from app.config import settings
-from qtcloud_knowl.loader import load_all_domains
+
+def _capture(fn: Callable[[], None]) -> str:
+    buf = io.StringIO()
+    old = sys.stdout
+    sys.stdout = buf
+    try:
+        fn()
+    except Exception as e:
+        buf.write(f"执行错误: {e}")
+    finally:
+        sys.stdout = old
+    return buf.getvalue()
 
 
-def run_validate(data_dir=None):
+def _validate(inp: dict) -> str:
     from app.validators.validate import run
-    return run(data_dir)
+    return _capture(lambda: run(inp.get("data_dir")))
 
 
-def run_fusion_check(data_dir=None, sample_dir=None):
+def _fusion_check(inp: dict) -> str:
     from app.validators.fusion_check import run
-    return run(data_dir or settings.data_home, sample_dir or settings.sample_home)
+    return _capture(lambda: run(inp.get("data_dir"), inp.get("sample_dir")))
 
 
-def run_find_undefined(sample_dir=None, data_dir=None):
+def _find_undefined(inp: dict) -> str:
     from app.validators.find_undefined import run
-    return run(sample_dir or settings.sample_home, data_dir or settings.data_home)
+    return _capture(lambda: run(inp.get("sample_dir"), inp.get("data_dir")))
 
 
-def run_check_abstraction(data_dir=None):
+def _check_abstraction(inp: dict) -> str:
     from app.reporters.abstraction import run
-    return run(data_dir)
+    return _capture(lambda: run(inp.get("data_dir")))
 
 
-def run_cross_domain_report(data_dir=None):
+def _cross_domain_report(inp: dict) -> str:
     from app.reporters.cross_domain import run
-    return run(data_dir)
-
-
-def run_summary(data_dir=None):
-    from app.reporters.summary import run
-    return run(data_dir)
-
-
-def run_auto_fix(data_dir=None):
-    from app.validators.auto_fix import run
-    return run(data_dir)
-
-
-def run_detect_domain(filepath, data_dir=None):
-    from app.detectors.detect_domain import run
-    return run(filepath, data_dir or settings.data_home)
-
-
-def run_init_domain(domain_name, from_detect_file=None):
-    from app.detectors.init_domain import run
-    return run(domain_name, from_detect_file)
+    return _capture(lambda: run(inp.get("data_dir")))
 
 
 STRUCTURAL_TOOLS = [
-    ("validate", "领域目录结构完整性验证", run_validate),
-    ("find-undefined-terms", "扫描源文档中未定义术语", run_find_undefined),
-    ("fusion-check", "跨领域融合检测（名称冲突、引用断裂）", run_fusion_check),
+    Tool(name="validate", description="领域目录结构完整性验证", executor=_validate),
+    Tool(name="find-undefined-terms", description="扫描源文档中未定义术语", executor=_find_undefined),
+    Tool(name="fusion-check", description="跨领域融合检测（名称冲突、引用断裂）", executor=_fusion_check),
 ]
+
 QUALITY_TOOLS = [
-    ("check-abstraction", "本体抽象度检测", run_check_abstraction),
-    ("cross-domain-report", "跨领域关系覆盖率报告", run_cross_domain_report),
+    Tool(name="check-abstraction", description="本体抽象度检测", executor=_check_abstraction),
+    Tool(name="cross-domain-report", description="跨领域关系覆盖率报告", executor=_cross_domain_report),
 ]
 
 
-def all_detection_tools(mode="full"):
+def all_detection_tools(mode: str = "full") -> list[Tool]:
     tools = list(STRUCTURAL_TOOLS)
     if mode == "full":
         tools += QUALITY_TOOLS

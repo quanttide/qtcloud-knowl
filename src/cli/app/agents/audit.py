@@ -1,7 +1,5 @@
 """全量质量审计 — 串行执行全部检测，生成业务语言报告。"""
 
-import io
-import sys
 import re
 import json
 from datetime import datetime
@@ -58,19 +56,6 @@ def _compute_diff(previous_issues, current_issues):
     return fixed, new, pending, prev_set, curr_set
 
 
-def capture_run(fn, *args, **kwargs):
-    buf = io.StringIO()
-    old = sys.stdout
-    sys.stdout = buf
-    try:
-        ret = fn(*args, **kwargs)
-    except Exception as e:
-        ret = f"执行错误: {e}"
-    finally:
-        sys.stdout = old
-    return buf.getvalue(), ret
-
-
 def _has_issue(output):
     return "[MISS]" in output or "[FAIL]" in output or "[检测到]" in output or "使用了术语" in output or "需人确认" in output
 
@@ -115,16 +100,16 @@ def run(data_dir=None, sample_dir=None, mode="full"):
     ddir = Path(data_dir) if data_dir else settings.data_home
     sdir = Path(sample_dir) if sample_dir else settings.sample_home
 
-    import typer
+    import sys
     if not ddir.exists():
         print("审计中止：数据目录不存在")
         print(f"  当前路径: {ddir}")
         print("请确认 QTCLOUD_KNOWL_DATA_HOME 环境变量已正确设置，或传入 data_dir 参数。")
-        raise typer.Exit(code=1)
+        sys.exit(1)
 
     if mode not in ("simple", "full"):
         print(f"错误: 不支持的审计模式 '{mode}'，仅支持 simple（快速）/ full（全面）")
-        raise typer.Exit(code=1)
+        sys.exit(1)
 
     domain_count = 0
     try:
@@ -138,34 +123,26 @@ def run(data_dir=None, sample_dir=None, mode="full"):
     suggestions = []
 
     tools = all_detection_tools(mode)
-    for name, desc, fn in tools:
-        kwargs = {}
-        if name in ("find-undefined-terms",):
-            if sdir:
-                kwargs["sample_dir"] = str(sdir)
-            kwargs["data_dir"] = str(ddir)
-        elif name in ("fusion-check",):
-            kwargs["data_dir"] = str(ddir)
-            if sdir:
-                kwargs["sample_dir"] = str(sdir)
-        else:
-            kwargs["data_dir"] = str(ddir)
+    for tool in tools:
+        inp = {"data_dir": str(ddir)}
+        if tool.name in ("find-undefined-terms", "fusion-check") and sdir:
+            inp["sample_dir"] = str(sdir)
 
-        output, ret = capture_run(fn, **kwargs)
+        output = tool.execute(inp)
 
         issues = _parse_issues(output, str(ddir))
         if not issues and _has_issue(output):
             issues.append(("• 检测到异常但无法解析具体位置", "请查看上方原始日志确认问题"))
 
-        if name == "validate" and issues:
+        if tool.name == "validate" and issues:
             auto_fixable.append(("文件结构问题", issues))
-        elif name == "find-undefined-terms" and issues:
+        elif tool.name == "find-undefined-terms" and issues:
             need_confirm.append(("未定义术语", issues))
-        elif name == "fusion-check" and issues:
+        elif tool.name == "fusion-check" and issues:
             need_confirm.append(("名称冲突或引用断裂", issues))
-        elif name == "check-abstraction" and issues:
+        elif tool.name == "check-abstraction" and issues:
             suggestions.append(("本体抽象度不足", issues))
-        elif name == "cross-domain-report" and issues:
+        elif tool.name == "cross-domain-report" and issues:
             suggestions.append(("跨领域关系覆盖率", issues))
 
     if mode == "simple":
