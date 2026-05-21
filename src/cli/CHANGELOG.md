@@ -1,5 +1,24 @@
 # 变更记录
 
+## [0.1.0] - 2026-05-22
+
+### Breaking changes
+
+- extract 完全重写：全程 LLM 驱动，移除规则匹配模式
+- 数据模型简化：Domain/Ontology/Instance/Relation 统一为 id/name/label/description
+- 依赖切换：使用 `quanttide-knowl`（PyPI）替代本地 `qtcloud-knowl` SDK
+
+### Removed
+
+- `source`、`review` 命令
+- 所有隐藏命令（summary/validate/find-undefined-terms 等）
+- `--llm` 参数
+
+### Added
+
+- CI：`.github/workflows/publish-python.yml`
+- `extract --source`：从本地目录直接抽取知识库
+
 ## [0.0.20] - 2026-05-21
 
 ### Fixed
