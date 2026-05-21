@@ -10,6 +10,12 @@
 
 **用户能力**：一条命令完成从源文档到正式知识库的全流程，中途经 audit 自动质检。
 
+## v0.0.17 — 示例数据下载后散落在仓库里
+
+**痛点**：`setup.sh` 下载的示例源文档直接放在 `examples/` 目录下，污染仓库，不适合真实使用场景。
+
+**用户能力**：`qtcloud-knowl example download` 将示例数据下载到 XDG 数据目录；`qtcloud-knowl example list` 查看已下载的示例；`qtcloud-knowl example remove` 清理。
+
 ## v0.0.16 — 实例归类靠手动，审计看不出下一步
 
 > 对应 OCL 阶段四（实例化校验）+ 阶段六（知识应用与回流）
