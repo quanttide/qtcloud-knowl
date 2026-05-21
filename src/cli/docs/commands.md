@@ -63,7 +63,7 @@ source remove [--name NAME]
 
 关键行为：
 - `list`：列出已下载的源文档；如无已下载项，显示可用源文档列表
-- `download --name <name>`：下载指定源文档到 `sample_home`（默认 `data_home/samples/`）
+- `download --name <name>`：下载指定源文档到 `source_home`（默认 `data_home/sources/`）
 - `download`（不传 name）：列出可用源文档
 - `remove --name <name>`：删除指定源文档
 - `remove`（不传 name）：删除所有源文档

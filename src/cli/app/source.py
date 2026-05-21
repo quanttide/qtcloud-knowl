@@ -34,7 +34,7 @@ SOURCES = {
 
 
 def _sources_dir():
-    return settings.sample_home
+    return settings.source_home
 
 
 def list_sources():

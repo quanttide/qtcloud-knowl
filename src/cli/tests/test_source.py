@@ -3,8 +3,8 @@
 from typer.testing import CliRunner
 
 
-def _setup(monkeypatch, data_home):
-    monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", str(data_home))
+def _setup(monkeypatch, source_home):
+    monkeypatch.setenv("QTCLOUD_KNOWL_SOURCE_HOME", str(source_home))
     import importlib
     from app import config
     importlib.reload(config)
@@ -24,7 +24,7 @@ class TestSourceList:
 
     def test_list_with_data(self, tmp_path, monkeypatch):
         app = _setup(monkeypatch, tmp_path)
-        (tmp_path / "samples" / "test-source").mkdir(parents=True)
+        (tmp_path / "test-source").mkdir(parents=True)
         runner = CliRunner()
         result = runner.invoke(app, ["source", "list"])
         assert "test-source" in result.output
@@ -47,7 +47,7 @@ class TestSourceDownload:
 class TestSourceRemove:
     def test_remove_existing(self, tmp_path, monkeypatch):
         app = _setup(monkeypatch, tmp_path)
-        (tmp_path / "samples" / "test-source").mkdir(parents=True)
+        (tmp_path / "test-source").mkdir(parents=True)
         runner = CliRunner()
         result = runner.invoke(app, ["source", "remove", "--name", "test-source"])
         assert "已删除" in result.output
