@@ -12,6 +12,8 @@ version = "0.0.19"
 description = "Knowledge Agent CLI — charting, validation, and ontology management"
 requires-python = ">=3.12"
 dependencies = [
+    "typer",
+    "pydantic-settings",
     "quanttide-agent>=0.3.0",
     "qtcloud-knowl",
 ]
