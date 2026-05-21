@@ -1,6 +1,5 @@
 """集成测试共享夹具 — 使用 tests/fixtures/ 的真实数据。"""
 
-import importlib
 import shutil
 import sys
 from pathlib import Path
@@ -11,21 +10,11 @@ FIXTURE_DIR = Path(__file__).resolve().parent / "fixtures" / "output"
 SAMPLE_DIR = Path(__file__).resolve().parent / "fixtures" / "input"
 
 
-def _reload_all_app_modules():
-    """重载所有已加载的 app.* 模块，确保 settings 引用刷新。
-
-    每个模块都通过 `from app.config import settings` 在模块级缓存了 settings
-    引用。仅 reload config 不够——必须 reload 所有缓存旧引用的子模块。
-    """
-    for mod_name in list(sys.modules.keys()):
-        if mod_name.startswith("app.") and mod_name != "app.config":
-            importlib.reload(sys.modules[mod_name])
-
-
 def setup_env(monkeypatch, *, data_home, sample_dir=None, api_key="", state_home=None):
-    """统一环境设置：设环境变量 → 重载模块 → 返回 app。
+    """设置环境变量 → 创建 Settings → 注入所有已加载 app 模块。
 
-    所有集成测试使用此函数而非各自定义 _setup。
+    不重载模块，只替换模块的 .settings 属性（from app.config import settings
+    在 consumer 模块中创建了 module.settings 引用，直接替换即可）。
     """
     if state_home is None:
         state_home = data_home
@@ -38,21 +27,24 @@ def setup_env(monkeypatch, *, data_home, sample_dir=None, api_key="", state_home
         monkeypatch.setenv("QTCLOUD_KNOWL_LLM_API_KEY", api_key)
 
     from app import config
-    importlib.reload(config)
-    _reload_all_app_modules()
+
+    new_settings = config.Settings()
+    config.settings = new_settings
+    for mod_name in list(sys.modules.keys()):
+        if mod_name.startswith("app."):
+            sys.modules[mod_name].settings = new_settings
+
     import app.cli as cli_mod
     return cli_mod.app
 
 
 @pytest.fixture
 def real_sample_dir():
-    """返回 tests/fixtures/input/，包含 10 份真实样本文档。"""
     return SAMPLE_DIR
 
 
 @pytest.fixture
 def real_knowledge_base(tmp_path):
-    """复制真实领域数据到临时目录，避免测试写操作污染原 fixture。"""
     dest = tmp_path / "kbase"
     shutil.copytree(FIXTURE_DIR, dest)
     return dest

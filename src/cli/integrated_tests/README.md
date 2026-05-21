@@ -62,9 +62,16 @@
 
 ### conftest.setup_env 的 settings 隔离
 
-15 个 app 模块通过 `from app.config import settings` 在模块级缓存了 settings 引用。仅 `importlib.reload(config)` 会创建新 settings 对象，但已导入的模块仍持有旧引用。
+15 个 app 模块通过 `from app.config import settings` 在模块级缓存了 settings 引用。`setup_env` 不重载模块，而是直接替换每个已加载模块的 `.settings` 属性：
 
-**解决**：`setup_env` 中 reload config 后，通过 `_reload_all_app_modules()` 重载所有已加载的 `app.*` 子模块。
+```python
+new_settings = config.Settings()
+for mod_name in sys.modules:
+    if mod_name.startswith("app."):
+        sys.modules[mod_name].settings = new_settings
+```
+
+无需 `importlib.reload`，纯属性注入。
 
 ### state_dir 不能放在 data_home 内
 
