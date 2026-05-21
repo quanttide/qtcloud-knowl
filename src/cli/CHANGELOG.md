@@ -1,5 +1,13 @@
 # 变更记录
 
+## [0.1.3] - 2026-05-22
+
+### Changed
+
+- 移除 `sample_home`/`source_home` 配置项
+- 移除 audit `--sample-dir` 参数
+- audit 输出去重，概览 + 检测结果两段式
+
 ## [0.1.2] - 2026-05-22
 
 ### Fixed
