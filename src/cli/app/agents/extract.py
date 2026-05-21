@@ -5,6 +5,46 @@ from collections import Counter
 from app.config import settings
 from qtcloud_knowl.loader import load_all_domains
 
+PROMPT_DIR = Path(__file__).resolve().parent.parent / "prompts"
+
+
+def _load_prompt(name):
+    path = PROMPT_DIR / name
+    if not path.exists():
+        return None
+    return path.read_text(encoding="utf-8")
+
+
+def extract_with_llm(document_path, prompt_name="ontology_discovery.txt"):
+    """对文档运行 LLM 抽取，输出原始结果。
+
+    Args:
+        document_path: 文档文件路径
+        prompt_name: prompt 模板文件名
+
+    Returns:
+        str: LLM 原始输出
+    """
+    from quanttide_agent import LLM
+
+    doc_path = Path(document_path)
+    if not doc_path.exists():
+        return f"错误: 文件不存在 {doc_path}"
+
+    prompt = _load_prompt(prompt_name)
+    if not prompt:
+        return f"错误: prompt 模板不存在 {prompt_name}"
+
+    content = doc_path.read_text(encoding="utf-8")
+    filled = prompt.replace("{document}", content)
+
+    kwargs = {}
+    if settings.llm_base_url:
+        kwargs["base_url"] = settings.llm_base_url
+    llm = LLM(model=settings.llm_model, api_key=settings.llm_api_key, **kwargs)
+    response = llm.complete(filled)
+    return response.content
+
 
 def _describe(domain_hits, existing_domains):
     new = sum(1 for d in domain_hits if d not in existing_domains)

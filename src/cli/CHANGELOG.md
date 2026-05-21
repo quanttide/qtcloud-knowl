@@ -1,5 +1,17 @@
 # 变更记录
 
+## [0.0.14] - 2026-05-21
+
+### 功能
+
+- `extract --llm <file>` 对指定文档运行 LLM 语义抽取，输出原始结果到 stdout
+- 新增 `app/prompts/` 目录，存放 ontology-discovery / instance-mapping / relation-discovery prompt 模板
+- 新增配置：`QTCLOUD_KNOWL_LLM_MODEL`（默认 deepseek-chat）、`QTCLOUD_KNOWL_LLM_BASE_URL`
+
+### 测试
+
+- 新增 5 项 extract --llm 测试（mock LLM 调用、异常路径覆盖）
+
 ## [0.0.13] - 2026-05-21
 
 ### 功能

@@ -32,7 +32,7 @@ audit [DATA_DIR] [--mode simple|full] [--sample-dir PATH]
 ## extract
 
 ```
-extract [SAMPLE_DIR] [--data-dir PATH] [--verbose]
+extract [SAMPLE_DIR] [--data-dir PATH] [--verbose] [--llm FILE]
 ```
 
 从 Markdown 文档创建知识库骨架，按内容推荐所属领域。
@@ -40,7 +40,10 @@ extract [SAMPLE_DIR] [--data-dir PATH] [--verbose]
 关键行为：
 - 无 LLM 也能用：只做骨架创建 + 词汇匹配
 - 默认输出一句话摘要；加 `--verbose` 显示领域匹配详情
-- 配置 `QTCLOUD_KNOWL_LLM_API_KEY` 后可启用语义抽取
+- `--llm <file>`：对指定文档运行 LLM 语义抽取，输出原始结果到 stdout
+- LLM 通过 `quanttide-agent` 调用，需设置 `QTCLOUD_KNOWL_LLM_API_KEY`
+- 可选设置 `QTCLOUD_KNOWL_LLM_MODEL`（默认 deepseek-chat）和 `QTCLOUD_KNOWL_LLM_BASE_URL`
+- Prompt 模板位于 `app/prompts/`，可自定义抽取方向
 
 实际输出：
 

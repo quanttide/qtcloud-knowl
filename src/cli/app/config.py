@@ -33,6 +33,8 @@ class Settings(BaseSettings):
             else {}
         ),
     )
+    llm_model: str = Field(default="deepseek-chat")
+    llm_base_url: str = Field(default="")
 
     @field_validator("data_home", "state_home", mode="before")
     @classmethod

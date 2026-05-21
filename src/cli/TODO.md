@@ -2,20 +2,7 @@
 
 ## 已发布
 
-v0.0.5 → v0.0.13 全部完成，见 [CHANGELOG.md](CHANGELOG.md)。
-
-## v0.0.14 — 不知道 LLM 抽出来效果怎么样
-
-- [ ] `app/prompts/` 目录，存放抽取 prompt 模板
-  - [ ] ontology-discovery prompt（本体发现）
-  - [ ] instance-mapping prompt（实例映射）
-  - [ ] relation-discovery prompt（关系发现）
-- [ ] `extract --llm <document>` 读取文档，调用 LLM，输出原始结果到 stdout
-- [ ] LLM 连接复用 `quanttide-agent.LLM`
-- [ ] 测试
-- [ ] 更新 docs/commands.md
-
-停止条件：指定一个源文档，`extract --llm` 能返回原始 LLM 输出。
+v0.0.5 → v0.0.14 全部完成，见 [CHANGELOG.md](CHANGELOG.md)。
 
 ## v0.0.15 — LLM 输出没法保存为结构化草稿
 
