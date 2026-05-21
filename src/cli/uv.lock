@@ -321,8 +321,8 @@ provides-extras = ["test"]
 
 [[package]]
 name = "qtcloud-knowl-cli"
-version = "0.0.17"
-source = { virtual = "." }
+version = "0.0.18"
+source = { editable = "." }
 dependencies = [
     { name = "pydantic-settings" },
     { name = "qtcloud-knowl" },
