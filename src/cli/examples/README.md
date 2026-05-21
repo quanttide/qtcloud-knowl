@@ -40,6 +40,6 @@ qtcloud-knowl audit
 数据默认存储在 `~/.local/share/quanttide/qtcloud-knowl/`，对环境变量 `QTCLOUD_KNOWL_DATA_HOME` 可自定义。
 
 ```bash
-# 清空示例数据（恢复到初始状态）
-rm -rf ~/.local/share/quanttide/qtcloud-knowl/
+# 删除下载的示例源文档
+rm -rf ./examples/qtcloud-*
 ```
