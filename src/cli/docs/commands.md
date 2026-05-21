@@ -1,98 +1,81 @@
 # 命令参考
 
-## audit
-
-```
-audit [DATA_DIR] [--mode simple|full] [--sample-dir PATH]
-```
-
-全面检查知识库，按「需要你确认」「平台发现」「建议关注」三组输出报告。支持增量对比——二次运行会显示相比上次的变化。
-
-关键行为：
-- `--mode simple`：只检查结构完整性，跳过质量检测，问题降一级严重度
-- `--mode full`（默认）：执行全部 5 项检测
-- 首次运行无历史对比；二次起输出 `相比上次审计：✅ 已修复 N 项 / 🆕 新增 N 项 / ⏳ 待处理 N 项`
-
-实际输出：
-
-```text
-============================================================
-  知识库质量审计报告（全面审计模式）
-============================================================
-审计目标: ~/.local/share/quanttide/qtcloud-knowl/
-领域数量: 4
-相比上次审计（2026-05-21）：⏳ 待处理 1 项
-
-━━━ 需要你确认的问题 ━━━
-  名称冲突或引用断裂
-    • qtdata-index.md: 引用 "《量潮数据项目岗位权责章程》" 但无法匹配到已知文件
-    → 确认该引用是否必要，如必要则补充源文件或删除引用
-```
-
 ## extract
 
 ```
-extract [SAMPLE_DIR] [--data-dir PATH] [--verbose] [--llm FILE]
+qtcloud-knowl extract --source <目录> [--data-dir <目录>] [--verbose]
 ```
 
-从 Markdown 文档创建知识库骨架，按内容推荐所属领域。
+从本地 Markdown 文档提取知识，全程 LLM 驱动。逐文件调用大模型，自动识别并生成四类知识条目。
 
-关键行为：
-- 无 LLM 也能用：只做骨架创建 + 词汇匹配
-- 默认输出一句话摘要；加 `--verbose` 显示领域匹配详情
-- `--llm <file>`：对指定文档运行 LLM 语义抽取，输出原始结果到 stdout
-- LLM 通过 `quanttide-agent` 调用，需设置 `QTCLOUD_KNOWL_LLM_API_KEY`
-- 可选设置 `QTCLOUD_KNOWL_LLM_MODEL`（默认 deepseek-chat）和 `QTCLOUD_KNOWL_LLM_BASE_URL`
-- Prompt 模板位于 `app/prompts/`，可自定义抽取方向
+### 参数
 
-实际输出：
+| 选项 | 说明 |
+|------|------|
+| `--source` `-s` | 源文档目录路径（必填） |
+| `--data-dir` | 知识库输出目录（默认 `QTCLOUD_KNOWL_DATA_HOME`） |
+| `--verbose` `-v` | 显示抽取详情 |
 
-```text
-抽取完成。共收录 10 份文档。骨架文件已保存到 ~/.local/share/quanttide/qtcloud-knowl/。
-```
-
-## source
+### 输出
 
 ```
-source list
-source download [--name NAME]
-source remove [--name NAME]
+抽取完成。生成 1 个领域知识库，保存至 ~/.local/share/qtcloud-knowl。
+  本体: 3 项
+  实例: 5 项
+  关系: 4 项
 ```
 
-管理源文档——从 GitHub 下载、列出、清理。
-
-关键行为：
-- `list`：列出已下载的源文档；如无已下载项，显示可用源文档列表
-- `download --name <name>`：下载指定源文档到 `source_home`（默认 `data_home/sources/`）
-- `download`（不传 name）：列出可用源文档
-- `remove --name <name>`：删除指定源文档
-- `remove`（不传 name）：删除所有源文档
-
-可用源文档：
-- `qtcloud-bylaw`：量潮科技工作章程
-- `qtcloud-handbook`：量潮科技工作手册
-- `qtcloud-tutorial`：量潮科技工作教程
-
-## review
+### 生成的文件结构
 
 ```
-review list [--pending] [--domain NAME]
-review approve [--id KEY]
-review reject --id KEY [--reason TEXT]
-review reset
+<data-dir>/
+└── <domain-id>/
+    ├── domain.json         # 领域定义
+    ├── ontologies.json     # 本体列表
+    ├── instances.json      # 实例列表
+    └── relations.json      # 关系列表
 ```
 
-评审知识条目，支持批量操作。替代旧的 TUI 评审工具。
+每个条目统一四个字段：`id`、`name`、`label`、`description`。`description` 可包含结构化内容（如"职责：xxx；权限：xxx"）。
 
-关键行为：
-- `list`：列出所有条目及评审状态，`--pending` 只显示待审项
-- `approve`：不传 `--id` 时全部通过；传 `--id` 时通过指定项
-- `reject`：需传 `--id` 和可选的 `--reason` 说明原因
-- `reset`：清空所有评审记录
-- 条目 ID 格式：`{领域}:{类型}:{ID}`（如 `biz-ops:ontology:role-responsibility`）
+### 前置条件
 
-## 内部命令（不公开）
+- 需要配置 LLM API key（通过 `QTCLOUD_KNOWL_LLM_API_KEY` 环境变量或 Vault）
+- 默认使用 DeepSeek，可通过 `QTCLOUD_KNOWL_LLM_MODEL` 和 `QTCLOUD_KNOWL_LLM_BASE_URL` 切换
 
-以下 9 个命令标记为 `hidden=True`，不出现在 `--help` 中，可通过 CliRunner 或直接 import 调用，供 `audit` 和 `extract` 内部编排：
+## audit
 
-`validate` `find-undefined-terms` `fusion-check` `check-abstraction` `auto-fix` `cross-domain-report` `summary` `detect-domain` `init-domain`
+```
+qtcloud-knowl audit [<data-dir>] [--mode simple|full] [--sample-dir <目录>]
+```
+
+审计知识库完整性。先统计概览（领域/本体/实例/关系数量），再运行检测。
+
+### 参数
+
+| 选项 | 说明 |
+|------|------|
+| `data-dir` | 知识库目录（默认 `QTCLOUD_KNOWL_DATA_HOME`） |
+| `--mode` | `simple`（快速）/ `full`（全面，默认） |
+| `--sample-dir` | 源文件目录（部分检测需要） |
+
+### 输出
+
+```
+============================================================
+  知识库概览
+============================================================
+
+  数据目录: ~/.local/share/qtcloud-knowl
+  领域数量: 1
+  本体数量: 3
+  实例数量: 5
+  关系数量: 4
+
+  领域清单:
+    company_governance   公司治理       vocabulary=0 项
+
+============================================================
+  检测结果
+============================================================
+```
