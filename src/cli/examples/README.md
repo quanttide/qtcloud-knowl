@@ -1,6 +1,20 @@
 # 示例项目
 
-本目录存放 qtcloud-knowl CLI 的示例知识库项目。每个示例包含源文档和知识库输出，供测试和演示使用。
+本目录存放 qtcloud-knowl CLI 的示例知识库项目。每个示例包含源文档，供测试和演示使用。
+
+## 安装 CLI
+
+```bash
+pip install qtcloud-knowl-cli
+```
+
+或从源码安装：
+
+```bash
+pip install -e /path/to/qtcloud-knowl/src/cli
+```
+
+安装后可用 `qtcloud-knowl --help` 查看所有命令。
 
 ## 可用示例
 
