@@ -1,9 +1,7 @@
-"""知识抽取 — 从源文档自动创建知识库骨架。"""
+"""知识抽取 — 全程 LLM 驱动，从源文档直接生成知识库。"""
 
-from collections import Counter
+import json
 from pathlib import Path
-
-from qtcloud_knowl.loader import load_all_domains
 
 from app.config import settings
 
@@ -17,46 +15,93 @@ def _load_prompt(name):
     return path.read_text(encoding="utf-8")
 
 
-def extract_with_llm(document_path, prompt_name="ontology_discovery.txt"):
-    """对文档运行 LLM 抽取，输出原始结果。
+def _save_knowledge_base(ddir, data):
+    """将 LLM 返回的知识库结构写入文件。"""
+    domain = data.get("domain", {})
+    domain_id = domain.get("id", "default")
 
-    Args:
-        document_path: 文档文件路径
-        prompt_name: prompt 模板文件名
+    domain_dir = ddir / domain_id
+    domain_dir.mkdir(parents=True, exist_ok=True)
 
-    Returns:
-        str: LLM 原始输出
-    """
+    with open(domain_dir / "domain.json", "w", encoding="utf-8") as f:
+        json.dump(domain, f, ensure_ascii=False, indent=2)
+
+    for key, filename in [
+        ("ontologies", "ontologies.json"),
+        ("instances", "instances.json"),
+        ("relations", "relations.json"),
+    ]:
+        items = data.get(key, [])
+        with open(domain_dir / filename, "w", encoding="utf-8") as f:
+            json.dump({key: items}, f, ensure_ascii=False, indent=2)
+
+    return domain_id
+
+
+def _extract_dir(sdir, prompt_template="full_extraction.txt"):
+    """对目录中所有 .md 文件执行 LLM 抽取，合并结果。"""
     from quanttide_agent import LLM
 
-    doc_path = Path(document_path)
-    if not doc_path.exists():
-        return f"错误: 文件不存在 {doc_path}"
-
-    prompt = _load_prompt(prompt_name)
+    prompt = _load_prompt(prompt_template)
     if not prompt:
-        return f"错误: prompt 模板不存在 {prompt_name}"
+        return f"错误: prompt 模板不存在 {prompt_template}"
 
-    content = doc_path.read_text(encoding="utf-8")
-    filled = prompt.replace("{document}", content)
+    md_files = sorted(sdir.glob("*.md"))
+    if not md_files:
+        return "错误: 源目录中没有 .md 文件"
+
+    if not settings.llm_api_key:
+        return "错误: 未设置 LLM API Key（需通过环境变量 QTCLOUD_KNOWL_LLM_API_KEY 或 Vault 配置）"
 
     kwargs = {}
     if settings.llm_base_url:
         kwargs["base_url"] = settings.llm_base_url
     llm = LLM(model=settings.llm_model, api_key=settings.llm_api_key, **kwargs)
-    response = llm.complete(filled)
-    return response.content
 
+    all_domains = {}
+    all_ontologies = {}
+    all_instances = []
+    all_relations = []
 
-def _describe(domain_hits, existing_domains):
-    new = sum(1 for d in domain_hits if d not in existing_domains)
-    total_files = sum(domain_hits.values())
-    parts = []
-    if new:
-        parts.append(f"新增 {new} 个领域")
-    if total_files:
-        parts.append(f"共收录 {total_files} 份文档")
-    return "，".join(parts) if parts else None
+    for f in md_files:
+        content = f.read_text(encoding="utf-8")
+        filled = prompt.replace("{document}", content)
+
+        response = llm.complete(filled)
+        text = response.content.strip()
+
+        if text.startswith("```"):
+            text = text.split("\n", 1)[1]
+        if text.endswith("```"):
+            text = text.rsplit("```", 1)[0]
+        text = text.strip()
+
+        try:
+            data = json.loads(text)
+        except json.JSONDecodeError:
+            print(f"⚠ 文件 {f.name} LLM 返回结果解析失败，跳过")
+            continue
+
+        domain = data.get("domain", {})
+        did = domain.get("id", f"from-{f.stem}")
+        if did not in all_domains:
+            all_domains[did] = domain
+            all_domains[did]["files"] = []
+        all_domains[did]["files"].append(f.name)
+
+        for o in data.get("ontologies", []):
+            oid = o.get("id", "")
+            if oid and oid not in all_ontologies:
+                all_ontologies[oid] = o
+
+        for inst in data.get("instances", []):
+            inst["source"] = f.name
+            all_instances.append(inst)
+
+        for r in data.get("relations", []):
+            all_relations.append(r)
+
+    return all_domains, list(all_ontologies.values()), all_instances, all_relations
 
 
 def run(source=None, data_dir=None, verbose=False):
@@ -70,90 +115,49 @@ def run(source=None, data_dir=None, verbose=False):
         print("请设置 QTCLOUD_KNOWL_SAMPLE_HOME 环境变量，或传入 --source 参数。")
         raise typer.Exit(code=1)
     if not sdir.exists():
-        print(f"错误: 源文档目录不存在")
-        print(f"  路径: {sdir}")
-        print("请确认目录路径是否正确。")
+        print(f"错误: 源文档目录不存在: {sdir}")
         raise typer.Exit(code=1)
 
-    md_files = list(sdir.glob("*.md"))
+    result = _extract_dir(sdir)
+    if isinstance(result, str):
+        print(result)
+        return 1
 
-    if not md_files:
-        ddir.mkdir(parents=True, exist_ok=True)
-        print("没有 .md 文件需要处理，知识库骨架目录已就绪。")
-        return 0
+    all_domains, all_ontologies, all_instances, all_relations = result
 
     ddir.mkdir(parents=True, exist_ok=True)
 
-    domain_hits = Counter()
-    file_domains = {}
+    domain_count = 0
+    for domain in all_domains.values():
+        did = domain.get("id", "")
+        if not did:
+            continue
+        domain_dir = ddir / did
+        domain_dir.mkdir(parents=True, exist_ok=True)
 
-    existing_domains = {}
-    try:
-        for d, domain, ontologies, instances, relations in load_all_domains(ddir):
-            existing_domains[domain.id] = domain
-    except Exception:
-        pass
+        with open(domain_dir / "domain.json", "w", encoding="utf-8") as f:
+            json.dump(domain, f, ensure_ascii=False, indent=2)
 
-    for f in sorted(md_files):
-        content = f.read_text(encoding="utf-8")
-        best_domain = None
-        best_score = 0
+        domain_ontologies = [
+            o
+            for o in all_ontologies
+            if o.get("perspective") in (domain.get("perspective"), "") or True
+        ]
+        with open(domain_dir / "ontologies.json", "w", encoding="utf-8") as f:
+            json.dump({"ontologies": all_ontologies}, f, ensure_ascii=False, indent=2)
 
-        for d, domain, ontologies, instances, relations in load_all_domains(ddir):
-            if not domain.vocabulary:
-                continue
-            score = sum(content.count(term) for term in domain.vocabulary)
-            if score > best_score:
-                best_score = score
-                best_domain = domain.id
+        with open(domain_dir / "instances.json", "w", encoding="utf-8") as f:
+            json.dump({"instances": all_instances}, f, ensure_ascii=False, indent=2)
 
-        if best_domain:
-            domain_hits[best_domain] += 1
-            file_domains[f.name] = best_domain
+        with open(domain_dir / "relations.json", "w", encoding="utf-8") as f:
+            json.dump({"relations": all_relations}, f, ensure_ascii=False, indent=2)
 
-    import io
-    import sys
+        domain_count += 1
 
-    from app.detectors.init_domain import run as init_domain_run
-
-    for domain_id in sorted(
-        set([d for d in domain_hits.keys()] + list(existing_domains.keys()))
-    ):
-        old, sys.stdout = sys.stdout, io.StringIO()
-        try:
-            init_domain_run(domain_id, data_dir=str(ddir))
-        finally:
-            sys.stdout = old
-
-    summary = _describe(domain_hits, existing_domains)
-    if summary:
-        print(f"抽取完成。{summary}。骨架文件已保存到 {ddir}。")
-    else:
-        print(
-            "抽取完成。未匹配到已有领域词汇表，可先配置 domain.json 中的 vocabulary 后再试。"
-        )
-
+    print(f"抽取完成。生成 {domain_count} 个领域知识库，保存至 {ddir}。")
     if verbose:
-        print()
-        if domain_hits:
-            print("推荐领域:")
-            for domain_id, count in domain_hits.most_common():
-                tag = "（新建）" if domain_id not in existing_domains else "（已有）"
-                print(f"  {domain_id}{tag}: {count} 个文件匹配")
-            print()
-            print("文件归属:")
-            for fname, domain_id in sorted(file_domains.items()):
-                print(f"  {fname} → {domain_id}")
-        else:
-            print("（未发现与已有领域匹配的文件）")
-
-        if settings.llm_api_key:
-            print()
-            print(
-                "LLM 已就绪，可执行语义抽取。运行 qtcloud-knowl audit 检查骨架完整性。"
-            )
-        else:
-            print()
-            print("提示: 设置 QTCLOUD_KNOWL_LLM_API_KEY 可启用语义抽取。")
+        print(f"  本体: {len(all_ontologies)} 项")
+        print(f"  实例: {len(all_instances)} 项")
+        print(f"  关系: {len(all_relations)} 项")
 
     return 0
