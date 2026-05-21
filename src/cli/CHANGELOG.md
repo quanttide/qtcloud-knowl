@@ -1,5 +1,21 @@
 # 变更记录
 
+## [0.0.13] - 2026-05-21
+
+### 功能
+
+- 新增 `review` CLI 命令：`review list`、`review approve`、`review reject`、`review reset`
+- `review list --pending` 只显示待审项，`review list --domain NAME` 按领域过滤
+- `review approve` 不传参数时全部通过，传 `--id` 时单条通过
+- `review reject --id KEY --reason TEXT` 拒绝并注明原因
+- review CLI 同时支持已有知识库评审和 AI 草稿审核（接口预留）
+- `app/review.py` 100% 测试覆盖
+
+### 文档
+
+- 新增 `product-release` skill
+- `docs/commands.md` 新增 `review` 命令参考
+
 ## [0.0.12] - 2026-05-21
 
 ### 重构
