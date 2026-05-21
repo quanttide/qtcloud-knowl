@@ -29,21 +29,21 @@ class TestAudit:
         assert result.exit_code == 0
         assert "审计" in result.output
 
-    def test_audit_with_fixture_data(self, knowledge_base, monkeypatch):
-        app = _setup(monkeypatch, knowledge_base)
+    def test_audit_with_fixture_data(self, real_knowledge_base, monkeypatch):
+        app = _setup(monkeypatch, real_knowledge_base)
         runner = CliRunner()
         result = runner.invoke(app, ["audit"])
         assert result.exit_code == 0
         assert "审计目标" in result.output
 
-    def test_audit_simple_mode(self, knowledge_base, monkeypatch):
-        app = _setup(monkeypatch, knowledge_base)
+    def test_audit_simple_mode(self, real_knowledge_base, monkeypatch):
+        app = _setup(monkeypatch, real_knowledge_base)
         runner = CliRunner()
         result = runner.invoke(app, ["audit", "--mode", "simple"])
         assert result.exit_code == 0
 
-    def test_audit_invalid_mode(self, knowledge_base, monkeypatch):
-        app = _setup(monkeypatch, knowledge_base)
+    def test_audit_invalid_mode(self, real_knowledge_base, monkeypatch):
+        app = _setup(monkeypatch, real_knowledge_base)
         runner = CliRunner()
         result = runner.invoke(app, ["audit", "--mode", "bogus"])
         assert result.exit_code != 0

@@ -34,20 +34,20 @@ def _setup(monkeypatch, sample_dir, data_home, api_key="test-key"):
 class TestPipeline:
     """完整 OCL 工作流：骨架创建 → LLM 抽取 → 评审 → 审计"""
 
-    def test_skeleton_then_audit(self, sample_doc, knowledge_base, monkeypatch):
+    def test_skeleton_then_audit(self, real_sample_dir, real_knowledge_base, monkeypatch):
         """知识工程用户的一天：建骨架 → 审计"""
-        app = _setup(monkeypatch, sample_doc.parent, knowledge_base)
+        app = _setup(monkeypatch, real_sample_dir, real_knowledge_base)
         runner = CliRunner()
 
-        assert (knowledge_base / "data-gov" / "domain.json").exists()
+        assert (real_knowledge_base / "org-gov" / "domain.json").exists()
 
         result_audit = runner.invoke(app, ["audit"])
         assert result_audit.exit_code == 0
         assert "审计" in result_audit.output
 
-    def test_review_then_audit(self, sample_doc, knowledge_base, monkeypatch):
+    def test_review_then_audit(self, real_sample_dir, real_knowledge_base, monkeypatch):
         """评审条目后运行审计，验证状态变更不影响审计"""
-        app = _setup(monkeypatch, sample_doc.parent, knowledge_base)
+        app = _setup(monkeypatch, real_sample_dir, real_knowledge_base)
         runner = CliRunner()
 
         result_review = runner.invoke(app, ["review", "approve"])
@@ -56,9 +56,9 @@ class TestPipeline:
         result_audit = runner.invoke(app, ["audit"])
         assert result_audit.exit_code == 0
 
-    def test_extract_llm_then_review(self, sample_doc, knowledge_base, monkeypatch):
+    def test_extract_llm_then_review(self, real_sample_dir, real_knowledge_base, monkeypatch):
         """LLM 抽取后评审能看到结果（mock LLM 返回）"""
-        app = _setup(monkeypatch, sample_doc.parent, knowledge_base, api_key="test-key")
+        app = _setup(monkeypatch, real_sample_dir, real_knowledge_base, api_key="test-key")
 
         with patch("quanttide_agent.LLM") as MockLLM:
             mock = MockLLM.return_value
@@ -66,13 +66,13 @@ class TestPipeline:
                 '{"concepts": [{"name": "数据治理委员会", "type": "职务"}]}'
             )
             runner = CliRunner()
-            result_llm = runner.invoke(app, ["extract", "--llm", str(sample_doc)])
+            result_llm = runner.invoke(app, ["extract", "--llm", str(real_sample_dir / "basic-charter.md")])
             assert result_llm.exit_code == 0
             assert "数据治理委员会" in result_llm.output
 
-    def test_full_pipeline_no_llm_key(self, sample_doc, knowledge_base, monkeypatch):
+    def test_full_pipeline_no_llm_key(self, real_sample_dir, real_knowledge_base, monkeypatch):
         """无 LLM key 时，非 LLM 功能仍正常工作"""
-        app = _setup(monkeypatch, sample_doc.parent, knowledge_base, api_key="")
+        app = _setup(monkeypatch, real_sample_dir, real_knowledge_base, api_key="")
         runner = CliRunner()
 
         result_extract = runner.invoke(app, ["extract"])

@@ -34,8 +34,8 @@ def _setup(monkeypatch, sample_dir, data_home, api_key="test-key"):
 class TestExtractSkeleton:
     """extract 骨架创建（无 LLM）"""
 
-    def test_creates_skeleton_from_samples(self, sample_doc, knowledge_base, monkeypatch):
-        app = _setup(monkeypatch, sample_doc.parent, knowledge_base)
+    def test_creates_skeleton_from_samples(self, real_sample_dir, real_knowledge_base, monkeypatch):
+        app = _setup(monkeypatch, real_sample_dir, real_knowledge_base)
         runner = CliRunner()
         result = runner.invoke(app, ["extract"])
         assert result.exit_code == 0
@@ -51,22 +51,22 @@ class TestExtractSkeleton:
 class TestExtractLLM:
     """extract --llm 语义抽取"""
 
-    def test_returns_llm_output(self, sample_doc, knowledge_base, monkeypatch):
-        app = _setup(monkeypatch, sample_doc.parent, knowledge_base, api_key="test-key")
+    def test_returns_llm_output(self, real_sample_dir, real_knowledge_base, monkeypatch):
+        app = _setup(monkeypatch, real_sample_dir, real_knowledge_base, api_key="test-key")
         with patch("quanttide_agent.LLM") as MockLLM:
             mock = MockLLM.return_value
             mock.complete.return_value = FakeResponse(
                 '{"concepts": [{"name": "数据治理委员会", "type": "职务"}]}'
             )
             runner = CliRunner()
-            result = runner.invoke(app, ["extract", "--llm", str(sample_doc)])
+            result = runner.invoke(app, ["extract", "--llm", str(real_sample_dir / "basic-charter.md")])
             assert result.exit_code == 0
             assert "数据治理委员会" in result.output
 
-    def test_requires_api_key(self, sample_doc, knowledge_base, monkeypatch):
-        app = _setup(monkeypatch, sample_doc.parent, knowledge_base, api_key="")
+    def test_requires_api_key(self, real_sample_dir, real_knowledge_base, monkeypatch):
+        app = _setup(monkeypatch, real_sample_dir, real_knowledge_base, api_key="")
         runner = CliRunner()
-        result = runner.invoke(app, ["extract", "--llm", str(sample_doc)])
+        result = runner.invoke(app, ["extract", "--llm", str(real_sample_dir / "basic-charter.md")])
         assert result.exit_code == 1
         assert "未设置" in result.output
 
