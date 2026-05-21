@@ -230,7 +230,7 @@ def run(data_dir=None, sample_dir=None, mode="full"):
     print("=" * 60)
 
     print(f"\n审计目标: {ddir}")
-    print(f"领域数量: {domain_count}")
+    print(f"领域数量: {len(domains)}")
     if sdir:
         print(f"源文件目录: {sdir}")
 
