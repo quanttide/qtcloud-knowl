@@ -1,5 +1,19 @@
 # 变更记录
 
+## [0.0.19] - 2026-05-21
+
+### 重构
+
+- CLI 从 typer 迁移至 argparse，移除 typer 依赖
+- 使用 `quanttide_agent.Tool` 对象替代 tuple 工具定义
+- audit 使用 `Tool.execute(inp)` 替代 `capture_run`
+- agent 复用 tools.py 的 Tool 定义，消除重复
+- config 使用 `reload_from_env()` 替代 `importlib.reload`
+
+### 工程
+
+- 依赖 `quanttide-agent>=0.3.0`
+
 ## [0.0.18] - 2026-05-21
 
 ### 文档
