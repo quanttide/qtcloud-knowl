@@ -60,7 +60,7 @@ extract 逐文件调用 LLM，从文档中识别并生成四类知识条目：
 生成的知识库目录结构：
 
 ```
-~/.local/share/qtcloud-knowl/
+~/.local/share/quanttide/qtcloud-knowl
 └── <domain-id>/
     ├── domain.json         # 领域定义
     ├── ontologies.json     # 本体列表

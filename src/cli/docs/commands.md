@@ -19,7 +19,7 @@ qtcloud-knowl extract --source <目录> [--data-dir <目录>] [--verbose]
 ### 输出
 
 ```
-抽取完成。生成 1 个领域知识库，保存至 ~/.local/share/qtcloud-knowl。
+抽取完成。生成 1 个领域知识库，保存至 ~/.local/share/quanttide/qtcloud-knowl。
   本体: 3 项
   实例: 5 项
   关系: 4 项
@@ -66,7 +66,7 @@ qtcloud-knowl audit [<data-dir>] [--mode simple|full] [--sample-dir <目录>]
   知识库概览
 ============================================================
 
-  数据目录: ~/.local/share/qtcloud-knowl
+  数据目录: ~/.local/share/quanttide/qtcloud-knowl
   领域数量: 1
   本体数量: 3
   实例数量: 5

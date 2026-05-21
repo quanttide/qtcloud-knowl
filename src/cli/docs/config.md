@@ -4,8 +4,8 @@
 
 | 环境变量 | 说明 | 默认值 |
 |----------|------|--------|
-| `QTCLOUD_KNOWL_DATA_HOME` | 知识库数据目录 | `~/.local/share/qtcloud-knowl/` |
-| `QTCLOUD_KNOWL_STATE_HOME` | 审计状态文件目录（增量对比用） | `~/.local/state/qtcloud-knowl/` |
+| `QTCLOUD_KNOWL_DATA_HOME` | 知识库数据目录 | `~/.local/share/quanttide/qtcloud-knowl/` |
+| `QTCLOUD_KNOWL_STATE_HOME` | 审计状态文件目录（增量对比用） | `~/.local/state/quanttide/qtcloud-knowl/` |
 | `QTCLOUD_KNOWL_SAMPLE_HOME` | 源文档目录（extract --source 的备选） | `data_home/samples/` |
 | `QTCLOUD_KNOWL_SOURCE_HOME` | 源文档下载目录（预留） | `data_home/sources/`（已弃用） |
 | `QTCLOUD_KNOWL_LLM_API_KEY` | LLM API key（extract 需要） | 空，可通过 Vault 配置 |
