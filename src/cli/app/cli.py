@@ -166,20 +166,9 @@ def extract(
     source: str = typer.Option(None, "--source", "-s", help="源文档目录路径"),
     data_dir: str = typer.Option(None, "--data-dir", help="数据目录路径"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="显示详细匹配信息"),
-    llm: str = typer.Option(
-        None, "--llm", help="对指定文档运行 LLM 抽取（传文件路径）"
-    ),
 ):
     """知识抽取 — 从源文件自动创建知识库骨架"""
-    from app.agents.extract import extract_with_llm, run
-
-    if llm:
-        if not settings.llm_api_key:
-            print("错误: 未设置 QTCLOUD_KNOWL_LLM_API_KEY")
-            raise typer.Exit(code=1)
-        result = extract_with_llm(llm)
-        print(result)
-        return
+    from app.agents.extract import run
 
     return run(source, data_dir, verbose)
 
