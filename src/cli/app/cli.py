@@ -12,6 +12,7 @@
 """
 
 import typer
+
 from app.config import settings
 
 app = typer.Typer()
@@ -21,6 +22,7 @@ app = typer.Typer()
 def summary():
     """领域概况统计"""
     from app.reporters.summary import run
+
     return run(settings.data_home)
 
 
@@ -28,6 +30,7 @@ def summary():
 def validate():
     """领域目录结构完整性验证"""
     from app.validators.validate import run
+
     return run(settings.data_home)
 
 
@@ -35,6 +38,7 @@ def validate():
 def find_undefined_terms():
     """扫描源文档中出现的术语是否已定义"""
     from app.validators.find_undefined import run
+
     return run(settings.sample_home, settings.data_home)
 
 
@@ -42,6 +46,7 @@ def find_undefined_terms():
 def fusion_check():
     """跨领域融合检测（名称冲突、引用断裂、效力声明）"""
     from app.validators.fusion_check import run
+
     return run(settings.data_home, settings.sample_home)
 
 
@@ -49,6 +54,7 @@ def fusion_check():
 def check_abstraction():
     """本体抽象度检测"""
     from app.reporters.abstraction import run
+
     return run(settings.data_home)
 
 
@@ -56,6 +62,7 @@ def check_abstraction():
 def auto_fix():
     """骨架文件自动补全"""
     from app.validators.auto_fix import run
+
     return run(settings.data_home)
 
 
@@ -63,6 +70,7 @@ def auto_fix():
 def cross_domain_report():
     """跨领域关系覆盖率报告"""
     from app.reporters.cross_domain import run
+
     return run(settings.data_home)
 
 
@@ -72,6 +80,7 @@ def detect_domain(
 ):
     """推荐所属领域"""
     from app.detectors.detect_domain import run
+
     return run(filepath, settings.data_home)
 
 
@@ -82,6 +91,7 @@ def init_domain(
 ):
     """初始化新领域目录和骨架文件"""
     from app.detectors.init_domain import run
+
     return run(domain_name, from_detect_file=from_detect)
 
 
@@ -89,20 +99,35 @@ def init_domain(
 def audit(
     data_dir: str = typer.Argument(None, help="数据目录路径（默认从 settings 读取）"),
     sample_dir: str = typer.Option(None, "--sample-dir", help="源文件目录路径"),
-    mode: str = typer.Option("full", "--mode", help="审计模式：simple（快速检查）/ full（全面审计）"),
+    mode: str = typer.Option(
+        "full", "--mode", help="审计模式：simple（快速检查）/ full（全面审计）"
+    ),
 ):
     """全量质量审计 — 串行执行全部检测并聚合报告"""
     from app.agents.audit import run
+
     return run(data_dir, sample_dir, mode)
 
 
 @app.command()
 def source(
     action: str = typer.Argument("list", help="操作：download / list / remove"),
-    name: str = typer.Option(None, "--name", "-n", help="源文档名称（download / remove 时必填）"),
+    name: str = typer.Option(
+        None, "--name", "-n", help="源文档名称（download / remove 时必填）"
+    ),
+    url: str = typer.Option(
+        None, "--url", "-u", help="Git 仓库 URL（不指定时从预设源查找）"
+    ),
 ):
     """管理源文档 — 下载、列出、清理"""
-    from app.source import SOURCES, download, download_all, list_sources, remove, remove_all
+    from app.source import (
+        SOURCES,
+        download,
+        download_all,
+        list_sources,
+        remove,
+        remove_all,
+    )
 
     if action == "list":
         downloaded = list_sources()
@@ -118,14 +143,21 @@ def source(
         print(f"\n共 {len(downloaded)} 项")
 
     elif action == "download":
-        if name:
+        if name and url:
+            result = download(name, url=url)
+            print(result)
+        elif name:
             result = download(name)
             print(result)
         else:
             print("可用源文档:")
             for k, v in SOURCES.items():
                 print(f"  {k}: {v['desc']}")
-            print("\n指定名称下载: qtcloud-knowl source download --name qtcloud-bylaw")
+            print()
+            print("从预设源下载: qtcloud-knowl source download --name qtcloud-bylaw")
+            print(
+                "从任意仓库:    qtcloud-knowl source download --name my-docs --url https://github.com/user/repo.git"
+            )
 
     elif action == "remove":
         if name:
@@ -146,7 +178,13 @@ def review(
     pending: bool = typer.Option(False, "--pending", help="仅显示待审项（仅 list）"),
 ):
     """评审知识条目 — 批量通过/拒绝，查看评审状态"""
-    from app.review import list_items, approve_item, approve_all, reject_item, reset_reviews
+    from app.review import (
+        approve_all,
+        approve_item,
+        list_items,
+        reject_item,
+        reset_reviews,
+    )
 
     if action == "list":
         items = list_items(domain_filter=domain, pending_only=pending)
@@ -154,9 +192,11 @@ def review(
             print("没有符合条件的条目。")
             return
         print(f"{'领域':<12} {'类型':<8} {'ID/名称':<24} {'状态':<8} {'备注'}")
-        print(f"{'─'*12} {'─'*8} {'─'*24} {'─'*8} {'─'*20}")
+        print(f"{'─' * 12} {'─' * 8} {'─' * 24} {'─' * 8} {'─' * 20}")
         for item in items:
-            print(f"{item['domain']:<12} {item['type']:<8} {item['label'][:24]:<24} {item['status']:<8} {item['comment']}")
+            print(
+                f"{item['domain']:<12} {item['type']:<8} {item['label'][:24]:<24} {item['status']:<8} {item['comment']}"
+            )
         total = len(items)
         pending_count = sum(1 for i in items if i["status"] == "待评审")
         print(f"\n共 {total} 项，{pending_count} 项待评审")
@@ -183,10 +223,14 @@ def review(
 
 @app.command()
 def extract(
-    sample_dir: str = typer.Argument(None, help="源文档目录路径（默认从 settings 读取）"),
+    sample_dir: str = typer.Argument(
+        None, help="源文档目录路径（默认从 settings 读取）"
+    ),
     data_dir: str = typer.Option(None, "--data-dir", help="数据目录路径"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="显示详细匹配信息"),
-    llm: str = typer.Option(None, "--llm", help="对指定文档运行 LLM 抽取（传文件路径）"),
+    llm: str = typer.Option(
+        None, "--llm", help="对指定文档运行 LLM 抽取（传文件路径）"
+    ),
 ):
     """知识抽取 — 从源文件自动创建知识库骨架"""
     from app.agents.extract import extract_with_llm, run
@@ -204,6 +248,7 @@ def extract(
 
 def main():
     return app()
+
 
 if __name__ == "__main__":
     exit(main())

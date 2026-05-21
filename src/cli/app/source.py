@@ -15,6 +15,7 @@ Usage:
 """
 
 from pathlib import Path
+
 from app.config import settings
 
 SOURCES = {
@@ -45,29 +46,33 @@ def list_sources():
     return sorted(d.name for d in src_dir.iterdir() if d.is_dir())
 
 
-def download(name):
+def download(name, url=None):
     """下载指定源文档。
 
     Args:
-        name: 源文档名称（如 qtcloud-bylaw）
+        name: 源文档名称，用作本地目录名
+        url: Git 仓库 URL（不指定时从预设源查找）
 
     Returns:
-        str: 下载路径
+        str: 结果消息
     """
-    import subprocess, sys
+    import subprocess
+    import sys
 
-    if name not in SOURCES:
-        return f"错误: 未知源文档 '{name}'，可用: {', '.join(SOURCES.keys())}"
+    if url is None:
+        if name not in SOURCES:
+            return f"错误: 未知源文档 '{name}'，可用: {', '.join(SOURCES.keys())}"
+        url = SOURCES[name]["url"]
 
-    info = SOURCES[name]
     target = _sources_dir() / name
     if target.exists():
         return f"✓ {name} 已存在"
 
     target.parent.mkdir(parents=True, exist_ok=True)
     result = subprocess.run(
-        ["git", "clone", "--depth", "1", info["url"], str(target)],
-        capture_output=True, text=True,
+        ["git", "clone", "--depth", "1", url, str(target)],
+        capture_output=True,
+        text=True,
     )
     if result.returncode != 0:
         return f"错误: 下载失败\n{result.stderr.strip()}"
@@ -99,6 +104,7 @@ def remove(name):
     if not target.exists():
         return f"✗ {name} 不存在"
     import shutil
+
     shutil.rmtree(target)
     return f"✗ {name} 已删除"
 
