@@ -1,6 +1,7 @@
 """知识抽取 — 全程 LLM 驱动，从源文档直接生成知识库。"""
 
 import json
+import uuid
 from pathlib import Path
 
 from app.config import settings
@@ -8,9 +9,16 @@ from app.config import settings
 ALLOWED_FIELDS = ["id", "name", "label", "description"]
 
 
+def _make_uuid(name: str) -> str:
+    """从字符串生成稳定的 UUID（v5，基于 namespace DNS）。"""
+    return str(uuid.uuid5(uuid.NAMESPACE_DNS, name))
+
+
 def _clean(item):
-    """只保留 id/name/label/description 四个字段。"""
-    return {k: item.get(k, "") for k in ALLOWED_FIELDS}
+    """只保留 id/name/label/description 四个字段，id 转为 UUID。"""
+    cleaned = {k: item.get(k, "") for k in ALLOWED_FIELDS}
+    cleaned["id"] = _make_uuid(cleaned["id"] or cleaned["name"] or "unknown")
+    return cleaned
 
 
 PROMPT_DIR = Path(__file__).resolve().parent.parent / "prompts"

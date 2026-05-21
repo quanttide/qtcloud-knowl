@@ -1,8 +1,10 @@
 """知识库加载器 — 读取目录结构中的 JSON 文件。"""
 
 import json
+import uuid
 from pathlib import Path
 
+from pydantic import ValidationError
 from quanttide_knowl.models import Domain, Instance, Ontology
 
 
@@ -19,14 +21,17 @@ def get_domain_dirs(data_dir: Path) -> list[Path]:
     )
 
 
-def load_domain(domain_dir: Path) -> Domain:
+def load_domain(domain_dir: Path) -> Domain | None:
     data = load_json(domain_dir / "domain.json")
-    return Domain(
-        id=data.get("id", domain_dir.name),
-        name=data.get("name", ""),
-        label=data.get("label", ""),
-        description=data.get("description", ""),
-    )
+    try:
+        return Domain(
+            id=data.get("id", domain_dir.name),
+            name=data.get("name", ""),
+            label=data.get("label", ""),
+            description=data.get("description", ""),
+        )
+    except ValidationError:
+        return None
 
 
 def load_ontologies(domain_dir: Path) -> list[Ontology]:
@@ -59,6 +64,8 @@ def load_all_domains(data_dir: Path):
     result = []
     for d in get_domain_dirs(data_dir):
         domain = load_domain(d)
+        if domain is None:
+            continue
         ontologies = load_ontologies(d)
         instances = load_instances(d)
         result.append((d, domain, ontologies, instances))
