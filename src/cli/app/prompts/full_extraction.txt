@@ -1,54 +1,31 @@
 你是一个知识工程专家。你的任务是从以下文档中提取完整的知识库结构。
 
-请分析文档内容，识别其中的领域、本体、实例和关系，以 JSON 格式输出。
+请分析文档内容，识别其中的领域（Domain）、本体（Ontology）、实例（Instance）和关系（Relation），以 JSON 格式输出。
 
-输出格式必须严格遵循以下结构：
+每个条目只有四个字段：
+- id: 唯一标识（英文短名）
+- name: 名称（英文）
+- label: 显示标签（中文）
+- description: 描述
+
+输出格式：
 
 ```json
 {
-  "domain": {
-    "id": "领域唯一标识（英文短名，如 org-gov）",
-    "name": "领域中文名称",
-    "perspective": "领域视角描述",
-    "vocabulary": ["领域核心术语列表"]
-  },
+  "domain": { "id": "", "name": "", "label": "", "description": "" },
   "ontologies": [
-    {
-      "id": "本体唯一标识（英文短名）",
-      "name": "本体名称",
-      "label": "中文显示标签",
-      "perspective": "所属视角",
-      "description": "本体定义描述",
-      "pattern": "本体的结构化模式描述"
-    }
+    { "id": "", "name": "", "label": "", "description": "" }
   ],
   "instances": [
-    {
-      "id": "实例唯一标识",
-      "ontology": "所属本体 ID",
-      "subject": "实例主体名称",
-      "source": "来源文档",
-      "article": "来源条款/章节",
-      "data": {}
-    }
+    { "id": "", "name": "", "label": "", "description": "" }
   ],
   "relations": [
-    {
-      "id": "关系唯一标识",
-      "source_ontology": "源本体 ID",
-      "target_ontology": "目标本体 ID",
-      "relation": "关系类型",
-      "description": "关系描述"
-    }
+    { "id": "", "name": "", "label": "", "description": "" }
   ]
 }
 ```
 
-注意事项：
-- ontologies、instances、relations 可以是空数组
-- 每个 ontology 必须有 id、name、label、description
-- pattern 描述该本体的抽象结构（如"角色以职责+权限成对定义"）
-- instances 的 data 字段可包含任意额外字段
+ontologies、instances、relations 可以是空数组。
 
 文档内容：
 """

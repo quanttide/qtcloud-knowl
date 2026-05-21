@@ -5,7 +5,7 @@ import re
 from datetime import datetime
 from pathlib import Path
 
-from qtcloud_knowl.loader import load_all_domains
+from quanttide_knowl.loader import load_all_domains
 
 from app.agents.tools import all_detection_tools
 from app.config import settings

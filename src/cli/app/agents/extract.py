@@ -5,6 +5,14 @@ from pathlib import Path
 
 from app.config import settings
 
+ALLOWED_FIELDS = ["id", "name", "label", "description"]
+
+
+def _clean(item):
+    """只保留 id/name/label/description 四个字段。"""
+    return {k: item.get(k, "") for k in ALLOWED_FIELDS}
+
+
 PROMPT_DIR = Path(__file__).resolve().parent.parent / "prompts"
 
 
@@ -82,23 +90,23 @@ def _extract_dir(sdir, prompt_template="full_extraction.txt"):
             print(f"⚠ 文件 {f.name} LLM 返回结果解析失败，跳过")
             continue
 
-        domain = data.get("domain", {})
+        domain = _clean(data.get("domain", {}))
         did = domain.get("id", f"from-{f.stem}")
         if did not in all_domains:
             all_domains[did] = domain
-            all_domains[did]["files"] = []
-        all_domains[did]["files"].append(f.name)
 
         for o in data.get("ontologies", []):
+            o = _clean(o)
             oid = o.get("id", "")
             if oid and oid not in all_ontologies:
                 all_ontologies[oid] = o
 
         for inst in data.get("instances", []):
-            inst["source"] = f.name
+            inst = _clean(inst)
             all_instances.append(inst)
 
         for r in data.get("relations", []):
+            r = _clean(r)
             all_relations.append(r)
 
     return all_domains, list(all_ontologies.values()), all_instances, all_relations

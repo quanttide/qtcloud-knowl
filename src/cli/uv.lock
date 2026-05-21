@@ -428,6 +428,7 @@ dependencies = [
     { name = "qtcloud-knowl" },
     { name = "quanttide" },
     { name = "quanttide-agent" },
+    { name = "quanttide-knowl" },
     { name = "typer" },
 ]
 
@@ -443,6 +444,7 @@ requires-dist = [
     { name = "qtcloud-knowl", editable = "../../packages/python" },
     { name = "quanttide" },
     { name = "quanttide-agent", specifier = ">=0.3.0" },
+    { name = "quanttide-knowl" },
     { name = "typer" },
 ]
 
@@ -473,6 +475,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/c7/b3/9a498b66a2ca0d774e186cd36620332a6412e00093bf9bf5bee73bdeac7f/quanttide_agent-0.3.0.tar.gz", hash = "sha256:81e497a0b151a1ca90d1345470f289253a78292e238eb9167c19558fdcab05a4", size = 42508, upload-time = "2026-05-21T09:57:25.38Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/35/35/a2be42115302b6738c15defb376c96720e8c34149ace03a4595b918c103e/quanttide_agent-0.3.0-py3-none-any.whl", hash = "sha256:d41555bc371d0dd27207de7cd418e371846e4c6f60aacd05fbf778ec0d95b845", size = 11821, upload-time = "2026-05-21T09:57:24.096Z" },
+]
+
+[[package]]
+name = "quanttide-knowl"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "quanttide" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/3c/38/4ec5f44a4c8036f79d23040616ee24bfec3e52c5e5e34cbc9a6453275b3b/quanttide_knowl-0.1.0.tar.gz", hash = "sha256:2c83f99997087a64a42e2a903096606291a73ab75b06294efe85004846f00131", size = 8255, upload-time = "2026-05-21T09:12:51.754Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5b/21/a42e367ba38721c0c96286ad89e129273c809d32619267c312d0f7a986c2/quanttide_knowl-0.1.0-py3-none-any.whl", hash = "sha256:efc27ce849e895a49a05553bb3731530c74fc9ede97ea1eff2ac959da369f92b", size = 6840, upload-time = "2026-05-21T09:12:52.882Z" },
 ]
 
 [[package]]
