@@ -83,7 +83,6 @@ def _extract_dir(sdir, prompt_template="full_extraction.txt"):
     all_domains = {}
     all_ontologies = {}
     all_instances = []
-    all_relations = []
 
     for f in md_files:
         print(f"  [{f.name}] 正在抽取...", end=" ", flush=True)
@@ -123,11 +122,7 @@ def _extract_dir(sdir, prompt_template="full_extraction.txt"):
             inst, _ = _clean(inst)
             all_instances.append(inst)
 
-        for r in data.get("relations", []):
-            r, _ = _clean(r)
-            all_relations.append(r)
-
-    return all_domains, list(all_ontologies.values()), all_instances, all_relations
+    return all_domains, list(all_ontologies.values()), all_instances
 
 
 def run(source=None, data_dir=None, verbose=False):
@@ -148,7 +143,7 @@ def run(source=None, data_dir=None, verbose=False):
         print(result)
         return 1
 
-    all_domains, all_ontologies, all_instances, all_relations = result
+    all_domains, all_ontologies, all_instances = result
 
     ddir.mkdir(parents=True, exist_ok=True)
 
@@ -173,15 +168,11 @@ def run(source=None, data_dir=None, verbose=False):
         with open(domain_dir / "instances.json", "w", encoding="utf-8") as f:
             json.dump({"instances": all_instances}, f, ensure_ascii=False, indent=2)
 
-        with open(domain_dir / "relations.json", "w", encoding="utf-8") as f:
-            json.dump({"relations": all_relations}, f, ensure_ascii=False, indent=2)
-
         domain_count += 1
 
     print(f"抽取完成。生成 {domain_count} 个领域知识库，保存至 {ddir}。")
     if verbose:
         print(f"  本体: {len(all_ontologies)} 项")
         print(f"  实例: {len(all_instances)} 项")
-        print(f"  关系: {len(all_relations)} 项")
 
     return 0

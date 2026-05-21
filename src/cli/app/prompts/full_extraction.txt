@@ -1,6 +1,6 @@
 你是一个知识工程专家。你的任务是从以下文档中提取完整的知识库结构。
 
-请分析文档内容，识别其中的领域（Domain）、本体（Ontology）、实例（Instance）和关系（Relation），以 JSON 格式输出。
+请分析文档内容，识别其中的领域（Domain）、本体（Ontology）和实例（Instance），以 JSON 格式输出。
 
 每个条目四个字段：
 - id: 唯一标识（英文短名）
@@ -25,14 +25,11 @@ description 是主要的承载字段，可以把原文中的关键信息以"键�
   ],
   "instances": [
     { "id": "", "name": "", "label": "", "description": "" },
-  ],
-  "relations": [
-    { "id": "", "name": "", "label": "", "description": "" },
   ]
 }
 ```
 
-ontologies、instances、relations 可以是空数组。
+ontologies、instances 可以是空数组。
 
 源目录名称：{directory_name}
 本文档是该目录中的一份文件。如果该目录包含多个文件，它们属于同一个项目/作品，请使用一致的 domain.id。
