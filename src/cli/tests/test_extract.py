@@ -50,10 +50,15 @@ class TestExtract:
         assert "prompt 模板不存在" in result["error"]
 
     def test_extract_no_api_key(self, tmp_path):
-        from app.extract import extract
+        from app.extract import extract, settings
         f = tmp_path / "test.md"
         f.write_text("content", encoding="utf-8")
-        result = extract(str(f))
+        old_key = settings.llm_api_key
+        settings.llm_api_key = ""
+        try:
+            result = extract(str(f))
+        finally:
+            settings.llm_api_key = old_key
         assert "error" in result
         assert "未设置 LLM API Key" in result["error"]
 
@@ -151,13 +156,6 @@ class TestExtract:
 
     # === CLI 集成测试 ===
 
-    def test_cli_empty_dir(self, tmp_path):
-        empty = tmp_path / "empty"
-        empty.mkdir()
-        result = CliRunner().invoke(app, ["--source", str(empty)])
-        assert result.exit_code == 1
-        assert "没有 .md 文件" in result.output
-
     def test_cli_nonexistent_path(self):
         result = CliRunner().invoke(app, ["--source", "/nonexistent"])
         assert result.exit_code == 1
@@ -214,43 +212,4 @@ class TestExtract:
         from app.extract import _strip_fences
         assert _strip_fences("content\n```") == "content"
 
-    # === run() 目录模式 ===
 
-    def test_run_dir_creates_files(self, tmp_path):
-        from unittest.mock import patch
-        from app.extract import run
-
-        sdir = tmp_path / "samples"
-        sdir.mkdir()
-        (sdir / "test.md").write_text("content", encoding="utf-8")
-        out = tmp_path / "out"
-
-        with patch("app.extract.extract") as mock_extract:
-            mock_extract.return_value = {
-                "domain": {"id": "the-domain", "name": "the-domain", "label": "领域", "description": ""},
-                "ontologies": [{"id": "o1", "name": "o1", "label": "O1", "description": ""}],
-                "instances": [{"id": "i1", "name": "i1", "label": "I1", "description": "", "ontology": "o1"}],
-            }
-            result = run(source=str(sdir), data_dir=str(out))
-
-        assert result == 0
-        assert (out / "the-domain" / "domain.json").exists()
-        assert (out / "the-domain" / "ontologies.json").exists()
-        assert (out / "the-domain" / "instances.json").exists()
-
-    def test_run_skips_empty_domain_id(self, tmp_path):
-        from unittest.mock import patch
-        from app.extract import run
-
-        sdir = tmp_path / "samples"
-        sdir.mkdir()
-        (sdir / "test.md").write_text("content", encoding="utf-8")
-
-        with patch("app.extract.extract") as mock_extract:
-            mock_extract.return_value = {
-                "domain": {"id": "", "name": "", "label": "", "description": ""},
-                "ontologies": [],
-                "instances": [],
-            }
-            result = run(source=str(sdir), data_dir=str(tmp_path / "out"))
-        assert result == 0

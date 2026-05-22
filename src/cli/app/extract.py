@@ -96,7 +96,7 @@ def extract(source: str, prompt_template: str = "extract.txt") -> dict:
     return result
 
 
-def run(source=None, data_dir=None, verbose=False):
+def run(source=None, data_dir=None):
     sdir = Path(source) if source else None
     ddir = Path(data_dir) if data_dir else settings.data_home
 
@@ -106,75 +106,14 @@ def run(source=None, data_dir=None, verbose=False):
         print("错误: 请指定 --source")
         raise typer.Exit(code=1)
 
-    if sdir.is_file():
-        result = extract(str(sdir))
-        if "error" in result:
-            print(result["error"])
-            raise typer.Exit(code=1)
-
-        ddir.mkdir(parents=True, exist_ok=True)
-        out_path = ddir / f"{sdir.stem}.json"
-        with open(out_path, "w", encoding="utf-8") as f:
-            json.dump(result, f, ensure_ascii=False, indent=2)
-        print(f"抽取完成。保存至 {out_path}。")
-        return 0
-
-    if not sdir.exists():
-        print(f"错误: 源文档目录不存在: {sdir}")
-        raise typer.Exit(code=1)
-
-    md_files = sorted(sdir.glob("*.md"))
-    if not md_files:
-        print("错误: 源目录中没有 .md 文件")
+    result = extract(str(sdir))
+    if "error" in result:
+        print(result["error"])
         raise typer.Exit(code=1)
 
     ddir.mkdir(parents=True, exist_ok=True)
-
-    all_domains = {}
-    all_ontologies = {}
-    all_instances = []
-
-    for f in md_files:
-        print(f"  [{f.name}] 正在抽取...", end=" ", flush=True)
-        result = extract(str(f))
-        if "error" in result:
-            print(f"⚠ {result['error']}")
-            continue
-
-        domain = result["domain"]
-        did = domain.get("id", "")
-        if did and did not in all_domains:
-            all_domains[did] = domain
-
-        for o in result["ontologies"]:
-            oid = o.get("id", "")
-            if oid and oid not in all_ontologies:
-                all_ontologies[oid] = o
-
-        for inst in result["instances"]:
-            all_instances.append(inst)
-
-        print(f"✓ {len(result['ontologies'])}本体/{len(result['instances'])}实例")
-
-    domain_count = 0
-    for did, domain in all_domains.items():
-        if not did:
-            continue
-        domain_dir = ddir / did
-        domain_dir.mkdir(parents=True, exist_ok=True)
-
-        with open(domain_dir / "domain.json", "w", encoding="utf-8") as f:
-            json.dump(domain, f, ensure_ascii=False, indent=2)
-        with open(domain_dir / "ontologies.json", "w", encoding="utf-8") as f:
-            json.dump({"ontologies": list(all_ontologies.values())}, f, ensure_ascii=False, indent=2)
-        with open(domain_dir / "instances.json", "w", encoding="utf-8") as f:
-            json.dump({"instances": all_instances}, f, ensure_ascii=False, indent=2)
-
-        domain_count += 1
-
-    print(f"抽取完成。生成 {domain_count} 个领域知识库，保存至 {ddir}。")
-    if verbose:
-        print(f"  本体: {len(all_ontologies)} 项")
-        print(f"  实例: {len(all_instances)} 项")
-
+    out_path = ddir / f"{sdir.stem}.json"
+    with open(out_path, "w", encoding="utf-8") as f:
+        json.dump(result, f, ensure_ascii=False, indent=2)
+    print(f"抽取完成。保存至 {out_path}。")
     return 0

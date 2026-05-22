@@ -33,12 +33,6 @@ class TestConfigEdge:
         assert Settings._empty_str_to_none(None) is None
 
 
-class _FakeLocalStorage:
-    def __init__(self, app_name, vendor=None):
-        self.data_dir = Path.home() / ".local" / "share" / vendor / app_name
-        self.state_dir = Path.home() / ".local" / "state" / vendor / app_name
-
-
 @pytest.fixture(autouse=True)
 def reset_config():
     yield
@@ -48,10 +42,8 @@ def reset_config():
 class TestConfig:
     def test_data_dir_fallback(self, monkeypatch):
         monkeypatch.delenv("QTCLOUD_KNOWL_DATA_HOME", raising=False)
-        import quanttide
-        monkeypatch.setattr(quanttide, "LocalStorage", _FakeLocalStorage)
         importlib.reload(config)
-        assert config.settings.data_home == Path.home() / ".local" / "share" / "quanttide" / "qtcloud-knowl"
+        assert config.settings.data_home == Path.cwd() / "data"
 
     def test_data_dir_from_env(self, monkeypatch):
         monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", "/tmp/custom-data")

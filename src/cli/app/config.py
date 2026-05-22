@@ -8,9 +8,6 @@ from typing import Optional
 
 from pydantic import Field, field_validator, model_validator
 from pydantic_settings import BaseSettings, PydanticBaseSettingsSource
-from quanttide import LocalStorage
-
-_local = LocalStorage("qtcloud-knowl", vendor="quanttide")
 
 try:
     from pydantic_vault import VaultSettingsSource
@@ -46,9 +43,9 @@ class Settings(BaseSettings):
     @model_validator(mode="after")
     def _default_paths(self):
         if self.data_home is None:
-            self.data_home = _local.data_dir
+            self.data_home = Path.cwd() / "data"
         if self.state_home is None:
-            self.state_home = _local.state_dir
+            self.state_home = self.data_home / ".state"
         if self.sample_home is None:
             self.sample_home = self.data_home / "samples"
         return self
