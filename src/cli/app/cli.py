@@ -16,8 +16,8 @@ import typer
 app = typer.Typer()
 
 
-@app.command()
-def extract(
+@app.command(name="extract")
+def extract_cmd(
     source: str = typer.Option(None, "--source", "-s", help="源文档 .md 文件路径"),
     data_dir: str = typer.Option(None, "--data-dir", help="输出 JSON 目录路径"),
 ):

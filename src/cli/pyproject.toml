@@ -6,6 +6,9 @@ build-backend = "setuptools.build_meta"
 include = ["app*"]
 exclude = ["tests*", "integrated_tests*"]
 
+[tool.setuptools.package-data]
+app = ["../assets/prompts/*.txt"]
+
 [project]
 name = "qtcloud-knowl-cli"
 version = "0.2.0"
