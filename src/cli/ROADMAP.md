@@ -1,87 +1,77 @@
 # ROADMAP
 
-每个版本交付的不是功能，是用户能力。
+## v0.2.0（进行中）— extract 重设计：信息→知识
 
-## 下一阶段：v0.2.0 审计模块收尾
+当前 `extract` 是一条**文档→JSON** 的流水线：读入 `.md` 文件，发给 LLM，解析 JSON 落盘。
+v0.2.0 将重新设计其语义模型——**输入抽象为信息，输出建模为知识**。
 
-完成 TODO.md 中 v0.2.0 的四项剩余工作：
-- parser 分离格式解析/分类规则/展示构造
-- `AuditIssue` 携带原始证据
-- `ReportRepository` 完整持久化
-- `AuditRule` / `AuditRuleSet` 统一建模
+### 方向
 
-## v0.3.0 — World 层级 + 多文件合并抽取
+| 方面 | 现状 | 目标 |
+|------|------|------|
+| 输入 | `.md` 文件目录 | 统一 **InformationSource** 接口（文档/结构化数据/对话等） |
+| 处理 | 逐文件 LLM 调用，单阶段 | **多阶段管道**：语境理解→概念抽取→结构建模→验证→入库 |
+| 输出 | 原始 LLM JSON，UUID 无溯源 | **KnowledgeItem** 模型，可溯源、已校验、可复用 |
 
-**层级扩展**：domain 上级增加 world（世界观），用于区分现实与虚构世界：
+### 设计
 
-```
-World（世界观）
-  └── Domain（领域）
-       ├── Ontology（本体）
-       └── Instance（实例）
-```
+#### InformationSource — 统一信息接入
 
-例如：
-- world: `reality` → domain: `公司治理`、`岗位职责`
-- world: `fiction-romance` → domain: `职场言情`、`校园言情`
-
-**核心矛盾**：`qtcloud-knowl extract` 是按文件抽取的，每文件一 domain。但知识库是按故事系列组织的（夜市约会、深夜失眠、书房陪伴等），不是按文件。工具没有"合并多文件到同一个 domain"、也没有"按 world 组织 domain"的能力。
-
-domain 不再直接归属知识库根目录，而是归属到对应的 world 目录下。
-extract 需要支持 `--world` 参数指定世界观归属。
-
-**方案 A：工具侧合并**
-
-改进 extract 的抽取逻辑，让它能识别同一故事的多文件并合并到同一个 domain。例如：
-- 利用源目录名作为 domain 分组 hint（已实现，效果有限）
-- 后处理合并：文件级 LLM 调用完成后，按 domain 相似度合并
-- 批处理：多文件合并后一次性发给 LLM（受限于上下文长度）
-
-**方案 B：工作流侧分工（推荐）**
-
-用户手动写好 domain 定义，extract 只做实例抽取。更符合 OCL 方法论的"人定义概念，AI 填充实例"：
-- 用户在知识库目录下预置 `domain.json`、`ontologies.json`
-- `extract` 读取已有 domain/ontology 结构，LLM 只填充 instances
-- 结果更可控，不产生冗余 domain
-
-## 已完成
-
-### v0.2.0 — 审计不可定制、不可追溯、不可复用（进行中）
-
-> 对应审计模块的领域模型提取与架构重构
-
-**痛点**：`audit.py` 是 300 行的单文件脚本，检测逻辑、分类规则、输出格式全部耦合在一起。加一种新检测工具要改四五个 if/else，换一种输出格式要复制整个函数，看不懂审计报告是怎么产生的。
-
-**用户能力（已完成）**：
-- 审计系统可扩展——加新检测工具只需新增一个 `run()` 函数加入 tools 列表，不改编排逻辑
-- 审计可理解——`AuditMode`、`AuditIssue`、`KnowledgeBaseStats`、`ReportTemplate` 各自独立，改文案不改逻辑，改规则不改渲染
-- 测试可覆盖——307 个测试，100% 行覆盖率
-
-**架构产出**（6 个模块）：
-
-```
-app/audit/
-├── models.py       # 领域类型
-├── report.py       # Report 实体 + 渲染 + 持久化
-├── service.py      # 编排
-├── parser.py       # 工具输出 → 结构化数据
-└── __init__.py     # 公共 API
-
-tests/test_audit/   # 5 个测试文件
+```python
+class InformationSource(ABC):
+    @abstractmethod
+    def read(self) -> list[InformationChunk]: ...
 ```
 
-**剩余工作**（见 `TODO.md`）：
-- parser 分离格式解析/分类规则/展示构造（消除与 service 的规则重复）
-- `AuditIssue` 携带原始证据
-- `ReportRepository` 完整持久化
-- `AuditRule` / `AuditRuleSet` 统一建模
+内置实现：
 
-### v0.1.0 — 文档入库到发布不能一步走完
+| 实现 | 输入 | 说明 |
+|------|------|------|
+| `DocumentSource` | `.md` 文件目录 | 当前模式，保持不变 |
+| `StructuredSource` | JSON / CSV / YAML | 直接解析为信息块 |
+| `ConversationSource` | 对话记录 | 从问答中提取知识 |
 
-> 对应 OCL 阶段二至五全串联
+#### 多阶段抽取管道
 
-**痛点**：抽取→草稿→审核→落库的每个环节都能单步执行，但缺少一条命令跑完全流程的工作流。
+```
+信息 → [语境理解] → [概念抽取] → [结构建模] → [验证] → [入库] → 知识
+```
 
-**用户能力**：一条命令完成从源文档到正式知识库的全流程，中途经 audit 自动质检。
+| 阶段 | 职责 |
+|------|------|
+| 语境理解 | 识别领域/视角，注入上下文 |
+| 概念抽取 | 从信息中抽候选概念与关系（复用当前 LLM 能力） |
+| 结构建模 | 将候选概念归入本体结构，建立 cross-reference |
+| 验证 | 校验一致性、完整性、可复用标准 |
+| 入库 | 去重、融合、持久化 |
 
-发布版本见 [CHANGELOG.md](./CHANGELOG.md)。
+#### 知识模型
+
+```python
+class KnowledgeItem(BaseModel):
+    source_ref: list[str]   # 溯源：来自哪些信息块
+    domain: Domain
+    ontologies: list[Ontology]
+    instances: list[Instance]
+    context: str            # 抽取时的语境/视角说明
+```
+
+### 任务
+
+- [ ] 定义 `InformationSource` 接口与 `InformationChunk` 模型
+- [ ] `DocumentSource` 实现（封装当前文件读取逻辑）
+- [ ] 拆分 `_extract_dir` 为多阶段子函数
+- [ ] 新增语境理解阶段：自动识别领域视角
+- [ ] 新增结构建模阶段：概念→本体归位
+- [ ] 新增验证阶段：一致性检查
+- [ ] 新增 `KnowledgeItem` 模型（含 `source_ref` 溯源）
+- [ ] 写入时保留 `context.json` 语境记录
+- [ ] 更新 `knowl_loader.py` 适配新模型
+- [ ] 更新测试套件
+
+## v0.3.0（规划）
+
+- 支持多信息源联合抽取（如文档 + 结构化数据交叉建模）
+- 增量抽取：基于已有知识库，只处理新增/变更的信息源
+- 多格式导出：`--format yaml / markdown`
+- 审计功能回归：基于新知识模型的审计
