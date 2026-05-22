@@ -26,7 +26,7 @@ def audit(
     ),
 ):
     """全量质量审计 — 串行执行全部检测并聚合报告"""
-    from app.agents.audit import run
+    from app.audit import run
 
     return run(data_dir, mode)
 

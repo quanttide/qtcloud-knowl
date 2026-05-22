@@ -4,7 +4,7 @@ import json
 from datetime import datetime
 from typer.testing import CliRunner
 from tests.conftest import FIXTURE_DIR, SAMPLE_DIR
-from app.agents.audit import _collect_issues, _compute_diff, _load_audit_state, _save_audit_state
+from app.audit import _collect_issues, _compute_diff, _load_audit_state, _save_audit_state
 
 
 class TestAuditState:
