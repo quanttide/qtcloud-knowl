@@ -1,4 +1,5 @@
-from app.audit.models import AuditDiff, AuditReport, KnowledgeBaseStats, IssueGroup, DEFAULT_REPORT_TEMPLATE
+from app.audit.models import AuditDiff, AuditReport, KnowledgeBaseStats, IssueGroup
+from app.audit.presentation import DEFAULT_REPORT_TEMPLATE
 
 
 def print_stats(stats: KnowledgeBaseStats) -> None:

@@ -31,33 +31,18 @@
 - domain 逻辑纯度优先：models/parser/repository 不打印、不依赖 settings
 - 展示层隔离：report.py 只做格式化输出
 
-## v0.2.1 — report.py 展示层重构
+## v0.2.1 — report.py 展示层重构 ✅
 
-`app/audit/report.py` 的三个设计问题及其修复方案。
+三个代码设计问题已修复。
 
-### 问题1: `print_stats` 参数散装 — 提取 KnowledgeBaseStats
+| 问题 | 方案 | 效果 |
+|------|------|------|
+| `print_stats` 4 个散装参数 | 提取 `KnowledgeBaseStats` dataclass | 调用方传递一个对象 |
+| `_print_section` 收 `list[Issue]` 却按 group 遍历 | 改收 `list[IssueGroup]`，移除 `[issue]` 包装 | 数据结构和遍历匹配 |
+| `print_report` 用 `if mode == "simple"` 硬编码标题文案 | 提取 `ReportTemplate`，`print_report` 遍历 `template.sections_for(mode)` | 换模板可改文案不改渲染 |
 
-- . [x] `app/audit/models.py` — 新增 `KnowledgeBaseStats` dataclass（domains, ontology_count, instance_count）
-- . [x] `app/audit/__init__.py` — `_collect_stats` 改为返回 `KnowledgeBaseStats` 而非散装 tuple
-- . [x] `app/audit/report.py` — `print_stats` 改为接收 `KnowledgeBaseStats` 对象
-- . [x] 更新 `test_models.py` — 测试 KnowledgeBaseStats
-- . [x] 更新 `test_integration.py` — 适配 _collect_stats / print_stats 新签名
+### 遗留问题（非阻塞，可后续考虑）
 
-### 问题2: `_print_section` 数据结构不匹配 — 修复 group → issues 映射
-
-- . [x] `app/audit/models.py` — 新增 `IssueGroup` dataclass（group_name: str, issues: list[AuditIssue]）
-- . [x] `app/audit/__init__.py` — `_categorize_issues` 返回 `list[IssueGroup]` 而非散装三层列表
-- . [x] `app/audit/report.py` — `_print_section` 接收 `list[IssueGroup]`，移除 `[issue]` 包装
-- . [x] `app/audit/models.py` — `AuditReport.from_raw` 重构为持 `IssueGroup` 结构
-- . [x] 更新测试
-
-### 问题3: `print_report` 渲染与决策耦合 — 提取 ReportTemplate
-
-- . [x] `app/audit/models.py` 或新建 `app/audit/template.py` — 定义 `ReportTemplate` dataclass（section_order, header_map per mode, summary_text）
-- . [x] `app/audit/report.py` — `print_report` 改为读取 `ReportTemplate` 决定标题和顺序，自身只做渲染
-- . [x] 更新测试验证：切换 template 可改变输出文案而不改渲染逻辑
-
-### 收尾
-
-- . [x] 验证 100% 覆盖率不受影响
-- . [x] 确认 `from app.audit import run` 接口不变
+- [x] **展示模型混在领域模型文件** — `ReportSectionDef`、`ReportTemplate`、`DEFAULT_REPORT_TEMPLATE` 移入 `presentation.py`。`IssueGroup` 因 `AuditReport.section_groups()` 强耦合留在 `models.py`
+- [ ] **AuditState 仍贫血** — 无 `add_issue()` 自动更新时间戳、无 `filter_by_category()`。当前无消费方需求
+- [ ] **tool→category 映射在服务层** — `_categorize_issues` 中的 mapping dict 是领域规则（validate = auto_fixable），目前只有一个消费者。若出现第二个消费者则应收进模型
