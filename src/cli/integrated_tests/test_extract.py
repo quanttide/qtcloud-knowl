@@ -8,6 +8,6 @@ class TestExtract:
     def test_creates_skeleton_from_samples(self, real_sample_dir, real_knowledge_base, monkeypatch):
         app = setup_env(monkeypatch, sample_dir=real_sample_dir, data_home=real_knowledge_base)
         runner = CliRunner()
-        result = runner.invoke(app, ["extract"])
+        result = runner.invoke(app, [])
         assert result.exit_code == 0
         assert "抽取完成" in result.output

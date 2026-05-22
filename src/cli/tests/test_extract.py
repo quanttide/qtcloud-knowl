@@ -5,6 +5,7 @@ from pathlib import Path
 from unittest.mock import patch, MagicMock
 
 from typer.testing import CliRunner
+from app.cli import app
 from tests.conftest import SAMPLE_DIR
 
 
@@ -30,19 +31,19 @@ class TestExtract:
         from app.cli import app
         empty = tmp_path / "empty"
         empty.mkdir()
-        result = CliRunner().invoke(app, ["extract", "--source", str(empty)])
+        result = CliRunner().invoke(app, ["--source", str(empty)])
         assert result.exit_code == 1
         assert "没有 .md 文件" in result.output
 
     def test_extract_nonexistent_dir(self):
         from app.cli import app
-        result = CliRunner().invoke(app, ["extract", "--source", "/nonexistent"])
+        result = CliRunner().invoke(app, ["--source", "/nonexistent"])
         assert result.exit_code == 1
         assert "不存在" in result.output
 
     def test_extract_missing_api_key(self):
         from app.cli import app
-        result = CliRunner().invoke(app, ["extract", "--source", str(SAMPLE_DIR)])
+        result = CliRunner().invoke(app, ["--source", str(SAMPLE_DIR)])
         assert result.exit_code == 1
         assert "未设置 LLM API Key" in result.output
 
@@ -63,7 +64,7 @@ class TestExtract:
             fake_instances,
         )):
             result = CliRunner().invoke(
-                app, ["extract", "--source", str(sample), "--data-dir", str(out)]
+                app, ["--source", str(sample), "--data-dir", str(out)]
             )
 
         assert result.exit_code == 0

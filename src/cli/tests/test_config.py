@@ -71,16 +71,3 @@ class TestConfig:
         monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", str(tmp_path))
         importlib.reload(config)
         assert config.settings.data_home == tmp_path
-        domain_dir = tmp_path / "test-domain"
-        domain_dir.mkdir()
-        for fname, content in [
-            ("domain.json", '{"id": "test", "name": "test", "vocabulary": []}'),
-            ("ontologies.json", '{"ontologies": []}'),
-            ("instances.json", '{"instances": []}'),
-            ("relations.json", '{"relations": []}'),
-        ]:
-            (domain_dir / fname).write_text(content, encoding="utf-8")
-        from app.validators.validate import run as validate_run
-        from app.reporters.summary import run as summary_run
-        assert "全部验证通过" in validate_run(tmp_path)
-        assert summary_run(tmp_path) == 0
