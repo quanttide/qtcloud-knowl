@@ -240,33 +240,33 @@ class TestAuditCollectStats:
 
     def test_collect_stats_with_valid_domain(self, tmp_path):
         self._valid_domain_dir(tmp_path)
-        from app.audit import _collect_stats
+        from app.audit.service import _collect_stats
         stats = _collect_stats(tmp_path)
         assert stats.domain_count == 1
         assert stats.ontology_count == 1
         assert stats.instance_count == 1
 
     def test_collect_stats_empty_dir(self, tmp_path):
-        from app.audit import _collect_stats
+        from app.audit.service import _collect_stats
         empty = tmp_path / "empty"
         empty.mkdir()
         stats = _collect_stats(empty)
         assert stats.domain_count == 0
 
     def test_collect_stats_catches_exception(self, tmp_path):
-        from app.audit import _collect_stats
+        from app.audit.service import _collect_stats
         stats = _collect_stats(tmp_path / "nonexistent")
         assert stats.domain_count == 0
 
     def test_collect_stats_data_dir_path(self, tmp_path):
-        from app.audit import _collect_stats
+        from app.audit.service import _collect_stats
         stats = _collect_stats(tmp_path)
         assert stats.data_dir == tmp_path
 
 
 class TestAuditInternal:
     def test_collect_stats_exception(self, tmp_path):
-        from app.audit import _collect_stats
+        from app.audit.service import _collect_stats
         stats = _collect_stats(tmp_path / "nonexistent")
         assert stats.domain_count == 0
         assert stats.ontology_count == 0
@@ -274,12 +274,12 @@ class TestAuditInternal:
 
     def test_run_tools_fallback_issue(self, monkeypatch):
         from unittest.mock import MagicMock
-        from app.audit import _run_tools
+        from app.audit.service import _run_tools
         from app.audit.models import AuditMode
         mock_tool = MagicMock()
         mock_tool.name = "validate"
         mock_tool.execute.return_value = "=== [检测到] hidden ===\n其他行\n"
-        monkeypatch.setattr("app.audit.all_detection_tools", lambda mode: [mock_tool])
+        monkeypatch.setattr("app.audit.service.all_detection_tools", lambda mode: [mock_tool])
         need_confirm, auto_fixable, suggestions = _run_tools(Path("/tmp"), AuditMode.FULL)
         assert len(need_confirm) > 0 or len(auto_fixable) > 0 or len(suggestions) > 0
 
