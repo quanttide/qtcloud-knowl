@@ -39,6 +39,15 @@ wheels = [
 ]
 
 [[package]]
+name = "platformdirs"
+version = "4.9.6"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/9f/4a/0883b8e3802965322523f0b200ecf33d31f10991d0401162f4b23c698b42/platformdirs-4.9.6.tar.gz", hash = "sha256:3bfa75b0ad0db84096ae777218481852c0ebc6c727b3168c1b9e0118e458cf0a", size = 29400, upload-time = "2026-04-09T00:04:10.812Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/75/a6/a0a304dc33b49145b21f4808d763822111e67d1c3a32b524a1baf947b6e1/platformdirs-4.9.6-py3-none-any.whl", hash = "sha256:e61adb1d5e5cb3441b4b7710bea7e4c12250ca49439228cc1021c00dcfac0917", size = 21348, upload-time = "2026-04-09T00:04:09.463Z" },
+]
+
+[[package]]
 name = "pluggy"
 version = "1.6.0"
 source = { registry = "https://pypi.org/simple" }
@@ -168,6 +177,8 @@ version = "0.0.1"
 source = { virtual = "." }
 dependencies = [
     { name = "pydantic" },
+    { name = "quanttide-audit" },
+    { name = "quanttide-knowl" },
 ]
 
 [package.optional-dependencies]
@@ -179,8 +190,49 @@ test = [
 requires-dist = [
     { name = "pydantic", specifier = ">=2.0" },
     { name = "pytest", marker = "extra == 'test'", specifier = ">=8.0" },
+    { name = "quanttide-audit", specifier = ">=0.1.0" },
+    { name = "quanttide-knowl", specifier = ">=0.1.0" },
 ]
 provides-extras = ["test"]
+
+[[package]]
+name = "quanttide"
+version = "0.1.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "platformdirs" },
+    { name = "pydantic" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/72/a1/8155fd05729f33bcfd4334dc01754fa8a3d43fa98ed2d0171f6f8f7ff3e1/quanttide-0.1.1.tar.gz", hash = "sha256:93324c4fdd9c972919dee54c16e54b8ca4e94df21294202c0396d813d6adec90", size = 37937, upload-time = "2026-05-20T08:48:26.277Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/c4/38/22628403f02389020b02c74f781bb6d91bd2b5e5e325f6ce38e4161319e9/quanttide-0.1.1-py3-none-any.whl", hash = "sha256:d022ab92d34769f1700617eedb83dcc7ba902c0440410198a20ee14a1c1b8c00", size = 6130, upload-time = "2026-05-20T08:48:25.02Z" },
+]
+
+[[package]]
+name = "quanttide-audit"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "quanttide" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9d/f6/1ee662e8e8ca459868e85efc8a849070501d4ab2cfeec864a39cf4dc2d99/quanttide_audit-0.1.0.tar.gz", hash = "sha256:a2b5746a821870dcd2662625364473f12e323d7b5ba5d66cc7874238f5208b30", size = 43314, upload-time = "2026-05-22T09:37:47.209Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/41/79/b776d8152126182db8f28228d75240c210f2c55f61f1e74ce83798a7b0b4/quanttide_audit-0.1.0-py3-none-any.whl", hash = "sha256:1168adf943c645d1b246fed849c894d0f871ba7d7b94f9222b3cd13ae9992da3", size = 6215, upload-time = "2026-05-22T09:37:45.762Z" },
+]
+
+[[package]]
+name = "quanttide-knowl"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "quanttide" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/3c/38/4ec5f44a4c8036f79d23040616ee24bfec3e52c5e5e34cbc9a6453275b3b/quanttide_knowl-0.1.0.tar.gz", hash = "sha256:2c83f99997087a64a42e2a903096606291a73ab75b06294efe85004846f00131", size = 8255, upload-time = "2026-05-21T09:12:51.754Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/5b/21/a42e367ba38721c0c96286ad89e129273c809d32619267c312d0f7a986c2/quanttide_knowl-0.1.0-py3-none-any.whl", hash = "sha256:efc27ce849e895a49a05553bb3731530c74fc9ede97ea1eff2ac959da369f92b", size = 6840, upload-time = "2026-05-21T09:12:52.882Z" },
+]
 
 [[package]]
 name = "typing-extensions"

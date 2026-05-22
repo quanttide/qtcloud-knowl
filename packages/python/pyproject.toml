@@ -5,6 +5,8 @@ description = "量潮知识云Python SDK"
 requires-python = ">=3.12"
 dependencies = [
     "pydantic>=2.0",
+    "quanttide-audit>=0.1.0",
+    "quanttide-knowl>=0.1.0",
 ]
 
 [project.optional-dependencies]
