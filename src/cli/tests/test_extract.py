@@ -58,7 +58,7 @@ class TestExtract:
         fake_ontologies = [{"id": "onto-1", "name": "onto-1", "label": "权责", "description": ""}]
         fake_instances = [{"id": "inst-1", "name": "inst-1", "label": "董事会", "description": ""}]
 
-        with patch("app.agents.extract._extract_dir", return_value=(
+        with patch("app.extract._extract_dir", return_value=(
             {"org-gov": fake_domain},
             fake_ontologies,
             fake_instances,
@@ -76,14 +76,14 @@ class TestExtract:
     # === _extract_dir 函数测试 ===
 
     def test_extract_dir_no_md_files(self, tmp_path):
-        from app.agents.extract import _extract_dir
+        from app.extract import _extract_dir
         d = tmp_path / "empty"
         d.mkdir()
         result = _extract_dir(d)
         assert "没有 .md 文件" in result
 
     def test_extract_dir_missing_prompt(self, tmp_path):
-        from app.agents.extract import _extract_dir
+        from app.extract import _extract_dir
         d = tmp_path / "docs"
         d.mkdir()
         (d / "test.md").write_text("内容", encoding="utf-8")
@@ -91,7 +91,7 @@ class TestExtract:
         assert "prompt 模板不存在" in result
 
     def test_extract_dir_no_api_key(self, tmp_path):
-        from app.agents.extract import _extract_dir
+        from app.extract import _extract_dir
         d = tmp_path / "docs"
         d.mkdir()
         (d / "test.md").write_text("内容", encoding="utf-8")
@@ -100,7 +100,7 @@ class TestExtract:
 
     def test_extract_dir_calls_llm(self, tmp_path):
         """Mock LLM 验证 _extract_dir 正确调用 LLM 并返回结构化数据。"""
-        from app.agents.extract import _extract_dir
+        from app.extract import _extract_dir
 
         d = tmp_path / "docs"
         d.mkdir()
@@ -111,7 +111,7 @@ class TestExtract:
 
         with patch("quanttide_agent.LLM") as MockLLM:
             MockLLM.return_value.complete.return_value = mock_resp
-            from app.agents.extract import settings
+            from app.extract import settings
             old = settings.llm_api_key
             settings.llm_api_key = "test-key"
             try:
@@ -129,7 +129,7 @@ class TestExtract:
 
     def test_extract_dir_llm_json_error(self, tmp_path):
         """LLM 返回非法 JSON 时跳过该文件，返回空结构。"""
-        from app.agents.extract import _extract_dir
+        from app.extract import _extract_dir
 
         d = tmp_path / "docs"
         d.mkdir()
@@ -140,7 +140,7 @@ class TestExtract:
 
         with patch("quanttide_agent.LLM") as MockLLM:
             MockLLM.return_value.complete.return_value = mock_resp
-            from app.agents.extract import settings
+            from app.extract import settings
             old = settings.llm_api_key
             settings.llm_api_key = "test-key"
             try:
@@ -154,7 +154,7 @@ class TestExtract:
 
     def test_extract_dir_multiple_files(self, tmp_path):
         """多个 .md 文件的结果应合并到同一 domain。"""
-        from app.agents.extract import _extract_dir
+        from app.extract import _extract_dir
 
         d = tmp_path / "docs"
         d.mkdir()
@@ -179,7 +179,7 @@ class TestExtract:
         with patch("quanttide_agent.LLM") as MockLLM:
             mock_llm = MockLLM.return_value
             mock_llm.complete.side_effect = [mock_resp_a, mock_resp_b]
-            from app.agents.extract import settings
+            from app.extract import settings
             old = settings.llm_api_key
             settings.llm_api_key = "test-key"
             try:
@@ -195,11 +195,11 @@ class TestExtract:
     # === _load_prompt 函数测试 ===
 
     def test_load_prompt_missing(self):
-        from app.agents.extract import _load_prompt
+        from app.extract import _load_prompt
         assert _load_prompt("nonexistent.txt") is None
 
     def test_load_prompt_found(self):
-        from app.agents.extract import _load_prompt
+        from app.extract import _load_prompt
         content = _load_prompt("full_extraction.txt")
         assert content is not None
         assert "{document}" in content
@@ -207,7 +207,7 @@ class TestExtract:
     # === run() 函数边缘路径 ===
 
     def test_run_no_source(self):
-        from app.agents.extract import run
+        from app.extract import run
         import typer
         try:
             run(source=None)
@@ -217,12 +217,12 @@ class TestExtract:
 
     def test_run_verbose_mode(self, tmp_path):
         from unittest.mock import patch
-        from app.agents.extract import run
+        from app.extract import run
         sdir = tmp_path / "samples"
         sdir.mkdir()
         (sdir / "test.md").write_text("content", encoding="utf-8")
         fake_domain = {"id": "test", "name": "test", "label": "test", "description": ""}
-        with patch("app.agents.extract._extract_dir", return_value=(
+        with patch("app.extract._extract_dir", return_value=(
             {"test": fake_domain}, [], []
         )):
             result = run(source=str(sdir), data_dir=str(tmp_path / "out"), verbose=True)
@@ -230,12 +230,12 @@ class TestExtract:
 
     def test_run_skips_empty_domain_id(self, tmp_path):
         from unittest.mock import patch
-        from app.agents.extract import run
+        from app.extract import run
         sdir = tmp_path / "samples"
         sdir.mkdir()
         (sdir / "test.md").write_text("content", encoding="utf-8")
         fake_domain = {"id": "", "name": "", "label": "", "description": ""}
-        with patch("app.agents.extract._extract_dir", return_value=(
+        with patch("app.extract._extract_dir", return_value=(
             {"": fake_domain}, [], []
         )):
             result = run(source=str(sdir), data_dir=str(tmp_path / "out"), verbose=True)
@@ -245,7 +245,7 @@ class TestExtract:
 
     def test_extract_dir_strips_code_fences(self, tmp_path):
         from unittest.mock import patch, MagicMock
-        from app.agents.extract import _extract_dir
+        from app.extract import _extract_dir
         d = tmp_path / "docs"
         d.mkdir()
         (d / "test.md").write_text("content", encoding="utf-8")
@@ -254,7 +254,7 @@ class TestExtract:
         mock_resp.content = wrapped
         with patch("quanttide_agent.LLM") as MockLLM:
             MockLLM.return_value.complete.return_value = mock_resp
-            from app.agents.extract import settings
+            from app.extract import settings
             old = settings.llm_api_key
             settings.llm_api_key = "test-key"
             settings.llm_base_url = "http://localhost:8000"
@@ -267,7 +267,7 @@ class TestExtract:
 
     def test_extract_dir_strips_leading_trailing_fences(self, tmp_path):
         from unittest.mock import patch, MagicMock
-        from app.agents.extract import _extract_dir
+        from app.extract import _extract_dir
         d = tmp_path / "docs2"
         d.mkdir()
         (d / "test.md").write_text("content", encoding="utf-8")
@@ -276,7 +276,7 @@ class TestExtract:
         mock_resp.content = wrapped
         with patch("quanttide_agent.LLM") as MockLLM:
             MockLLM.return_value.complete.return_value = mock_resp
-            from app.agents.extract import settings
+            from app.extract import settings
             old = settings.llm_api_key
             settings.llm_api_key = "test-key"
             try:
@@ -287,7 +287,7 @@ class TestExtract:
 
     def test_extract_dir_only_leading_fence(self, tmp_path):
         from unittest.mock import patch, MagicMock
-        from app.agents.extract import _extract_dir
+        from app.extract import _extract_dir
         d = tmp_path / "docs3"
         d.mkdir()
         (d / "test.md").write_text("content", encoding="utf-8")
@@ -296,7 +296,7 @@ class TestExtract:
         mock_resp.content = wrapped
         with patch("quanttide_agent.LLM") as MockLLM:
             MockLLM.return_value.complete.return_value = mock_resp
-            from app.agents.extract import settings
+            from app.extract import settings
             old = settings.llm_api_key
             settings.llm_api_key = "test-key"
             try:

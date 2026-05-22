@@ -23,7 +23,7 @@ def extract(
     verbose: bool = typer.Option(False, "--verbose", "-v", help="显示详细匹配信息"),
 ):
     """知识抽取 — 从源文件自动创建知识库骨架"""
-    from app.agents.extract import run
+    from app.extract import run
 
     return run(source, data_dir, verbose)
 

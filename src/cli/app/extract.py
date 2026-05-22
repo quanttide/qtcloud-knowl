@@ -24,7 +24,7 @@ def _clean(item):
     return cleaned, original_id
 
 
-PROMPT_DIR = Path(__file__).resolve().parent.parent / "prompts"
+PROMPT_DIR = Path(__file__).resolve().parent.parent / "assets" / "prompts"
 
 
 def _load_prompt(name):
