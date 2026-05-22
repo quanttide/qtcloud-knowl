@@ -34,29 +34,6 @@ def _load_prompt(name):
     return path.read_text(encoding="utf-8")
 
 
-def _save_knowledge_base(ddir, data):
-    """将 LLM 返回的知识库结构写入文件。"""
-    domain = data.get("domain", {})
-    domain_id = domain.get("id", "default")
-
-    domain_dir = ddir / domain_id
-    domain_dir.mkdir(parents=True, exist_ok=True)
-
-    with open(domain_dir / "domain.json", "w", encoding="utf-8") as f:
-        json.dump(domain, f, ensure_ascii=False, indent=2)
-
-    for key, filename in [
-        ("ontologies", "ontologies.json"),
-        ("instances", "instances.json"),
-        ("relations", "relations.json"),
-    ]:
-        items = data.get(key, [])
-        with open(domain_dir / filename, "w", encoding="utf-8") as f:
-            json.dump({key: items}, f, ensure_ascii=False, indent=2)
-
-    return domain_id
-
-
 def _extract_dir(sdir, prompt_template="full_extraction.txt"):
     """对目录中所有 .md 文件执行 LLM 抽取，合并结果。"""
     from quanttide_agent import LLM
@@ -157,11 +134,6 @@ def run(source=None, data_dir=None, verbose=False):
         with open(domain_dir / "domain.json", "w", encoding="utf-8") as f:
             json.dump(domain, f, ensure_ascii=False, indent=2)
 
-        domain_ontologies = [
-            o
-            for o in all_ontologies
-            if o.get("perspective") in (domain.get("perspective"), "") or True
-        ]
         with open(domain_dir / "ontologies.json", "w", encoding="utf-8") as f:
             json.dump({"ontologies": all_ontologies}, f, ensure_ascii=False, indent=2)
 

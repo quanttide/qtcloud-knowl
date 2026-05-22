@@ -29,7 +29,7 @@ def run(filepath: str, data_dir=None):
             results.append((domain.id, score, len(domain.vocabulary)))
 
     results.sort(key=lambda x: -x[1])
-    for name, score, total in results:
+    for name, score, _ in results:
         print(f"  {name}")
     return 0
 

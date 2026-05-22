@@ -37,7 +37,7 @@ class Settings(BaseSettings):
 
     @field_validator("data_home", "state_home", mode="before")
     @classmethod
-    def _empty_str_to_none(cls, v):
+    def _empty_str_to_none(_, v):
         if isinstance(v, str) and v.strip() == "":
             return None
         return v
@@ -52,7 +52,7 @@ class Settings(BaseSettings):
 
     @classmethod
     def settings_customise_sources(
-        cls,
+        _,
         settings_cls: type[BaseSettings],
         init_settings: PydanticBaseSettingsSource,
         env_settings: PydanticBaseSettingsSource,
