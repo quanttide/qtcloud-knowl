@@ -35,6 +35,12 @@
       "name": "refactoring-safety-net",
       "label": "重构安全网",
       "description": "确保重构不改变外部行为的保障机制。包括测试覆盖（单元测试/快照测试）、静态类型检查、lint规则、持续集成流水线。缺少安全网是放弃重构的首要原因。"
+    },
+    {
+      "id": "correspondence",
+      "name": "correspondence",
+      "label": "对应",
+      "description": "定义=描述实例之间有方向性的关联，如从问题到解决方案。关系实例的 description 以'从X到Y'格式标明连接方向。"
     }
   ],
   "instances": [
@@ -170,6 +176,41 @@
       "label": "持续集成流水线",
       "description": "安全网：提交后自动执行测试和检查。要求：所有测试通过→自动构建→部署到staging。重构时确保每次提交都能通过CI。原则：小步提交（每步≤10分钟）、频繁推送（每步后都推）。",
       "ontology": "refactoring-safety-net"
+    },
+    {
+      "id": "long-function-to-extract-function",
+      "name": "long-function-to-extract-function",
+      "label": "从过长函数到提炼函数",
+      "description": "从过长函数到提炼函数",
+      "ontology": "correspondence"
+    },
+    {
+      "id": "duplicate-code-to-extract-method",
+      "name": "duplicate-code-to-extract-method",
+      "label": "从重复代码到提取公共方法",
+      "description": "从重复代码到提取公共方法",
+      "ontology": "correspondence"
+    },
+    {
+      "id": "large-class-to-extract-class",
+      "name": "large-class-to-extract-class",
+      "label": "从大而全的类到提炼类",
+      "description": "从大而全的类到提炼类",
+      "ontology": "correspondence"
+    },
+    {
+      "id": "long-parameter-list-to-introduce-parameter-object",
+      "name": "long-parameter-list-to-introduce-parameter-object",
+      "label": "从过长参数列表到引入参数对象",
+      "description": "从过长参数列表到引入参数对象",
+      "ontology": "correspondence"
+    },
+    {
+      "id": "mysterious-name-to-rename",
+      "name": "mysterious-name-to-rename",
+      "label": "从神秘命名到重命名",
+      "description": "从神秘命名到重命名",
+      "ontology": "correspondence"
     }
   ]
 }
