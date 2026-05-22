@@ -23,7 +23,7 @@ def collect_defined_terms(sample_dir, data_dir):
     for d, domain, ontologies, instances, relations in load_all_domains(data_dir):
         for inst in instances:
             for val in [inst.subject, inst.data.get("principle"), inst.data.get("risk"),
-                        inst.data.get("element"), inst.data.get("term")]:
+                        inst.data.get("element"), inst.data.get("term"), inst.data.get("triggers")]:
                 if val:
                     if isinstance(val, str):
                         terms.add(val)

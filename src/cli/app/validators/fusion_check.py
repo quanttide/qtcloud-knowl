@@ -82,7 +82,7 @@ def check_broken_references(sample_dir=None):
     print("  3. 引用断裂（文件内《…》引用检测）")
     print("========================================\n")
 
-    sdir = Path(sample_dir) if sample_dir else SAMPLE_DIR
+    sdir = Path(sample_dir) if sample_dir else settings.sample_home
     ref_re = re.compile(r"《([^》]+)》")
     found = 0
 
@@ -129,7 +129,7 @@ def check_effectiveness_consistency(sample_dir=None):
     print("  4. 效力声明模式对比")
     print("========================================\n")
 
-    sdir = Path(sample_dir) if sample_dir else SAMPLE_DIR
+    sdir = Path(sample_dir) if sample_dir else settings.sample_home
     print("提取各文件章程效力条款：")
 
     statements = []

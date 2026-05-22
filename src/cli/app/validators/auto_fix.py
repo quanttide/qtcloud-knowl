@@ -72,5 +72,5 @@ def main():
     exit(run(args.data_dir))
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

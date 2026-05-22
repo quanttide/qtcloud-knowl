@@ -34,14 +34,14 @@ class TestCliHelp:
                      "cross-domain-report", "detect-domain", "init-domain"]:
             assert cmd not in result.output, f"命令 {cmd} 不应出现在 --help 输出中"
 
-    def test_validate_help(self):
+    def test_audit_help(self):
         from app.cli import app
         from typer.testing import CliRunner
 
         runner = CliRunner()
-        result = runner.invoke(app, ["validate", "--help"])
+        result = runner.invoke(app, ["audit", "--help"])
         assert result.exit_code == 0
-        assert "领域目录结构完整性验证" in result.output
+        assert "全量质量审计" in result.output
 
 
 class TestStorageDoc:

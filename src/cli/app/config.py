@@ -34,8 +34,9 @@ class Settings(BaseSettings):
     )
     llm_model: str = Field(default="deepseek-chat")
     llm_base_url: str = Field(default="")
+    sample_home: Optional[Path] = None
 
-    @field_validator("data_home", "state_home", mode="before")
+    @field_validator("data_home", "state_home", "sample_home", mode="before")
     @classmethod
     def _empty_str_to_none(_, v):
         if isinstance(v, str) and v.strip() == "":
@@ -48,6 +49,8 @@ class Settings(BaseSettings):
             self.data_home = _local.data_dir
         if self.state_home is None:
             self.state_home = _local.state_dir
+        if self.sample_home is None:
+            self.sample_home = self.data_home / "samples"
         return self
 
     @classmethod

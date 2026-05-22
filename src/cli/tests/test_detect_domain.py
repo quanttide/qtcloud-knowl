@@ -40,3 +40,19 @@ class TestDetectDomain:
         captured = capsys.readouterr()
         assert "doc-std" in captured.out
         assert "org-gov" in captured.out
+
+    def test_empty_vocabulary_skipped(self, tmp_path, capsys):
+        from pathlib import Path
+        sample = SAMPLE_DIR / "basic-charter.md"
+        domain_dir = tmp_path / "empty-vocab"
+        domain_dir.mkdir()
+        (domain_dir / "domain.json").write_text(
+            '{"id": "empty", "name": "empty", "vocabulary": []}', encoding="utf-8"
+        )
+        (domain_dir / "ontologies.json").write_text('{"ontologies": []}', encoding="utf-8")
+        (domain_dir / "instances.json").write_text('{"instances": []}', encoding="utf-8")
+        (domain_dir / "relations.json").write_text('{"relations": []}', encoding="utf-8")
+        result = run(str(sample), tmp_path)
+        captured = capsys.readouterr()
+        assert result == 0
+        assert "basic-charter.md" in captured.out

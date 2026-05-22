@@ -8,7 +8,11 @@ from tests.conftest import FIXTURE_DIR
 class TestDetectDomainMain:
     def test_main_function(self, monkeypatch, capsys):
         import sys
-        monkeypatch.setattr(sys, "argv", ["detect_domain.py", str(FIXTURE_DIR / ".." / "input" / "basic-charter.md")])
+        monkeypatch.setattr(sys, "argv", [
+            "detect_domain.py", str(FIXTURE_DIR / ".." / "input" / "basic-charter.md"),
+            "--data-dir", str(FIXTURE_DIR),
+        ])
+        monkeypatch.setattr("app.detectors.detect_domain.settings.data_home", FIXTURE_DIR)
         from app.detectors.detect_domain import main
         with pytest.raises(SystemExit):
             main()
@@ -58,3 +62,25 @@ class TestValidateMain:
             main()
         captured = capsys.readouterr()
         assert "[OK]" in captured.out
+
+
+class TestAbstractionMain:
+    def test_main_function(self, monkeypatch, capsys):
+        import sys
+        monkeypatch.setattr(sys, "argv", ["abstraction.py", str(FIXTURE_DIR)])
+        from app.reporters.abstraction import main
+        with pytest.raises(SystemExit):
+            main()
+        captured = capsys.readouterr()
+        assert "抽象度检测" in captured.out
+
+
+class TestSummaryMain:
+    def test_main_function(self, monkeypatch, capsys):
+        import sys
+        monkeypatch.setattr(sys, "argv", ["summary.py", str(FIXTURE_DIR)])
+        from app.reporters.summary import main
+        with pytest.raises(SystemExit):
+            main()
+        captured = capsys.readouterr()
+        assert "领域" in captured.out or "未找到领域数据" in captured.out

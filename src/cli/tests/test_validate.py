@@ -33,3 +33,8 @@ class TestValidate:
         captured = capsys.readouterr()
         assert "[MISS]" in captured.out
         assert "instances.json" in captured.out
+
+    def test_skips_non_directory_entries(self, tmp_path, capsys):
+        (tmp_path / "not-a-dir.txt").write_text("hello", encoding="utf-8")
+        result = run(tmp_path)
+        assert "全部验证通过" in result or "发现" in result

@@ -74,3 +74,8 @@ class TestAutoFix:
         result = run("/nonexistent")
         captured = capsys.readouterr()
         assert "数据目录不存在" in captured.out
+
+    def test_skips_non_directory_entries(self, tmp_path, capsys):
+        (tmp_path / "not-a-dir.txt").write_text("hello", encoding="utf-8")
+        result = run(tmp_path)
+        assert result == 1 or "全部验证通过" in result

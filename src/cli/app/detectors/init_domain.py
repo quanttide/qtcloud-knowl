@@ -62,5 +62,5 @@ def main():
     exit(run(args.domain_name, args.from_detect))
 
 
-if __name__ == "__main__":
+if __name__ == "__main__":  # pragma: no cover
     main()

@@ -118,7 +118,7 @@ def run(source=None, data_dir=None, verbose=False):
     result = _extract_dir(sdir)
     if isinstance(result, str):
         print(result)
-        return 1
+        raise typer.Exit(code=1)
 
     all_domains, all_ontologies, all_instances = result
 

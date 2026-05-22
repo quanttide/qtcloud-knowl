@@ -1,3 +1,3 @@
-from app.reviewers import main
+from app.reviewers import main  # pragma: no cover
 
-main()
+main()  # pragma: no cover

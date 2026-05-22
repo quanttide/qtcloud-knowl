@@ -29,3 +29,22 @@ class TestCrossDomain:
         run(FIXTURE_DIR)
         captured = capsys.readouterr()
         assert "达标" in captured.out or "未达标" in captured.out
+
+    def test_domain_with_one_cross_shows_unfulfilled(self, tmp_path, capsys):
+        domain_dir = tmp_path / "test-domain"
+        domain_dir.mkdir()
+        (domain_dir / "domain.json").write_text(
+            '{"id": "test", "name": "test", "vocabulary": []}', encoding="utf-8"
+        )
+        (domain_dir / "ontologies.json").write_text(
+            '{"ontologies": [{"id": "o1", "name": "o1"}]}', encoding="utf-8"
+        )
+        (domain_dir / "instances.json").write_text('{"instances": []}', encoding="utf-8")
+        (domain_dir / "relations.json").write_text(
+            '{"relations": [{"id": "r1", "source_ontology": "o1", "target_ontology": "other:o2"}]}',
+            encoding="utf-8",
+        )
+        result = run(tmp_path)
+        captured = capsys.readouterr()
+        assert result == 0
+        assert "未达标" in captured.out

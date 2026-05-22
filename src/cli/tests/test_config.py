@@ -5,6 +5,34 @@ import pytest
 from app import config
 
 
+class TestConfigEdge:
+    def test_vault_unavailable_path(self, monkeypatch):
+        import builtins
+        _orig_import = builtins.__import__
+
+        def _mock_import(name, *args, **kwargs):
+            if name == "pydantic_vault":
+                raise ImportError(f"No module named '{name}'")
+            return _orig_import(name, *args, **kwargs)
+
+        monkeypatch.setattr(builtins, "__import__", _mock_import)
+        import importlib
+        importlib.reload(config)
+        assert config.settings is not None
+
+    def test_field_validator_non_empty_string(self, monkeypatch):
+        monkeypatch.setenv("QTCLOUD_KNOWL_DATA_HOME", "/custom/nonempty/path")
+        import importlib
+        importlib.reload(config)
+        assert str(config.settings.data_home) == "/custom/nonempty/path"
+
+    def test_empty_str_to_none_direct_call(self):
+        from app.config import Settings
+        assert Settings._empty_str_to_none("") is None
+        assert Settings._empty_str_to_none("/path") == "/path"
+        assert Settings._empty_str_to_none(None) is None
+
+
 class _FakeLocalStorage:
     def __init__(self, app_name, vendor=None):
         self.data_dir = Path.home() / ".local" / "share" / vendor / app_name
