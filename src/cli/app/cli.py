@@ -17,16 +17,6 @@ app = typer.Typer()
 
 
 @app.command()
-def audit(
-    data_dir: str = typer.Argument(None, help="数据目录路径"),
-):
-    """全量质量审计 — 检查知识库结构质量"""
-    from app.audit import run
-
-    return run(data_dir)
-
-
-@app.command()
 def extract(
     source: str = typer.Option(None, "--source", "-s", help="源文档目录路径"),
     data_dir: str = typer.Option(None, "--data-dir", help="数据目录路径"),

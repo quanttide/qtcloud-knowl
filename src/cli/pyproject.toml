@@ -17,7 +17,6 @@ dependencies = [
     "pydantic-settings-vault",
     "quanttide",
     "quanttide-agent>=0.3.0",
-    "quanttide-audit",
     "quanttide-knowl",
 ]
 
