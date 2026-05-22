@@ -1,23 +1,23 @@
-from app.audit.models import AuditDiff, AuditReport
+from app.audit.models import AuditDiff, AuditReport, KnowledgeBaseStats, IssueGroup, DEFAULT_REPORT_TEMPLATE
 
 
-def print_stats(ddir, domains, ontology_count, instance_count):
+def print_stats(stats: KnowledgeBaseStats) -> None:
     print("=" * 60)
     print("  知识库概览")
     print("=" * 60)
-    print(f"\n  数据目录: {ddir}")
-    print(f"  领域数量: {len(domains)}")
-    print(f"  本体数量: {ontology_count}")
-    print(f"  实例数量: {instance_count}")
+    print(f"\n  数据目录: {stats.data_dir}")
+    print(f"  领域数量: {stats.domain_count}")
+    print(f"  本体数量: {stats.ontology_count}")
+    print(f"  实例数量: {stats.instance_count}")
     print()
-    if domains:
+    if stats.has_domains:
         print("  领域清单:")
-        for domain in domains:
+        for domain in stats.domains:
             print(f"    {str(domain.id):<20} {domain.name:<12}")
         print()
 
 
-def _print_group(title, issues):
+def _print_group(title: str, issues: list) -> None:
     print(f"  {title}")
     for issue in issues:
         print(f"    {issue.label}")
@@ -26,13 +26,13 @@ def _print_group(title, issues):
     print()
 
 
-def _print_section(header, desc, groups):
+def _print_section(header: str, desc: str, groups: list[IssueGroup]) -> None:
     if not groups:
         return
     print(f"━━━ {header} ━━━")
     print(f"{desc}\n")
-    for issue in groups:
-        _print_group(issue.group, [issue])
+    for group in groups:
+        _print_group(group.group_name, group.issues)
 
 
 def print_diff(diff: AuditDiff) -> None:
@@ -50,46 +50,35 @@ def print_diff(diff: AuditDiff) -> None:
         print(f"✓ 与上次审计一致，无新增问题（{prev_time}）")
 
 
-def print_report(report: AuditReport) -> None:
-    if not report.need_confirm and not report.auto_fixable and not report.suggestions:
-        print("✓ 未发现问题，知识库结构良好。")
-        return
+def print_report(report: AuditReport, template=None) -> None:
+    template = template or DEFAULT_REPORT_TEMPLATE
+    has_problems = bool(report.need_confirm or report.auto_fixable)
+    sections = template.sections_for(report.mode)
 
-    if report.need_confirm:
-        header = "建议关注" if report.mode.value == "simple" else "需要你确认的问题"
-        desc = (
-            "以下问题可由平台自动修复，无需手动处理。"
-            if report.mode.value == "simple"
-            else "以下问题平台无法自动判断，需要你决定如何处理。"
-        )
-        _print_section(header, desc, report.need_confirm)
+    if has_problems:
+        for section in sections:
+            groups = report.section_groups(section.key)
+            if groups:
+                _print_section(section.header, section.description, groups)
 
-    if report.auto_fixable:
-        _print_section(
-            "平台发现的问题",
-            "以下问题平台已识别，可通过自动修复处理。",
-            report.auto_fixable,
-        )
+        print("=" * 60)
+        print(template.summary_header)
+        print("=" * 60)
+        print(f"  · 需要你确认: {len(report.need_confirm)} 项")
+        print(f"  · 平台可修复: {len(report.auto_fixable)} 项")
+        print(f"  · 建议关注:   {len(report.suggestions)} 项")
+        print()
+        tail = template.tail_for(report.mode, bool(report.need_confirm), bool(report.auto_fixable))
+        if tail:
+            print(tail)
 
     if report.suggestions:
-        header = "建议关注"
-        desc = (
-            "以下优化建议在全面审计模式下提供。"
-            if report.mode.value == "full"
-            else "以下问题在快速模式下仅供参考，切换到 --mode full 进行全面审计。"
+        _print_section(
+            "建议关注",
+            "以下优化建议在全面审计模式下提供。" if report.mode.value == "full"
+            else "以下问题在快速模式下仅供参考，切换到 --mode full 进行全面审计。",
+            report.section_groups("suggestions"),
         )
-        _print_section(header, desc, report.suggestions)
 
-    print("=" * 60)
-    print("  汇总")
-    print("=" * 60)
-    print(f"  · 需要你确认: {len(report.need_confirm)} 项")
-    print(f"  · 平台可修复: {len(report.auto_fixable)} 项")
-    print(f"  · 建议关注:   {len(report.suggestions)} 项")
-    print()
-    if report.mode.value == "simple":
-        print("当前为快速检查模式，运行 qtcloud-knowl audit --mode full 进行全面审计。")
-    elif report.need_confirm:
-        print("请先处理「需要你确认的问题」，其他问题可并行处理。")
-    elif report.auto_fixable:
-        print("运行 qtcloud-knowl auto-fix 自动修复平台发现的问题。")
+    if not has_problems and not report.suggestions:
+        print(template.clean_message)

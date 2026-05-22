@@ -1,10 +1,9 @@
 """全量质量审计 — 串行执行全部检测，生成业务语言报告。"""
-from datetime import datetime
 from pathlib import Path
 from typing import Optional
 
 from app.agents.tools import all_detection_tools
-from app.audit.models import AuditMode, AuditIssue, AuditDiff, AuditReport, AuditState
+from app.audit.models import AuditMode, AuditIssue, AuditDiff, AuditReport, AuditState, KnowledgeBaseStats
 from app.audit.repository import AuditStateRepository
 from app.audit.parser import ToolOutputParser
 from app.audit.report import print_stats, print_report, print_diff
@@ -23,7 +22,7 @@ def _collect_stats(ddir):
             instance_count += len(instances)
     except Exception:
         pass
-    return domains, ontology_count, instance_count
+    return KnowledgeBaseStats(data_dir=ddir, domains=domains, ontology_count=ontology_count, instance_count=instance_count)
 
 
 def _run_tools(ddir, mode):
@@ -68,10 +67,6 @@ def _categorize_issues(raw_issues, mode):
             target[category].append(
                 AuditIssue(category=category, group=group, label=issue.label, action=issue.action)
             )
-    if mode == AuditMode.SIMPLE:
-        suggestions = need_confirm + suggestions
-        need_confirm = auto_fixable
-        auto_fixable = []
     return need_confirm, auto_fixable, suggestions
 
 
@@ -95,8 +90,8 @@ def run(data_dir: Optional[str] = None, mode: str = "full") -> int:
     if not _validate_args(ddir, mode_vo):
         return 1
 
-    domains, ontology_count, instance_count = _collect_stats(ddir)
-    print_stats(ddir, domains, ontology_count, instance_count)
+    stats = _collect_stats(ddir)
+    print_stats(stats)
 
     print("=" * 60)
     print("  检测结果")
@@ -104,7 +99,8 @@ def run(data_dir: Optional[str] = None, mode: str = "full") -> int:
     print()
 
     need_confirm, auto_fixable, suggestions = _run_tools(ddir, mode_vo)
-    current_issues = [i for lst in (need_confirm, auto_fixable, suggestions) for i in lst]
+    report = AuditReport.from_raw(need_confirm, auto_fixable, suggestions, mode_vo)
+    current_issues = report.need_confirm + report.auto_fixable + report.suggestions
 
     repo = AuditStateRepository(settings.state_home)
     previous = repo.load(mode=mode_vo)
@@ -115,11 +111,5 @@ def run(data_dir: Optional[str] = None, mode: str = "full") -> int:
         print_diff(diff)
     print()
 
-    report = AuditReport(
-        need_confirm=need_confirm,
-        auto_fixable=auto_fixable,
-        suggestions=suggestions,
-        mode=mode_vo,
-    )
     print_report(report)
-    return 0 if not need_confirm and not auto_fixable else 1
+    return report.exit_code

@@ -1,4 +1,8 @@
-from app.audit.models import AuditMode, AuditIssue, AuditDiff, AuditState, AuditReport
+from pathlib import Path
+from app.audit.models import (
+    AuditMode, AuditIssue, AuditDiff, AuditState, AuditReport,
+    KnowledgeBaseStats, IssueGroup, ReportSectionDef, ReportTemplate, DEFAULT_REPORT_TEMPLATE,
+)
 
 
 class TestAuditMode:
@@ -82,6 +86,22 @@ class TestAuditState:
         assert len(state.issues) == 1
 
 
+class TestIssueGroup:
+    def test_from_issues_groups_by_group_field(self):
+        issues = [
+            AuditIssue(category="a", group="g1", label="l1"),
+            AuditIssue(category="a", group="g1", label="l2"),
+            AuditIssue(category="b", group="g2", label="l3"),
+        ]
+        groups = IssueGroup.from_issues(issues)
+        assert len(groups) == 2
+        assert groups[0].group_name in ("g1", "g2")
+        assert len([g for g in groups if g.group_name == "g1"][0].issues) == 2
+
+    def test_from_issues_empty(self):
+        assert IssueGroup.from_issues([]) == []
+
+
 class TestAuditReport:
     def test_create(self):
         report = AuditReport(need_confirm=[], auto_fixable=[], suggestions=[], mode=AuditMode.FULL)
@@ -94,3 +114,77 @@ class TestAuditReport:
         issue = AuditIssue(category="need_confirm", group="g", label="l")
         report = AuditReport(need_confirm=[issue], auto_fixable=[], suggestions=[], mode=AuditMode.SIMPLE)
         assert len(report.need_confirm) == 1
+
+    def test_from_raw_full(self):
+        report = AuditReport.from_raw(["a"], ["b"], ["c"], AuditMode.FULL)
+        assert report.need_confirm == ["a"]
+        assert report.auto_fixable == ["b"]
+        assert report.suggestions == ["c"]
+
+    def test_from_raw_simple_reclassifies(self):
+        report = AuditReport.from_raw(["confirm"], ["fixable"], ["suggest"], AuditMode.SIMPLE)
+        assert report.need_confirm == ["fixable"]
+        assert report.auto_fixable == []
+        assert report.suggestions == ["confirm", "suggest"]
+
+    def test_from_raw_simple_empty(self):
+        report = AuditReport.from_raw([], [], [], AuditMode.SIMPLE)
+        assert report.need_confirm == []
+        assert report.auto_fixable == []
+
+    def test_is_clean_true(self):
+        report = AuditReport.from_raw([], [], [], AuditMode.FULL)
+        assert report.is_clean
+
+    def test_is_clean_false(self):
+        report = AuditReport.from_raw(["issue"], [], [], AuditMode.FULL)
+        assert not report.is_clean
+
+    def test_is_clean_ignores_suggestions(self):
+        report = AuditReport.from_raw([], [], ["suggestion"], AuditMode.FULL)
+        assert report.is_clean
+
+    def test_exit_code_clean(self):
+        report = AuditReport.from_raw([], [], [], AuditMode.FULL)
+        assert report.exit_code == 0
+
+    def test_exit_code_dirty(self):
+        report = AuditReport.from_raw(["issue"], [], [], AuditMode.FULL)
+        assert report.exit_code == 1
+
+    def test_exit_code_ignores_suggestions(self):
+        report = AuditReport.from_raw([], [], ["s"], AuditMode.FULL)
+        assert report.exit_code == 0
+
+
+class TestKnowledgeBaseStats:
+    def test_create(self):
+        stats = KnowledgeBaseStats(data_dir=Path("/data"), domains=[], ontology_count=0, instance_count=0)
+        assert stats.domain_count == 0
+        assert not stats.has_domains
+
+    def test_with_domains(self):
+        stats = KnowledgeBaseStats(data_dir=Path("/data"), domains=["d1"], ontology_count=5, instance_count=10)
+        assert stats.domain_count == 1
+        assert stats.has_domains
+        assert stats.ontology_count == 5
+        assert stats.instance_count == 10
+
+
+class TestReportTemplate:
+    def test_default_full_sections(self):
+        sections = DEFAULT_REPORT_TEMPLATE.sections_for(AuditMode.FULL)
+        assert len(sections) == 2
+        assert sections[0].key == "need_confirm"
+
+    def test_default_simple_sections(self):
+        sections = DEFAULT_REPORT_TEMPLATE.sections_for(AuditMode.SIMPLE)
+        assert sections[0].header == "建议关注"
+
+    def test_tail_for_simple(self):
+        msg = DEFAULT_REPORT_TEMPLATE.tail_for(AuditMode.SIMPLE, False, False)
+        assert "快速检查模式" in msg
+
+    def test_tail_for_need_confirm(self):
+        msg = DEFAULT_REPORT_TEMPLATE.tail_for(AuditMode.FULL, True, False)
+        assert "请先处理" in msg
