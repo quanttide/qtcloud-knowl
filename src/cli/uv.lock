@@ -510,6 +510,7 @@ dependencies = [
     { name = "pydantic-settings-vault" },
     { name = "quanttide" },
     { name = "quanttide-agent" },
+    { name = "quanttide-audit" },
     { name = "quanttide-knowl" },
     { name = "typer" },
 ]
@@ -526,6 +527,7 @@ requires-dist = [
     { name = "pydantic-settings-vault" },
     { name = "quanttide" },
     { name = "quanttide-agent", specifier = ">=0.3.0" },
+    { name = "quanttide-audit" },
     { name = "quanttide-knowl" },
     { name = "typer" },
 ]
@@ -560,6 +562,19 @@ dependencies = [
 sdist = { url = "https://files.pythonhosted.org/packages/c7/b3/9a498b66a2ca0d774e186cd36620332a6412e00093bf9bf5bee73bdeac7f/quanttide_agent-0.3.0.tar.gz", hash = "sha256:81e497a0b151a1ca90d1345470f289253a78292e238eb9167c19558fdcab05a4", size = 42508, upload-time = "2026-05-21T09:57:25.38Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/35/35/a2be42115302b6738c15defb376c96720e8c34149ace03a4595b918c103e/quanttide_agent-0.3.0-py3-none-any.whl", hash = "sha256:d41555bc371d0dd27207de7cd418e371846e4c6f60aacd05fbf778ec0d95b845", size = 11821, upload-time = "2026-05-21T09:57:24.096Z" },
+]
+
+[[package]]
+name = "quanttide-audit"
+version = "0.1.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "pydantic" },
+    { name = "quanttide" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/9d/f6/1ee662e8e8ca459868e85efc8a849070501d4ab2cfeec864a39cf4dc2d99/quanttide_audit-0.1.0.tar.gz", hash = "sha256:a2b5746a821870dcd2662625364473f12e323d7b5ba5d66cc7874238f5208b30", size = 43314, upload-time = "2026-05-22T09:37:47.209Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/41/79/b776d8152126182db8f28228d75240c210f2c55f61f1e74ce83798a7b0b4/quanttide_audit-0.1.0-py3-none-any.whl", hash = "sha256:1168adf943c645d1b246fed849c894d0f871ba7d7b94f9222b3cd13ae9992da3", size = 6215, upload-time = "2026-05-22T09:37:45.762Z" },
 ]
 
 [[package]]
