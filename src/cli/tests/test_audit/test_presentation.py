@@ -1,5 +1,5 @@
 from app.audit.models import AuditMode
-from app.audit.report import ReportSectionDef, ReportTemplate, DEFAULT_REPORT_TEMPLATE
+from app.audit.renderer import ReportSectionDef, ReportTemplate, DEFAULT_REPORT_TEMPLATE
 
 
 class TestReportSectionDef:

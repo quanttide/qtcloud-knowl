@@ -4,7 +4,7 @@ from pathlib import Path
 from app.audit import run
 from app.audit.models import AuditMode, AuditIssue, AuditDiff, AuditReport, AuditState, KnowledgeBaseStats, IssueGroup
 from app.audit.repository import AuditStateRepository
-from app.audit.report import print_stats, print_report, print_diff
+from app.audit.renderer import print_stats, print_report, print_diff
 from app.audit.parser import ToolOutputParser
 from tests.conftest import FIXTURE_DIR
 
@@ -196,13 +196,13 @@ class TestAuditParser:
 
 class TestAuditPrintSection:
     def test_print_section_empty_groups(self, capsys):
-        from app.audit.report import _print_section
+        from app.audit.renderer import _print_section
         _print_section("标题", "描述", [])
         captured = capsys.readouterr()
         assert captured.out == ""
 
     def test_print_section_with_multiple_groups(self, capsys):
-        from app.audit.report import _print_section
+        from app.audit.renderer import _print_section
         issues_a = [AuditIssue(category="a", group="组A", label="标签1", action="操作1")]
         issues_b = [AuditIssue(category="a", group="组B", label="标签2")]
         groups = [
@@ -286,14 +286,14 @@ class TestAuditInternal:
 
 class TestAuditPrintGroup:
     def test_print_group_with_action(self, capsys):
-        from app.audit.report import _print_group
+        from app.audit.renderer import _print_group
         issue = AuditIssue(category="a", group="g", label="l", action="a")
         _print_group("标题", [issue])
         captured = capsys.readouterr()
         assert "→ a" in captured.out
 
     def test_print_group_without_action(self, capsys):
-        from app.audit.report import _print_group
+        from app.audit.renderer import _print_group
         issue = AuditIssue(category="a", group="g", label="l")
         _print_group("标题", [issue])
         captured = capsys.readouterr()

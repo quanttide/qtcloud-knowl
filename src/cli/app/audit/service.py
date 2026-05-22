@@ -5,7 +5,7 @@ from app.agents.tools import all_detection_tools
 from app.audit.models import AuditMode, AuditIssue, AuditDiff, AuditReport, AuditState, KnowledgeBaseStats
 from app.audit.repository import AuditStateRepository
 from app.audit.parser import ToolOutputParser
-from app.audit.report import print_stats, print_report, print_diff
+from app.audit.renderer import print_stats, print_report, print_diff
 from app.config import settings
 from app.knowl_loader import load_all_domains
 
