@@ -1,5 +1,12 @@
 # 变更记录
 
+## [0.2.1] - 2026-05-22
+
+### Fixed
+
+- CLI 子命令 `extract` 名称丢失（`name=None`），`pip install` 后无法作为子命令调用
+- `assets/prompts/*.txt` 未包含在 wheel 中，安装后报 `prompt 模板不存在`
+
 ## [0.2.0] - 2026-05-22
 
 ### extract 重设计：信息→知识
