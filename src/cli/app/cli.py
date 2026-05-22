@@ -13,22 +13,7 @@
 
 import typer
 
-from app.config import settings
-
 app = typer.Typer()
-
-
-@app.command()
-def audit(
-    data_dir: str = typer.Argument(None, help="数据目录路径（默认从 settings 读取）"),
-    mode: str = typer.Option(
-        "full", "--mode", help="审计模式：simple（快速检查）/ full（全面审计）"
-    ),
-):
-    """全量质量审计 — 串行执行全部检测并聚合报告"""
-    from app.audit import run
-
-    return run(data_dir, mode)
 
 
 @app.command()
