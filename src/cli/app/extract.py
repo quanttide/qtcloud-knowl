@@ -10,8 +10,7 @@ ALLOWED_FIELDS = ["id", "name", "label", "description"]
 
 
 def _make_uuid(name: str) -> str:
-    """从字符串生成稳定的 UUID（v5，基于 namespace DNS）。"""
-    return str(uuid.uuid5(uuid.NAMESPACE_DNS, name))
+    return str(uuid.uuid4())
 
 
 def _clean(item):
