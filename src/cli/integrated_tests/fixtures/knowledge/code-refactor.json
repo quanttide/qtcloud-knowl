@@ -1,0 +1,175 @@
+{
+  "domain": {
+    "id": "code-refactoring",
+    "name": "code-refactoring",
+    "label": "代码重构",
+    "description": "软件工程中在保持外部行为不变的前提下改善内部结构的系统性方法。涵盖重构手法、代码坏味道、重构目标、重构流程四大知识维度。"
+  },
+  "ontologies": [
+    {
+      "id": "refactoring-technique",
+      "name": "refactoring-technique",
+      "label": "重构手法",
+      "description": "具体的代码变换操作，每种手法有明确的动机、步骤、效果和适用条件。手法=动机+步骤+效果+条件，四个要素缺一不可。"
+    },
+    {
+      "id": "code-smell",
+      "name": "code-smell",
+      "label": "代码坏味道",
+      "description": "代码中表明存在更深层问题的表面症状。坏味道不是 bug，而是设计退化的信号，多数可通过对应的重构手法消除。"
+    },
+    {
+      "id": "refactoring-goal",
+      "name": "refactoring-goal",
+      "label": "重构目标",
+      "description": "重构希望达成的质量维度，如可读性、可维护性、可测试性、性能优化等。目标决定手法选择：同一段代码面向不同目标可采取不同重构。"
+    },
+    {
+      "id": "refactoring-process",
+      "name": "refactoring-process",
+      "label": "重构流程",
+      "description": "重构的操作步骤序列。基本流程：识别坏味道→选择手法→执行变换→验证行为不变。复杂重构需拆为小步迭代。"
+    },
+    {
+      "id": "refactoring-safety-net",
+      "name": "refactoring-safety-net",
+      "label": "重构安全网",
+      "description": "确保重构不改变外部行为的保障机制。包括测试覆盖（单元测试/快照测试）、静态类型检查、lint规则、持续集成流水线。缺少安全网是放弃重构的首要原因。"
+    }
+  ],
+  "instances": [
+    {
+      "id": "extract-function",
+      "name": "extract-function",
+      "label": "提炼函数",
+      "description": "手法：将一段代码从原函数中提取为独立函数，以意图命名。动机：函数过长或包含需要注释才能理解的代码段。步骤：创建新函数→复制代码→处理变量作用域→替换原处为调用。条件：提取后的函数名能清晰表达代码意图。",
+      "ontology": "refactoring-technique"
+    },
+    {
+      "id": "rename-variable",
+      "name": "rename-variable",
+      "label": "重命名变量",
+      "description": "手法：将变量名改为能清晰表达其用途的名称。动机：变量名模糊、缩写或误导。步骤：搜索所有引用→逐个替换→运行测试。条件：名称反映用途而非类型。",
+      "ontology": "refactoring-technique"
+    },
+    {
+      "id": "extract-class",
+      "name": "extract-class",
+      "label": "提炼类",
+      "description": "手法：将一个类的部分职责拆分到新类中。动机：类承担了多个不相关的职责（单一职责原则违反）。步骤：创建新类→在新类中声明字段和方法→建立原类到新类的引用→编译测试。",
+      "ontology": "refactoring-technique"
+    },
+    {
+      "id": "move-function",
+      "name": "move-function",
+      "label": "搬移函数",
+      "description": "手法：将函数从其当前类/模块移动到更合适的类/模块中。动机：函数使用了另一个类/模块的比自身更多的上下文。步骤：检查源和目标上下文→复制函数→建立引用→删除原函数。",
+      "ontology": "refactoring-technique"
+    },
+    {
+      "id": "replace-conditional-with-polymorphism",
+      "name": "replace-conditional-with-polymorphism",
+      "label": "以多态取代条件表达式",
+      "description": "手法：将类型分支的条件逻辑替换为多态分发。动机：多个条件分支根据对象类型执行不同行为。步骤：为每种类型创建子类→将条件分支逻辑移到子类方法→删除原条件表达式。",
+      "ontology": "refactoring-technique"
+    },
+    {
+      "id": "long-function",
+      "name": "long-function",
+      "label": "过长函数",
+      "description": "坏味道：函数过长，难以理解、测试和维护。特征：函数超过一屏、包含多个层级的缩进、需要滚动才能看完。对应手法：提炼函数、以查询取代临时变量。",
+      "ontology": "code-smell"
+    },
+    {
+      "id": "duplicate-code",
+      "name": "duplicate-code",
+      "label": "重复代码",
+      "description": "坏味道：相同的代码结构在多个位置出现。特征：复制粘贴的代码块、仅在细节上不同的相似结构。对应手法：提炼函数、移动语句、提炼超类。",
+      "ontology": "code-smell"
+    },
+    {
+      "id": "large-class",
+      "name": "large-class",
+      "label": "过大类",
+      "description": "坏味道：类承担了过多职责，字段和方法数量过大。特征：类字段超过10个、方法超过20个、难以用一句话描述类的职责。对应手法：提炼类、提炼子类、以观察者替代。",
+      "ontology": "code-smell"
+    },
+    {
+      "id": "long-parameter-list",
+      "name": "long-parameter-list",
+      "label": "过长参数列表",
+      "description": "坏味道：函数的参数过多（超过3-4个），调用和维护困难。特征：参数超过5个、存在相邻参数经常同时变化。对应手法：保持对象完整、以查询取代参数、引入参数对象。",
+      "ontology": "code-smell"
+    },
+    {
+      "id": "shotgun-surgery",
+      "name": "shotgun-surgery",
+      "label": "霰弹式修改",
+      "description": "坏味道：一个改动导致多个类都需要修改。特征：修改一个功能需要在3个以上的文件中做改动、忘记修改某个文件会导致bug。对应手法：搬移函数、内联类、将类功能内联化。",
+      "ontology": "code-smell"
+    },
+    {
+      "id": "readability",
+      "name": "readability",
+      "label": "可读性",
+      "description": "目标：代码能被人（包括未来的自己）快速理解。衡量标准：新成员阅读代码后能在30分钟内理解其逻辑。对应手法：重命名变量、提炼函数、引入解释性变量、分解条件表达式。",
+      "ontology": "refactoring-goal"
+    },
+    {
+      "id": "maintainability",
+      "name": "maintainability",
+      "label": "可维护性",
+      "description": "目标：修改一处不影响其他部分，新增功能不需要改写大量现有代码。衡量标准：功能变更涉及的文件数≤3。对应手法：提炼类、搬移函数、模块化模式。",
+      "ontology": "refactoring-goal"
+    },
+    {
+      "id": "testability",
+      "name": "testability",
+      "label": "可测试性",
+      "description": "目标：代码能够方便地编写自动化测试。衡量标准：函数无副作用或有明确的副作用边界、依赖可注入。对应手法：依赖注入、提取接口、函数式重构。",
+      "ontology": "refactoring-goal"
+    },
+    {
+      "id": "identify-smell",
+      "name": "identify-smell",
+      "label": "识别坏味道",
+      "description": "流程步骤：阅读代码→标记可疑结构→确认坏味道类型。输入：源代码。输出：坏味道清单（每个条目含位置、类型、严重程度）。常用工具：静态分析工具辅助、Code Review。",
+      "ontology": "refactoring-process"
+    },
+    {
+      "id": "choose-technique",
+      "name": "choose-technique",
+      "label": "选择重构手法",
+      "description": "流程步骤：根据坏味道类型查找对应手法→评估手法适用性（目标、风险、副作用）→确定执行顺序。输入：坏味道清单。输出：重构方案（手法序列+预期效果）。原则：优先消除传播性强的坏味道（如重复代码）。",
+      "ontology": "refactoring-process"
+    },
+    {
+      "id": "execute-and-verify",
+      "name": "execute-and-verify",
+      "label": "执行并验证",
+      "description": "流程步骤：应用手法（每次只做一步）→运行测试→提交。输入：重构方案。输出：重构后的代码+绿色流水线。循环：每步重构后都能回到识别步骤。黄金法则：不混合重构和功能新增。",
+      "ontology": "refactoring-process"
+    },
+    {
+      "id": "unit-test-coverage",
+      "name": "unit-test-coverage",
+      "label": "单元测试覆盖",
+      "description": "安全网：核心逻辑有充足的单元测试。要求：重构涉及的代码路径≥80%覆盖率。工具：pytest（Python）、JUnit（Java）、vitest（TypeScript）。常见陷阱：测试本身耦合了实现细节（脆弱的测试）。",
+      "ontology": "refactoring-safety-net"
+    },
+    {
+      "id": "static-type-checking",
+      "name": "static-type-checking",
+      "label": "静态类型检查",
+      "description": "安全网：编译器或类型检查工具在重构时及早发现接口不匹配。工具：mypy/pyright（Python）、TypeScript compiler（JS）、rustc（Rust）。优势：比测试更快反馈，覆盖所有代码路径。局限：不能检查逻辑正确性。",
+      "ontology": "refactoring-safety-net"
+    },
+    {
+      "id": "ci-pipeline",
+      "name": "ci-pipeline",
+      "label": "持续集成流水线",
+      "description": "安全网：提交后自动执行测试和检查。要求：所有测试通过→自动构建→部署到staging。重构时确保每次提交都能通过CI。原则：小步提交（每步≤10分钟）、频繁推送（每步后都推）。",
+      "ontology": "refactoring-safety-net"
+    }
+  ]
+}
