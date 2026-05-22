@@ -2,47 +2,60 @@
 
 未来规划见 [ROADMAP.md](ROADMAP.md)。
 
-## v0.2.0 — audit 领域模型提取
+## v0.2.0 — audit 领域模型提取（进行中）
 
-将 `app/audit.py` 从单个模块重构为 `app/audit/` 包，提取领域模型。
+### ✅ 已完成
 
-### 目录转换
+**基础架构**（6 个模块，307 测试，100% 覆盖率）：
 
-- [x] `app/audit/__init__.py` — 公开 `run()` + 导出领域类型，保持 `from app.audit import run` 兼容
-- [x] `app/audit/models.py` — `AuditMode`, `IssueCategory`, `AuditIssue`, `AuditDiff`, `AuditReport`, `AuditState`
-- [x] `app/audit/repository.py` — `AuditStateRepository`（JSON 持久化，注入 state_home Path）
-- [x] `app/audit/parser.py` — `ToolOutputParser` + 5 个 IssueParser 策略（MISS/FAIL/TERM/CONFIRM/ABSTRACTION）
-- [x] `app/audit/report.py` — `print_stats`, `print_report`, `print_diff`（展示层，接收领域对象）
-- [x] 删除 `app/audit.py`
+- [x] `app/audit/__init__.py` — 公共 API 门面
+- [x] `app/audit/models.py` — `AuditMode`, `AuditIssue`, `AuditDiff`, `AuditReport`, `KnowledgeBaseStats`, `Report`
+- [x] `app/audit/service.py` — `run()` 编排
+- [x] `app/audit/parser.py` — `ToolOutputParser`
+- [x] `app/audit/report.py` — `Report` 实体 + 渲染 + `ReportRepository`
+- [x] 删除 `app/audit.py`、`app/audit/repository.py`、`app/audit/renderer.py`
+- [x] `tests/test_audit/` — 5 个测试文件
 
-### 测试迁移
+**设计改进**：
 
-- [x] `tests/test_audit/test_models.py` — AuditMode/AuditIssue/AuditDiff/AuditReport 纯逻辑
-- [x] `tests/test_audit/test_repository.py` — AuditStateRepository 持久化
-- [x] `tests/test_audit/test_parser.py` — ToolOutputParser 解析策略链
-- [x] `tests/test_audit/test_integration.py` — run() 编排集成测试（原 TestAudit/TestAuditUnit 等）
-- [x] 删除 `tests/test_audit.py`
-- [x] 验证 100% 覆盖率不变
+- [x] `KnowledgeBaseStats` — `print_stats` 从 4 个散装参数改为一个对象
+- [x] `IssueGroup` — `_print_section` 修复数据结构不匹配
+- [x] `ReportTemplate` — `print_report` 渲染/决策解耦
+- [x] `Report` 领域模型 — 替代 `AuditState`，合并渲染 + 仓储
+- [x] `service.py` — 编排从 `__init__.py` 分离
+- [x] 展示模型与领域模型分离（`ReportSectionDef`/`ReportTemplate` 留在 `report.py`）
 
-### 原则
+### 🔲 待完成
 
-- 不破坏 `from app.audit import run` 接口
-- 不破坏测试覆盖率
-- domain 逻辑纯度优先：models/parser/repository 不打印、不依赖 settings
-- 展示层隔离：report.py 只做格式化输出
+#### 1. parser 重构 — 分离格式解析、分类规则、展示构造
 
-## v0.2.1 — report.py 展示层重构 ✅
+`parser.py` 同时做了三件事：格式解析（识别 `[MISS]`）、分类决策（MISS → auto_fixable）、展示构造（中文 label/action）。与 `_categorize_issues` 的分类逻辑重复。
 
-三个代码设计问题已修复。
+- [ ] `app/audit/parser.py` — `_parse_*` 改为只返回结构化数据 `{tag, detail, domain}`，不分配 category/group/label/action
+- [ ] `app/audit/models.py` — 新增 `RawMatch` dataclass 作为 parser 输出类型
+- [ ] `app/audit/service.py` — `_categorize_issues` 接管分类决策，消除与 parser 的规则重复
+- [ ] `app/audit/report.py` — label/action 字符串构造移入 report 模块
+- [ ] 更新测试
 
-| 问题 | 方案 | 效果 |
-|------|------|------|
-| `print_stats` 4 个散装参数 | 提取 `KnowledgeBaseStats` dataclass | 调用方传递一个对象 |
-| `_print_section` 收 `list[Issue]` 却按 group 遍历 | 改收 `list[IssueGroup]`，移除 `[issue]` 包装 | 数据结构和遍历匹配 |
-| `print_report` 用 `if mode == "simple"` 硬编码标题文案 | 提取 `ReportTemplate`，`print_report` 遍历 `template.sections_for(mode)` | 换模板可改文案不改渲染 |
+#### 2. 审计证据 — AuditIssue 携带原始证据
 
-### 遗留问题（非阻塞，可后续考虑）
+- [ ] `app/audit/models.py` — `AuditIssue` 新增 `evidence: str = ""` 字段
+- [ ] `app/audit/parser.py` — 各 `_parse_*` 传入匹配到的原始行
+- [ ] `app/audit/report.py` — `_print_group` 支持 `--verbose` 输出 evidence
+- [ ] 更新测试
 
-- [x] **展示模型混在领域模型文件** — `ReportSectionDef`、`ReportTemplate`、`DEFAULT_REPORT_TEMPLATE` 移入 `presentation.py`。`IssueGroup` 因 `AuditReport.section_groups()` 强耦合留在 `models.py`
-- [ ] **AuditState 仍贫血** — 无 `add_issue()` 自动更新时间戳、无 `filter_by_category()`。当前无消费方需求
-- [ ] **tool→category 映射在服务层** — `_categorize_issues` 中的 mapping dict 是领域规则（validate = auto_fixable），目前只有一个消费者。若出现第二个消费者则应收进模型
+#### 3. 审计报告完整持久化 — ReportRepository 保存完整 Report
+
+- [ ] `app/audit/report.py` — `save_report()` 保存完整 Report（含 stats、issues、diff）
+- [ ] `app/audit/report.py` — `load_previous_state()` 升级为 `load_report()`，返回完整 Report
+- [ ] `app/audit/report.py` — `to_dict()` / `from_dict()` 序列化方法
+- [ ] 移除 `_PreviousAudit` helper
+- [ ] 更新测试
+
+#### 4. 审计规则 — AuditRule 模型
+
+- [ ] `app/audit/rules.py` — `AuditRule` 实体（id, name, tool, category, condition, action, severity）
+- [ ] `app/audit/rules.py` — `AuditRuleSet` 聚合（version, rules list）
+- [ ] `app/audit/service.py` — `_categorize_issues` 改为读取 `AuditRuleSet`
+- [ ] `app/audit/report.py` — `DEFAULT_REPORT_TEMPLATE` 可被规则集驱动
+- [ ] 更新测试

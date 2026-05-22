@@ -2,9 +2,15 @@
 
 每个版本交付的不是功能，是用户能力。
 
-## 下一阶段：多文件合并抽取 + World 层级
+## 下一阶段：v0.2.0 审计模块收尾
 
-**核心矛盾**：`qtcloud-knowl extract` 是按文件抽取的，每文件一 domain。但知识库是按故事系列组织的（夜市约会、深夜失眠、书房陪伴等），不是按文件。工具没有"合并多文件到同一个 domain"的能力。
+完成 TODO.md 中 v0.2.0 的四项剩余工作：
+- parser 分离格式解析/分类规则/展示构造
+- `AuditIssue` 携带原始证据
+- `ReportRepository` 完整持久化
+- `AuditRule` / `AuditRuleSet` 统一建模
+
+## v0.3.0 — World 层级 + 多文件合并抽取
 
 **层级扩展**：domain 上级增加 world（世界观），用于区分现实与虚构世界：
 
@@ -18,6 +24,8 @@ World（世界观）
 例如：
 - world: `reality` → domain: `公司治理`、`岗位职责`
 - world: `fiction-romance` → domain: `职场言情`、`校园言情`
+
+**核心矛盾**：`qtcloud-knowl extract` 是按文件抽取的，每文件一 domain。但知识库是按故事系列组织的（夜市约会、深夜失眠、书房陪伴等），不是按文件。工具没有"合并多文件到同一个 domain"、也没有"按 world 组织 domain"的能力。
 
 domain 不再直接归属知识库根目录，而是归属到对应的 world 目录下。
 extract 需要支持 `--world` 参数指定世界观归属。
@@ -37,6 +45,36 @@ extract 需要支持 `--world` 参数指定世界观归属。
 - 结果更可控，不产生冗余 domain
 
 ## 已完成
+
+### v0.2.0 — 审计不可定制、不可追溯、不可复用（进行中）
+
+> 对应审计模块的领域模型提取与架构重构
+
+**痛点**：`audit.py` 是 300 行的单文件脚本，检测逻辑、分类规则、输出格式全部耦合在一起。加一种新检测工具要改四五个 if/else，换一种输出格式要复制整个函数，看不懂审计报告是怎么产生的。
+
+**用户能力（已完成）**：
+- 审计系统可扩展——加新检测工具只需新增一个 `run()` 函数加入 tools 列表，不改编排逻辑
+- 审计可理解——`AuditMode`、`AuditIssue`、`KnowledgeBaseStats`、`ReportTemplate` 各自独立，改文案不改逻辑，改规则不改渲染
+- 测试可覆盖——307 个测试，100% 行覆盖率
+
+**架构产出**（6 个模块）：
+
+```
+app/audit/
+├── models.py       # 领域类型
+├── report.py       # Report 实体 + 渲染 + 持久化
+├── service.py      # 编排
+├── parser.py       # 工具输出 → 结构化数据
+└── __init__.py     # 公共 API
+
+tests/test_audit/   # 5 个测试文件
+```
+
+**剩余工作**（见 `TODO.md`）：
+- parser 分离格式解析/分类规则/展示构造（消除与 service 的规则重复）
+- `AuditIssue` 携带原始证据
+- `ReportRepository` 完整持久化
+- `AuditRule` / `AuditRuleSet` 统一建模
 
 ### v0.1.0 — 文档入库到发布不能一步走完
 
