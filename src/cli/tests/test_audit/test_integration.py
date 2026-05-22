@@ -2,9 +2,9 @@
 
 from pathlib import Path
 from app.audit import run
-from app.audit.models import AuditMode, AuditIssue, AuditDiff, AuditReport, AuditState, KnowledgeBaseStats, IssueGroup
-from app.audit.repository import AuditStateRepository
-from app.audit.renderer import print_stats, print_report, print_diff
+from app.audit.models import AuditMode, AuditIssue, AuditDiff, AuditReport, KnowledgeBaseStats, IssueGroup
+from app.audit.report import Report, ReportRepository
+from app.audit.report import _print_report_to_stdout, _print_section, _print_group
 from app.audit.parser import ToolOutputParser
 from tests.conftest import FIXTURE_DIR
 
@@ -69,53 +69,50 @@ class TestAuditRun:
 
     def test_audit_with_print_diff(self, monkeypatch, tmp_path, capsys):
         self._setup_state(monkeypatch, tmp_path)
-        repo = AuditStateRepository(tmp_path)
-        previous_issues = [AuditIssue(category="a", group="x", label="l1")]
-        repo.save(AuditState(mode=AuditMode.FULL, issues=previous_issues))
+        repo = ReportRepository(tmp_path)
+        stats = KnowledgeBaseStats(data_dir=tmp_path, domains=[], ontology_count=0, instance_count=0)
+        issues = AuditReport.from_raw(
+            [AuditIssue(category="a", group="x", label="l1")], [], [], AuditMode.FULL
+        )
+        report = Report(mode=AuditMode.FULL, stats=stats, issues=issues)
+        repo.save_report(report)
         ret = run(data_dir=str(FIXTURE_DIR))
         captured = capsys.readouterr()
         assert "相比上次审计" in captured.out
 
     def test_audit_with_identical_state(self, monkeypatch, tmp_path, capsys):
         self._setup_state(monkeypatch, tmp_path)
-        repo = AuditStateRepository(tmp_path)
-        repo.save(AuditState(mode=AuditMode.FULL, issues=[]))
+        repo = ReportRepository(tmp_path)
+        stats = KnowledgeBaseStats(data_dir=tmp_path, domains=[], ontology_count=0, instance_count=0)
+        issues = AuditReport.from_raw([], [], [], AuditMode.FULL)
+        report = Report(mode=AuditMode.FULL, stats=stats, issues=issues)
+        repo.save_report(report)
         ret = run(data_dir=str(FIXTURE_DIR))
         captured = capsys.readouterr()
         assert "无新增问题" in captured.out
 
 
 class TestAuditPrintDiff:
+    def _make_report(self, diff):
+        stats = KnowledgeBaseStats(data_dir=Path("/tmp"), domains=[], ontology_count=0, instance_count=0)
+        issues = AuditReport.from_raw([], [], [], AuditMode.FULL)
+        return Report(mode=AuditMode.FULL, stats=stats, issues=issues, diff=diff, previous_timestamp="2025-01-01T00:00:00")
+
     def test_print_diff_with_changes(self, capsys):
-        diff = AuditDiff(
-            fixed=frozenset({"a|x|l1"}),
-            new=frozenset({"b|y|l2"}),
-            pending=frozenset(),
-            previous_timestamp="2025-01-01T00:00:00",
-        )
-        print_diff(diff)
+        diff = AuditDiff(fixed=frozenset({"a|x|l1"}), new=frozenset({"b|y|l2"}), pending=frozenset())
+        self._make_report(diff)._print_diff()
         captured = capsys.readouterr()
         assert "相比上次审计" in captured.out
 
     def test_print_diff_with_pending(self, capsys):
-        diff = AuditDiff(
-            fixed=frozenset(),
-            new=frozenset(),
-            pending=frozenset({"a|x|l1"}),
-            previous_timestamp="2025-01-01T00:00:00",
-        )
-        print_diff(diff)
+        diff = AuditDiff(fixed=frozenset(), new=frozenset(), pending=frozenset({"a|x|l1"}))
+        self._make_report(diff)._print_diff()
         captured = capsys.readouterr()
         assert "待处理" in captured.out
 
     def test_print_diff_identical(self, capsys):
-        diff = AuditDiff(
-            fixed=frozenset(),
-            new=frozenset(),
-            pending=frozenset(),
-            previous_timestamp="2025-01-01T00:00:00",
-        )
-        print_diff(diff)
+        diff = AuditDiff(fixed=frozenset(), new=frozenset(), pending=frozenset())
+        self._make_report(diff)._print_diff()
         captured = capsys.readouterr()
         assert "无新增问题" in captured.out
 
@@ -124,41 +121,41 @@ class TestAuditPrintReport:
     def test_print_report_need_confirm_full(self, capsys):
         issue = AuditIssue(category="need_confirm", group="组1", label="问题1", action="操作1")
         report = AuditReport(need_confirm=[issue], auto_fixable=[], suggestions=[], mode=AuditMode.FULL)
-        print_report(report)
+        _print_report_to_stdout(report)
         captured = capsys.readouterr()
         assert "需要你确认的问题" in captured.out
 
     def test_print_report_need_confirm_simple(self, capsys):
         issue = AuditIssue(category="need_confirm", group="组1", label="问题1", action="操作1")
         report = AuditReport(need_confirm=[issue], auto_fixable=[], suggestions=[], mode=AuditMode.SIMPLE)
-        print_report(report)
+        _print_report_to_stdout(report)
         captured = capsys.readouterr()
         assert "建议关注" in captured.out
 
     def test_print_report_suggestions_full(self, capsys):
         issue = AuditIssue(category="suggestions", group="组1", label="建议1", action="操作1")
         report = AuditReport(need_confirm=[], auto_fixable=[], suggestions=[issue], mode=AuditMode.FULL)
-        print_report(report)
+        _print_report_to_stdout(report)
         captured = capsys.readouterr()
         assert "全面审计" in captured.out
 
     def test_print_report_suggestions_simple(self, capsys):
         issue = AuditIssue(category="suggestions", group="组1", label="建议1", action="操作1")
         report = AuditReport(need_confirm=[], auto_fixable=[], suggestions=[issue], mode=AuditMode.SIMPLE)
-        print_report(report)
+        _print_report_to_stdout(report)
         captured = capsys.readouterr()
         assert "快速模式" in captured.out
 
     def test_print_report_no_issues(self, capsys):
         report = AuditReport(need_confirm=[], auto_fixable=[], suggestions=[], mode=AuditMode.FULL)
-        print_report(report)
+        _print_report_to_stdout(report)
         captured = capsys.readouterr()
         assert "未发现问题" in captured.out
 
     def test_print_report_mixed_section_order(self, capsys):
         issue = AuditIssue(category="auto_fixable", group="组1", label="可修复", action="修复")
         report = AuditReport(need_confirm=[], auto_fixable=[issue], suggestions=[], mode=AuditMode.FULL)
-        print_report(report)
+        _print_report_to_stdout(report)
         captured = capsys.readouterr()
         assert "平台发现的问题" in captured.out
 
@@ -168,14 +165,16 @@ class TestAuditPrintStats:
         from qtcloud_knowl.models import Domain
         d = Domain(id="test-domain", name="Test")
         stats = KnowledgeBaseStats(data_dir=Path("/data"), domains=[d], ontology_count=5, instance_count=10)
-        print_stats(stats)
+        issues = AuditReport.from_raw([], [], [], AuditMode.FULL)
+        Report(mode=AuditMode.FULL, stats=stats, issues=issues)._print_stats()
         captured = capsys.readouterr()
         assert "领域清单" in captured.out
         assert "test-domain" in captured.out
 
     def test_print_stats_without_domains(self, capsys):
         stats = KnowledgeBaseStats(data_dir=Path("/data"), domains=[], ontology_count=0, instance_count=0)
-        print_stats(stats)
+        issues = AuditReport.from_raw([], [], [], AuditMode.FULL)
+        Report(mode=AuditMode.FULL, stats=stats, issues=issues)._print_stats()
         captured = capsys.readouterr()
         assert "领域数量: 0" in captured.out
 
@@ -196,13 +195,13 @@ class TestAuditParser:
 
 class TestAuditPrintSection:
     def test_print_section_empty_groups(self, capsys):
-        from app.audit.renderer import _print_section
+        from app.audit.report import _print_section
         _print_section("标题", "描述", [])
         captured = capsys.readouterr()
         assert captured.out == ""
 
     def test_print_section_with_multiple_groups(self, capsys):
-        from app.audit.renderer import _print_section
+        from app.audit.report import _print_section
         issues_a = [AuditIssue(category="a", group="组A", label="标签1", action="操作1")]
         issues_b = [AuditIssue(category="a", group="组B", label="标签2")]
         groups = [
@@ -286,14 +285,14 @@ class TestAuditInternal:
 
 class TestAuditPrintGroup:
     def test_print_group_with_action(self, capsys):
-        from app.audit.renderer import _print_group
+        from app.audit.report import _print_group
         issue = AuditIssue(category="a", group="g", label="l", action="a")
         _print_group("标题", [issue])
         captured = capsys.readouterr()
         assert "→ a" in captured.out
 
     def test_print_group_without_action(self, capsys):
-        from app.audit.renderer import _print_group
+        from app.audit.report import _print_group
         issue = AuditIssue(category="a", group="g", label="l")
         _print_group("标题", [issue])
         captured = capsys.readouterr()

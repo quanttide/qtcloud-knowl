@@ -2,10 +2,9 @@ from pathlib import Path
 from typing import Optional
 
 from app.agents.tools import all_detection_tools
-from app.audit.models import AuditMode, AuditIssue, AuditDiff, AuditReport, AuditState, KnowledgeBaseStats
-from app.audit.repository import AuditStateRepository
+from app.audit.models import AuditMode, AuditIssue, KnowledgeBaseStats
 from app.audit.parser import ToolOutputParser
-from app.audit.renderer import print_stats, print_report, print_diff
+from app.audit.report import Report, ReportRepository
 from app.config import settings
 from app.knowl_loader import load_all_domains
 
@@ -90,25 +89,12 @@ def run(data_dir: Optional[str] = None, mode: str = "full") -> int:
         return 1
 
     stats = _collect_stats(ddir)
-    print_stats(stats)
-
-    print("=" * 60)
-    print("  检测结果")
-    print("=" * 60)
-    print()
-
     need_confirm, auto_fixable, suggestions = _run_tools(ddir, mode_vo)
-    report = AuditReport.from_raw(need_confirm, auto_fixable, suggestions, mode_vo)
-    current_issues = report.need_confirm + report.auto_fixable + report.suggestions
 
-    repo = AuditStateRepository(settings.state_home)
-    previous = repo.load(mode=mode_vo)
-    repo.save(AuditState(mode=mode_vo, issues=current_issues))
+    repo = ReportRepository(settings.state_home)
+    previous = repo.load_previous_state(mode=mode_vo)
 
-    if previous:
-        diff = AuditDiff.compute(previous.issues, current_issues, previous.timestamp)
-        print_diff(diff)
-    print()
-
-    print_report(report)
+    report = Report.build(mode_vo, stats, need_confirm, auto_fixable, suggestions, previous_state=previous)
+    repo.save_report(report)
+    report.render()
     return report.exit_code

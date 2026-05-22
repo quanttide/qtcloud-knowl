@@ -56,13 +56,6 @@ class AuditDiff:
         return not self.has_changes
 
 
-@dataclass
-class AuditState:
-    mode: AuditMode
-    issues: list
-    timestamp: str = field(default_factory=lambda: datetime.now().isoformat())
-
-
 @dataclass(frozen=True)
 class IssueGroup:
     group_name: str

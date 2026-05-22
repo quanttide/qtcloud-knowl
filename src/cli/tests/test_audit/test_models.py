@@ -1,6 +1,6 @@
 from pathlib import Path
 from app.audit.models import (
-    AuditMode, AuditIssue, AuditDiff, AuditState, AuditReport,
+    AuditMode, AuditIssue, AuditDiff, AuditReport,
     KnowledgeBaseStats, IssueGroup,
 )
 
@@ -66,24 +66,6 @@ class TestAuditDiff:
         curr = []
         diff = AuditDiff.compute(prev, curr, prev_timestamp="2025-01-01T00:00:00")
         assert diff.previous_timestamp == "2025-01-01T00:00:00"
-
-
-class TestAuditState:
-    def test_create(self):
-        state = AuditState(mode=AuditMode.FULL, issues=[])
-        assert state.mode == AuditMode.FULL
-        assert state.issues == []
-        assert state.timestamp is not None
-
-    def test_with_issues(self):
-        issues = [AuditIssue(category="a", group="x", label="l1")]
-        state = AuditState(mode=AuditMode.SIMPLE, issues=issues)
-        assert len(state.issues) == 1
-
-    def test_mutable_issues(self):
-        state = AuditState(mode=AuditMode.FULL, issues=[])
-        state.issues.append(AuditIssue(category="a", group="x", label="l1"))
-        assert len(state.issues) == 1
 
 
 class TestIssueGroup:
