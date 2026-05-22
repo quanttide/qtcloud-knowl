@@ -138,7 +138,29 @@ def test_extract_code_refactor(info_path, knowledge_path):
         "Long Method", "重复逻辑",
     ]), f"缺少代码异味实例。已有:\n{all_inst_text[:500]}"
 
-    # === 5. 结构对齐 gallery ===
+    # === 5. 关系提取 ===
+    # prompt 要求 LLM 提取实例间有方向的联系。验证：
+    # - 存在关系类本体（"对应"、"关联"等关键词）
+    # - 存在 description 以"从"开头的关系实例
+    all_onto_text = ""
+    for o in result["ontologies"]:
+        all_onto_text += o.get("label", "") + o.get("description", "")
+    assert any(kw in all_onto_text for kw in [
+        "对应", "关联", "关系", "relation", "连接",
+    ]), f"缺少关系类本体。已有:\n{all_onto_text[:500]}"
+
+    relation_insts = [i for i in result["instances"] if i.get("description", "").startswith("从")]
+    assert len(relation_insts) >= 2, \
+        f"关系实例不足（需要 ≥2，实际 {len(relation_insts)}）。所有实例 description:\n" + \
+        "\n".join(f"  {i['id']}: {i.get('description', '')[:80]}" for i in result["instances"])
+
+    for inst in relation_insts:
+        desc = inst.get("description", "")
+        assert "到" in desc, f"关系实例 description 缺少'到': {desc}"
+
+    print(f"\n  关系本体 ✓ | 关系实例: {len(relation_insts)} 项")
+
+    # === 6. 结构对齐 gallery ===
     knowledge = json.loads(knowledge_path.read_text(encoding="utf-8"))
     assert set(result.keys()) == set(knowledge.keys()), \
         f"顶层键不一致: {set(result.keys())} vs {set(knowledge.keys())}"
