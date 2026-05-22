@@ -18,11 +18,11 @@ app = typer.Typer()
 
 @app.command()
 def extract(
-    source: str = typer.Option(None, "--source", "-s", help="源文档目录路径"),
-    data_dir: str = typer.Option(None, "--data-dir", help="数据目录路径"),
+    source: str = typer.Option(None, "--source", "-s", help="源文档路径（单个 .md 文件或目录）"),
+    data_dir: str = typer.Option(None, "--data-dir", help="数据目录路径（仅目录输入时生效）"),
     verbose: bool = typer.Option(False, "--verbose", "-v", help="显示详细匹配信息"),
 ):
-    """知识抽取 — 从源文件自动创建知识库骨架"""
+    """知识抽取 — 从源文档生成知识库 JSON"""
     from app.extract import run
 
     return run(source, data_dir, verbose)

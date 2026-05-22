@@ -1,1 +1,1 @@
-include app/prompts/*.txt
+include assets/prompts/*.txt

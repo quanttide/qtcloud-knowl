@@ -15,7 +15,7 @@ SAMPLE_LLM_DATA = {
         {"id": "test-onto-1", "name": "test-onto-1", "label": "测试本体", "description": "测试本体"},
     ],
     "instances": [
-        {"id": "test-inst-1", "name": "test-inst-1", "label": "测试实例", "description": "测试实例"},
+        {"id": "test-inst-1", "name": "test-inst-1", "label": "测试实例", "description": "测试实例", "ontology": "test-onto-1"},
     ],
 }
 
@@ -25,172 +25,164 @@ SAMPLE_LLM_RESPONSE = json.dumps(SAMPLE_LLM_DATA, ensure_ascii=False)
 class TestExtract:
     """知识抽取命令测试"""
 
-    # === CLI 集成测试 ===
+    # === extract() 函数测试 ===
 
-    def test_extract_empty_dir(self, tmp_path):
-        from app.cli import app
-        empty = tmp_path / "empty"
-        empty.mkdir()
-        result = CliRunner().invoke(app, ["--source", str(empty)])
-        assert result.exit_code == 1
-        assert "没有 .md 文件" in result.output
+    def test_extract_file_not_found(self):
+        from app.extract import extract
+        result = extract("/nonexistent/test.md")
+        assert "error" in result
+        assert "不存在" in result["error"]
 
-    def test_extract_nonexistent_dir(self):
-        from app.cli import app
-        result = CliRunner().invoke(app, ["--source", "/nonexistent"])
-        assert result.exit_code == 1
-        assert "不存在" in result.output
+    def test_extract_non_md_file(self, tmp_path):
+        from app.extract import extract
+        f = tmp_path / "test.txt"
+        f.write_text("content", encoding="utf-8")
+        result = extract(str(f))
+        assert "error" in result
+        assert "仅支持 .md" in result["error"]
 
-    def test_extract_missing_api_key(self):
-        from app.cli import app
-        result = CliRunner().invoke(app, ["--source", str(SAMPLE_DIR)])
-        assert result.exit_code == 1
-        assert "未设置 LLM API Key" in result.output
+    def test_extract_missing_prompt(self, tmp_path):
+        from app.extract import extract
+        f = tmp_path / "test.md"
+        f.write_text("content", encoding="utf-8")
+        result = extract(str(f), prompt_template="nonexistent.txt")
+        assert "error" in result
+        assert "prompt 模板不存在" in result["error"]
 
-    def test_extract_creates_skeleton(self, tmp_path):
-        from app.cli import app
-        sample = tmp_path / "samples"
-        sample.mkdir()
-        (sample / "test.md").write_text("这是一份公司治理章程。", encoding="utf-8")
-        out = tmp_path / "out"
+    def test_extract_no_api_key(self, tmp_path):
+        from app.extract import extract
+        f = tmp_path / "test.md"
+        f.write_text("content", encoding="utf-8")
+        result = extract(str(f))
+        assert "error" in result
+        assert "未设置 LLM API Key" in result["error"]
 
-        fake_domain = {"id": "org-gov", "name": "org-gov", "label": "组织治理", "description": ""}
-        fake_ontologies = [{"id": "onto-1", "name": "onto-1", "label": "权责", "description": ""}]
-        fake_instances = [{"id": "inst-1", "name": "inst-1", "label": "董事会", "description": ""}]
+    def test_extract_calls_llm(self, tmp_path):
+        from app.extract import extract, settings
 
-        with patch("app.extract._extract_dir", return_value=(
-            {"org-gov": fake_domain},
-            fake_ontologies,
-            fake_instances,
-        )):
-            result = CliRunner().invoke(
-                app, ["--source", str(sample), "--data-dir", str(out)]
-            )
-
-        assert result.exit_code == 0
-        assert "抽取完成" in result.output
-        assert (out / "org-gov" / "domain.json").exists()
-        with open(out / "org-gov" / "domain.json") as f:
-            assert json.load(f)["label"] == "组织治理"
-
-    # === _extract_dir 函数测试 ===
-
-    def test_extract_dir_no_md_files(self, tmp_path):
-        from app.extract import _extract_dir
-        d = tmp_path / "empty"
-        d.mkdir()
-        result = _extract_dir(d)
-        assert "没有 .md 文件" in result
-
-    def test_extract_dir_missing_prompt(self, tmp_path):
-        from app.extract import _extract_dir
-        d = tmp_path / "docs"
-        d.mkdir()
-        (d / "test.md").write_text("内容", encoding="utf-8")
-        result = _extract_dir(d, prompt_template="nonexistent.txt")
-        assert "prompt 模板不存在" in result
-
-    def test_extract_dir_no_api_key(self, tmp_path):
-        from app.extract import _extract_dir
-        d = tmp_path / "docs"
-        d.mkdir()
-        (d / "test.md").write_text("内容", encoding="utf-8")
-        result = _extract_dir(d)
-        assert "未设置 LLM API Key" in result
-
-    def test_extract_dir_calls_llm(self, tmp_path):
-        """Mock LLM 验证 _extract_dir 正确调用 LLM 并返回结构化数据。"""
-        from app.extract import _extract_dir
-
-        d = tmp_path / "docs"
-        d.mkdir()
-        (d / "test.md").write_text("关于董事会与股东会的治理章程", encoding="utf-8")
+        f = tmp_path / "test.md"
+        f.write_text("关于董事会与股东会的治理章程", encoding="utf-8")
 
         mock_resp = MagicMock()
         mock_resp.content = SAMPLE_LLM_RESPONSE
 
         with patch("quanttide_agent.LLM") as MockLLM:
             MockLLM.return_value.complete.return_value = mock_resp
-            from app.extract import settings
-            old = settings.llm_api_key
+            old_key = settings.llm_api_key
             settings.llm_api_key = "test-key"
             try:
-                result = _extract_dir(d)
+                result = extract(str(f))
             finally:
-                settings.llm_api_key = old
+                settings.llm_api_key = old_key
 
-        domains, ontologies, instances = result
-        assert "test-domain" in domains
-        assert domains["test-domain"]["label"] == "测试领域"
-        assert len(ontologies) == 1
-        assert ontologies[0]["label"] == "测试本体"
-        assert len(instances) == 1
-        assert instances[0]["label"] == "测试实例"
+        assert "error" not in result
+        assert result["domain"]["label"] == "测试领域"
+        assert len(result["ontologies"]) == 1
+        assert result["ontologies"][0]["label"] == "测试本体"
+        assert len(result["instances"]) == 1
+        assert result["instances"][0]["label"] == "测试实例"
 
-    def test_extract_dir_llm_json_error(self, tmp_path):
-        """LLM 返回非法 JSON 时跳过该文件，返回空结构。"""
-        from app.extract import _extract_dir
+    def test_extract_llm_json_error(self, tmp_path):
+        from app.extract import extract, settings
 
-        d = tmp_path / "docs"
-        d.mkdir()
-        (d / "test.md").write_text("内容", encoding="utf-8")
+        f = tmp_path / "test.md"
+        f.write_text("content", encoding="utf-8")
 
         mock_resp = MagicMock()
         mock_resp.content = "这不是 JSON"
 
         with patch("quanttide_agent.LLM") as MockLLM:
             MockLLM.return_value.complete.return_value = mock_resp
-            from app.extract import settings
-            old = settings.llm_api_key
+            old_key = settings.llm_api_key
             settings.llm_api_key = "test-key"
             try:
-                domains, ontologies, instances = _extract_dir(d)
+                result = extract(str(f))
             finally:
-                settings.llm_api_key = old
+                settings.llm_api_key = old_key
 
-        assert len(domains) == 0
-        assert len(ontologies) == 0
-        assert len(instances) == 0
+        assert "error" in result
+        assert "解析失败" in result["error"]
 
-    def test_extract_dir_multiple_files(self, tmp_path):
-        """多个 .md 文件的结果应合并到同一 domain。"""
-        from app.extract import _extract_dir
+    def test_extract_keeps_ontology_field(self, tmp_path):
+        """验证实例的 ontology 字段被保留。"""
+        from app.extract import extract, settings
 
-        d = tmp_path / "docs"
-        d.mkdir()
-        data_a = dict(SAMPLE_LLM_DATA)
-        data_b = {
-            "domain": {"id": "test-domain", "name": "test-domain", "label": "测试领域", "description": ""},
-            "ontologies": [
-                {"id": "test-onto-2", "name": "test-onto-2", "label": "流程", "description": ""},
-            ],
-            "instances": [
-                {"id": "inst-2", "name": "inst-2", "label": "股东会", "description": ""},
-            ],
+        f = tmp_path / "test.md"
+        f.write_text("content", encoding="utf-8")
+
+        data = {
+            "domain": {"id": "d", "name": "d", "label": "D", "description": ""},
+            "ontologies": [{"id": "onto-1", "name": "onto-1", "label": "O1", "description": ""}],
+            "instances": [{"id": "i1", "name": "i1", "label": "I1", "description": "", "ontology": "onto-1"}],
         }
-        (d / "a.md").write_text("文档A", encoding="utf-8")
-        (d / "b.md").write_text("文档B", encoding="utf-8")
-
-        mock_resp_a = MagicMock()
-        mock_resp_a.content = json.dumps(data_a, ensure_ascii=False)
-        mock_resp_b = MagicMock()
-        mock_resp_b.content = json.dumps(data_b, ensure_ascii=False)
+        mock_resp = MagicMock()
+        mock_resp.content = json.dumps(data, ensure_ascii=False)
 
         with patch("quanttide_agent.LLM") as MockLLM:
-            mock_llm = MockLLM.return_value
-            mock_llm.complete.side_effect = [mock_resp_a, mock_resp_b]
-            from app.extract import settings
-            old = settings.llm_api_key
+            MockLLM.return_value.complete.return_value = mock_resp
+            old_key = settings.llm_api_key
             settings.llm_api_key = "test-key"
             try:
-                domains, ontologies, instances = _extract_dir(d)
+                result = extract(str(f))
             finally:
-                settings.llm_api_key = old
+                settings.llm_api_key = old_key
 
-        assert len(domains) == 1
-        assert "test-domain" in domains
-        assert len(ontologies) == 2
-        assert len(instances) == 2
+        assert result["instances"][0]["ontology"] == "onto-1"
+
+    def test_extract_strips_code_fences(self, tmp_path):
+        from app.extract import extract, settings
+
+        f = tmp_path / "test.md"
+        f.write_text("content", encoding="utf-8")
+        wrapped = "```json\n" + '{"domain": {"id": "d1"}, "ontologies": [], "instances": []}\n' + "```"
+        mock_resp = MagicMock()
+        mock_resp.content = wrapped
+
+        with patch("quanttide_agent.LLM") as MockLLM:
+            MockLLM.return_value.complete.return_value = mock_resp
+            old_key = settings.llm_api_key
+            settings.llm_api_key = "test-key"
+            try:
+                result = extract(str(f))
+            finally:
+                settings.llm_api_key = old_key
+
+        assert result["domain"]["label"] == ""
+
+    # === CLI 集成测试 ===
+
+    def test_cli_empty_dir(self, tmp_path):
+        empty = tmp_path / "empty"
+        empty.mkdir()
+        result = CliRunner().invoke(app, ["--source", str(empty)])
+        assert result.exit_code == 1
+        assert "没有 .md 文件" in result.output
+
+    def test_cli_nonexistent_path(self):
+        result = CliRunner().invoke(app, ["--source", "/nonexistent"])
+        assert result.exit_code == 1
+        assert "不存在" in result.output
+
+    def test_cli_missing_source(self):
+        result = CliRunner().invoke(app, [])
+        assert result.exit_code == 1
+
+    def test_cli_single_file_writes_json(self, tmp_path):
+        f = tmp_path / "test.md"
+        f.write_text("content", encoding="utf-8")
+        out = tmp_path / "out"
+
+        with patch("app.extract.extract") as mock_extract:
+            mock_extract.return_value = {
+                "domain": {"id": "d", "name": "d", "label": "D", "description": ""},
+                "ontologies": [],
+                "instances": [],
+            }
+            result = CliRunner().invoke(app, ["--source", str(f), "--data-dir", str(out)])
+
+        assert result.exit_code == 0
+        assert (out / "test.json").exists()
+        assert json.loads((out / "test.json").read_text())["domain"]["label"] == "D"
 
     # === _load_prompt 函数测试 ===
 
@@ -200,107 +192,65 @@ class TestExtract:
 
     def test_load_prompt_found(self):
         from app.extract import _load_prompt
-        content = _load_prompt("full_extraction.txt")
+        content = _load_prompt("extract.txt")
         assert content is not None
         assert "{document}" in content
 
-    # === run() 函数边缘路径 ===
+    # === _strip_fences 测试 ===
 
-    def test_run_no_source(self):
-        from app.extract import run
-        import typer
-        try:
-            run(source=None)
-            assert False, "should have raised"
-        except typer.Exit as e:
-            assert e.exit_code == 1
+    def test_strip_fences_json(self):
+        from app.extract import _strip_fences
+        assert _strip_fences("```json\n{\"a\": 1}\n```") == "{\"a\": 1}"
 
-    def test_run_verbose_mode(self, tmp_path):
+    def test_strip_fences_no_fences(self):
+        from app.extract import _strip_fences
+        assert _strip_fences("plain text") == "plain text"
+
+    def test_strip_fences_leading_only(self):
+        from app.extract import _strip_fences
+        assert _strip_fences("```\ncontent") == "content"
+
+    def test_strip_fences_trailing_only(self):
+        from app.extract import _strip_fences
+        assert _strip_fences("content\n```") == "content"
+
+    # === run() 目录模式 ===
+
+    def test_run_dir_creates_files(self, tmp_path):
         from unittest.mock import patch
         from app.extract import run
+
         sdir = tmp_path / "samples"
         sdir.mkdir()
         (sdir / "test.md").write_text("content", encoding="utf-8")
-        fake_domain = {"id": "test", "name": "test", "label": "test", "description": ""}
-        with patch("app.extract._extract_dir", return_value=(
-            {"test": fake_domain}, [], []
-        )):
-            result = run(source=str(sdir), data_dir=str(tmp_path / "out"), verbose=True)
+        out = tmp_path / "out"
+
+        with patch("app.extract.extract") as mock_extract:
+            mock_extract.return_value = {
+                "domain": {"id": "the-domain", "name": "the-domain", "label": "领域", "description": ""},
+                "ontologies": [{"id": "o1", "name": "o1", "label": "O1", "description": ""}],
+                "instances": [{"id": "i1", "name": "i1", "label": "I1", "description": "", "ontology": "o1"}],
+            }
+            result = run(source=str(sdir), data_dir=str(out))
+
         assert result == 0
+        assert (out / "the-domain" / "domain.json").exists()
+        assert (out / "the-domain" / "ontologies.json").exists()
+        assert (out / "the-domain" / "instances.json").exists()
 
     def test_run_skips_empty_domain_id(self, tmp_path):
         from unittest.mock import patch
         from app.extract import run
+
         sdir = tmp_path / "samples"
         sdir.mkdir()
         (sdir / "test.md").write_text("content", encoding="utf-8")
-        fake_domain = {"id": "", "name": "", "label": "", "description": ""}
-        with patch("app.extract._extract_dir", return_value=(
-            {"": fake_domain}, [], []
-        )):
-            result = run(source=str(sdir), data_dir=str(tmp_path / "out"), verbose=True)
+
+        with patch("app.extract.extract") as mock_extract:
+            mock_extract.return_value = {
+                "domain": {"id": "", "name": "", "label": "", "description": ""},
+                "ontologies": [],
+                "instances": [],
+            }
+            result = run(source=str(sdir), data_dir=str(tmp_path / "out"))
         assert result == 0
-
-    # === _extract_dir 代码栅栏剥离 ===
-
-    def test_extract_dir_strips_code_fences(self, tmp_path):
-        from unittest.mock import patch, MagicMock
-        from app.extract import _extract_dir
-        d = tmp_path / "docs"
-        d.mkdir()
-        (d / "test.md").write_text("content", encoding="utf-8")
-        wrapped = "```json\n" + '{"domain": {"id": "d1"}, "ontologies": [], "instances": []}\n' + "```"
-        mock_resp = MagicMock()
-        mock_resp.content = wrapped
-        with patch("quanttide_agent.LLM") as MockLLM:
-            MockLLM.return_value.complete.return_value = mock_resp
-            from app.extract import settings
-            old = settings.llm_api_key
-            settings.llm_api_key = "test-key"
-            settings.llm_base_url = "http://localhost:8000"
-            try:
-                domains, _, _ = _extract_dir(d)
-            finally:
-                settings.llm_api_key = old
-                settings.llm_base_url = ""
-        assert "d1" in domains
-
-    def test_extract_dir_strips_leading_trailing_fences(self, tmp_path):
-        from unittest.mock import patch, MagicMock
-        from app.extract import _extract_dir
-        d = tmp_path / "docs2"
-        d.mkdir()
-        (d / "test.md").write_text("content", encoding="utf-8")
-        wrapped = "```\n" + '{"domain": {"id": "d2"}, "ontologies": [], "instances": []}\n' + "```"
-        mock_resp = MagicMock()
-        mock_resp.content = wrapped
-        with patch("quanttide_agent.LLM") as MockLLM:
-            MockLLM.return_value.complete.return_value = mock_resp
-            from app.extract import settings
-            old = settings.llm_api_key
-            settings.llm_api_key = "test-key"
-            try:
-                domains, _, _ = _extract_dir(d)
-            finally:
-                settings.llm_api_key = old
-        assert "d2" in domains
-
-    def test_extract_dir_only_leading_fence(self, tmp_path):
-        from unittest.mock import patch, MagicMock
-        from app.extract import _extract_dir
-        d = tmp_path / "docs3"
-        d.mkdir()
-        (d / "test.md").write_text("content", encoding="utf-8")
-        wrapped = "```\n" + '{"domain": {"id": "d3"}, "ontologies": [], "instances": []}'
-        mock_resp = MagicMock()
-        mock_resp.content = wrapped
-        with patch("quanttide_agent.LLM") as MockLLM:
-            MockLLM.return_value.complete.return_value = mock_resp
-            from app.extract import settings
-            old = settings.llm_api_key
-            settings.llm_api_key = "test-key"
-            try:
-                domains, _, _ = _extract_dir(d)
-            finally:
-                settings.llm_api_key = old
-        assert "d3" in domains
