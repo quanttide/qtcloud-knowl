@@ -1,5 +1,38 @@
 # 变更记录
 
+## [0.2.0] - 2026-05-22
+
+### extract 重设计：信息→知识
+
+extract 从"目录多文件流水线"改为"单文件入/JSON 出"，对齐 ROADMAP v0.2.0 的输入为信息、输出为知识的方向。
+
+### Breaking changes
+
+- extract 不再接受目录作为 `--source`，只处理单个 `.md` 文件
+- 移除 `--verbose` 参数
+- 移除 `--data-dir` 参数，输出写到 `source` 同目录
+- 移除 `run()` 中的目录模式、合并去重、多 domain 目录写入
+
+### Added
+
+- 新增 `extract(source: str) -> dict` 纯函数接口：读文件→填充 prompt→调用 LLM→解析 JSON→清理字段→返回 dict
+- prompt 模板从 `full_extraction.txt` 改为 `extract.txt`，使用 gallery 优化后的提示词
+- 集成测试使用真实 LLM API 端到端调用 gallery 数据（`information/code-refactor.md`）
+- 快照机制：每次集成测试运行后 dump 实际 LLM 输出到 `_snapshots/{timestamp}.json` 供人工审查
+- `_snapshots/` 加入 `.gitignore`
+
+### Changed
+
+- `_clean()` 新增 `is_instance` 参数，实例保留 `ontology` 字段（其他类型只保留 id/name/label/description）
+- 集成测试重写为单测试多断言，一次 LLM 调用完成全部验证
+- 集成测试断言改为语义匹配，移除魔法数字阈值
+
+### Removed
+
+- 移除 `run()` 中的目录模式、合并去重逻辑
+- 移除 `config.py` 中的 `LocalStorage` 依赖
+- 移除 `integrated_tests/fixtures/knowledge/`（改用 gallery 数据）
+
 ## [0.1.6] - 2026-05-22
 
 ### Changed
