@@ -21,6 +21,7 @@ project-root/
 ├── configs/              # 配置文件模板
 ├── scripts/              # 构建/部署脚本
 ├── docs/                 # 文档
+├── _examples/            # 用户演示示例（_ 前缀：go build 自动跳过编译）
 │
 ├── go.mod                # module 声明
 ├── go.sum                # 依赖锁文件
