@@ -1,4 +1,4 @@
-# CONTRIBUITING
+# CONTRIBUTING
 
 ## 项目结构
 
