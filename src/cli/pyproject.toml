@@ -1,33 +1,12 @@
 [build-system]
-requires = ["setuptools>=64"]
-build-backend = "setuptools.build_meta"
-
-[tool.setuptools.packages.find]
-include = ["app*"]
-exclude = ["tests*", "integrated_tests*"]
-
-[tool.setuptools.package-data]
-app = ["../assets/prompts/*.txt"]
+requires = ["maturin>=1.0,<2.0"]
+build-backend = "maturin"
 
 [project]
 name = "qtcloud-knowl-cli"
-version = "0.2.2"
+version = "0.3.0"
 description = "Knowledge Agent CLI — charting, validation, and ontology management"
 requires-python = ">=3.12"
-dependencies = [
-    "typer",
-    "pydantic-settings",
-    "pydantic-settings-vault",
-    "quanttide",
-    "quanttide-agent>=0.3.0",
-    "quanttide-knowl",
-]
 
-[project.scripts]
-qtcloud-knowl = "app.cli:main"
-
-[dependency-groups]
-dev = [
-    "pytest>=9.0.3",
-    "pytest-cov>=7.1.0",
-]
+[tool.maturin]
+bindings = "bin"

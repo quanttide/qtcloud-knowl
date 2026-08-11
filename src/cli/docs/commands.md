@@ -1,81 +1,76 @@
 # 命令参考
 
+qtcloud-knowl CLI（Rust，PyPI 包名 `qtcloud-knowl-cli`）。
+
 ## extract
 
 ```
-qtcloud-knowl extract --source <目录> [--data-dir <目录>] [--verbose]
+qtcloud-knowl extract --source <文档.md> [--data-dir <目录>]
 ```
 
-从本地 Markdown 文档提取知识，全程 LLM 驱动。逐文件调用大模型，自动识别并生成四类知识条目。
+知识库抽取：从单篇 .md 文档生成知识库 JSON（domain/ontologies/instances），全程 LLM 驱动。
 
 ### 参数
 
 | 选项 | 说明 |
 |------|------|
-| `--source` `-s` | 源文档目录路径（必填） |
-| `--data-dir` | 知识库输出目录（默认 `QTCLOUD_KNOWL_DATA_HOME`） |
-| `--verbose` `-v` | 显示抽取详情 |
+| `--source` `-s` | 源文档 .md 文件路径（必填） |
+| `--data-dir` | 知识库输出目录（默认 `data`，可用 `QTCLOUD_KNOWL_DATA_HOME` 覆盖） |
 
 ### 输出
 
 ```
-抽取完成。生成 1 个领域知识库，保存至 ~/.local/share/quanttide/qtcloud-knowl。
-  本体: 3 项
-  实例: 5 项
-  关系: 4 项
+抽取完成。保存至 {data-dir}/{文档名}.json。
 ```
 
-### 生成的文件结构
+生成 JSON 结构：`{"domain": {...}, "ontologies": [...], "instances": [...]}`，
+条目字段为 `id`（UUID）/`name`/`label`/`description`，实例额外含 `ontology`。
+
+## acquire
 
 ```
-<data-dir>/
-└── <domain-id>/
-    ├── domain.json         # 领域定义
-    ├── ontologies.json     # 本体列表
-    ├── instances.json      # 实例列表
-    └── relations.json      # 关系列表
+qtcloud-knowl acquire [--input <文件>] [--output <目录>]
 ```
 
-每个条目统一四个字段：`id`、`name`、`label`、`description`。`description` 可包含结构化内容（如"职责：xxx；权限：xxx"）。
-
-### 前置条件
-
-- 需要配置 LLM API key（通过 `QTCLOUD_KNOWL_LLM_API_KEY` 环境变量或 Vault）
-- 默认使用 DeepSeek，可通过 `QTCLOUD_KNOWL_LLM_MODEL` 和 `QTCLOUD_KNOWL_LLM_BASE_URL` 切换
-
-## audit
-
-```
-qtcloud-knowl audit [<data-dir>] [--mode simple|full] [--sample-dir <目录>]
-```
-
-审计知识库完整性。先统计概览（领域/本体/实例/关系数量），再运行检测。
+知识获取与可编码性评估：从文档提取规则（1-5 评分）、可编码率、模糊点与编码问题清单。
 
 ### 参数
 
 | 选项 | 说明 |
 |------|------|
-| `data-dir` | 知识库目录（默认 `QTCLOUD_KNOWL_DATA_HOME`） |
-| `--mode` | `simple`（快速）/ `full`（全面，默认） |
-| `--sample-dir` | 源文件目录（部分检测需要） |
+| `--input` | 输入文件路径（为空时读取默认源：bylaw/handbook/tutorial/profile） |
+| `--output` | 输出目录（默认 `data`），写入 `extracted.yaml` |
 
-### 输出
+## extract-by-type
 
 ```
-============================================================
-  知识库概览
-============================================================
-
-  数据目录: ~/.local/share/quanttide/qtcloud-knowl
-  领域数量: 1
-  本体数量: 3
-  实例数量: 5
-  关系数量: 4
-
-  领域清单:
-    company_governance   公司治理       vocabulary=0 项
-
-============================================================
-  检测结果
-============================================================
+qtcloud-knowl extract-by-type --input <本体.yaml> --type <类型> [--model <模型.yaml>]
 ```
+
+本体抽取：按类型（cognition/todo/motif/annotate/worldbuilding/scene-graph/policy）将本体 YAML 编译为结构化产物。
+
+### 参数
+
+| 选项 | 说明 |
+|------|------|
+| `--input` `-i` | 本体 YAML 路径（必填） |
+| `--type` `-t` | 抽取类型（必填） |
+| `--model` `-m` | 模型声明 YAML 路径（约束 LLM 输出） |
+
+## summary
+
+```
+qtcloud-knowl summary --input <知识.yaml> [--output <目录>]
+```
+
+知识总结：忠实总结现有知识，不生成新产物，输出 Markdown。
+
+## 环境变量
+
+| 变量 | 说明 |
+|------|------|
+| `QTCLOUD_KNOWL_LLM_API_KEY` | LLM API Key（兼容 `DEEPSEEK_API_KEY`） |
+| `QTCLOUD_KNOWL_LLM_MODEL` | 模型（默认 `deepseek-chat`） |
+| `QTCLOUD_KNOWL_LLM_BASE_URL` | Base URL（默认 DeepSeek 官方） |
+| `QTCLOUD_KNOWL_DATA_HOME` | 数据目录（默认 `./data`） |
+| `QTCLOUD_KNOWL_STATE_HOME` | 状态目录（默认 `data/.state`） |
